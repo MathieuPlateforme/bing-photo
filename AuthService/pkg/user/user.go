@@ -2,6 +2,7 @@ package user
 
 import (
 	"time" 
+    "gorm.io/gorm"
 )
 
 type User struct {
@@ -15,6 +16,7 @@ type User struct {
     GoogleID       string
     PhoneNumber    string
 	BirthDate      time.Time
+    ResetToken     string
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 }
@@ -23,4 +25,9 @@ type User struct {
 // Méthode pour valider le mot de passe
 func (u *User) ValidatePassword() {
     // Logique de validation de mot de passe
+}
+
+func (u *User) UpdateResetToken(db *gorm.DB, token string) error {
+    u.ResetToken = token
+    return db.Save(&u).Error
 }

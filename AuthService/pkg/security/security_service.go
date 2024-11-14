@@ -6,10 +6,13 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"log"
+	"AuthService/pkg/user"
+	"gorm.io/gorm"
 )
 
 // SecurityService structure
 type SecurityService struct {
+	DB *gorm.DB
 }
 
 // NewSecurityService initialise et retourne une nouvelle instance de SecurityService
@@ -59,4 +62,24 @@ func (s *SecurityService) GenerateSecureToken() string {
 	
 		// Convertit les octets en une chaîne hexadécimale
 		return hex.EncodeToString(token)
+}
+
+func (s *SecurityService) GeneratePasswordResetLink(email string) string {
+	// Logique pour générer un lien de réinitialisation de mot de passe
+	token := s.GenerateSecureToken()
+
+	// stocker le token dans la base de données
+	var u user.User
+	if err := s.DB.Where("email = ?", email).First(&u).Error; err != nil {
+		log.Fatalf("Error while getting user from database: %v", err)
+	}
+
+	if err := u.UpdateResetToken(s.DB, token); err != nil {
+		log.Fatalf("Error while updating reset token: %v", err)
+	}
+
+	//Générer le lien de réinitialisation de mot de passe
+
+	resetLink := "http://localhost:5050/reset-password?token=" + token + "&email=" + email
+	return resetLink
 }

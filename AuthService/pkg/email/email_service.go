@@ -52,6 +52,37 @@ func SendEmailVerification(email string) {
 
 func SendPasswordResetEmail(email string) {
 	// Logique pour envoyer un email de réinitialisation de mot de passe
+	from := "alizeamasse@gmail.com"
+	password := os.Getenv("APP_MAIL_PASSWORD")
+
+	// Configuration de l'authentification SMTP
+
+	smtpHost := "smtp.gmail.com"
+	smtpPort := "587"
+
+	// Destinataire
+
+	to := []string{email}
+
+	// Corps du mail
+	
+	subject := "Réinitialisation de votre mot de passe"
+	body := "Cliquez sur ce lien pour réinitialiser votre mot de passe : [lien de réinitialisation]"
+	message := fmt.Sprintf("Subject: %s\r\n\r\n%s", subject, body)
+
+	// Authentification avec le serveur SMTP
+
+	auth := smtp.PlainAuth("", from, password, smtpHost)
+
+	// envoi du mail
+
+	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, []byte(message))
+
+	if err != nil {
+		fmt.Println("Error sending email: ", err)
+	}
+
+	fmt.Println("Email sent successfully to: ", email)
 }
 
 func checkEmailStatus(email string) bool {
