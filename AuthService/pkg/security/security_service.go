@@ -2,6 +2,7 @@ package security
 
 import (
 	"fmt"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // SecurityService structure
@@ -14,17 +15,24 @@ func NewSecurityService() (*SecurityService, error) {
 	return &SecurityService{}, nil
 }
 
-func hashPassword(password string) string {
+func HashPassword(password string) string {
 	// Logique de hachage de mot de passe
-	return "hashedPassword"
+	const cost = 10
+
+	// Hacher le mot de passe avec un coût de 10
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), cost)
+	if err != nil {
+		fmt.Println("Error hashing password: ", err)
+	}
+	return string(hashedPassword)
 }
 
-func comparePasswords(hashedPassword string, password string) bool {
+func ComparePasswords(hashedPassword string, password string) bool {
 	// Logique de comparaison de mot de passe
 	return true
 }
 
-func generateSecureToken() string {
+func GenerateSecureToken() string {
 	// Logique de génération de jeton JWT
 	return "Token"
 }

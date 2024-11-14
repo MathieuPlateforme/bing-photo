@@ -32,8 +32,10 @@ services:
     depends_on:
       - db
     environment:
-      RUN_TESTS: "true"
-    command: ["sh", "-c", "go test -v ./..."]
+      RUN_TESTS: ${RUN_TESTS}
+    command: > 
+      sh -c "if [ \"$RUN_TESTS\" = \"true\" ]; then go test -v ./...; else echo 'Tests are skipped.'; fi"
+
 
   pgadmin:
     image: dpage/pgadmin4
