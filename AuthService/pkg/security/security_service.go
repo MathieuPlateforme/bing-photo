@@ -18,7 +18,7 @@ func NewSecurityService() (*SecurityService, error) {
 	return &SecurityService{}, nil
 }
 
-func HashPassword(password string) string {
+func (s *SecurityService) HashPassword(password string) string {
 	// Logique de hachage de mot de passe
 	const cost = 10
 
@@ -30,7 +30,7 @@ func HashPassword(password string) string {
 	return string(hashedPassword)
 }
 
-func ComparePasswords(hashedPassword string, password string) bool {
+func (s *SecurityService) ComparePasswords(hashedPassword string, password string) bool {
 	// Logique de comparaison de mot de passe
 	hashedPasswordBytes := []byte(hashedPassword)
 	passwordBytes := []byte(password)
@@ -44,7 +44,7 @@ func ComparePasswords(hashedPassword string, password string) bool {
 	return true
 }
 
-func GenerateSecureToken() string {
+func (s *SecurityService) GenerateSecureToken() string {
 	// Logique de génération de jeton 
 
 	// Taille du jeton en octets (32 octets = 256 bits)
