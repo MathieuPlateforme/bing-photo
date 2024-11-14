@@ -60,6 +60,16 @@ func (manager *DBManagerService) CloseConnection() {
 	log.Println("Connexion à la base de données fermée")
 }
 
-func (manager *DBManagerService) BeginTransaction() {
+func (manager *DBManagerService) BeginTransaction() (*gorm.DB, error) {
 	// Commencer une transaction
+	tx := manager.DB.Begin()
+
+	// Vérifier s'il y a eu une erreur lors du démarrage de la transaction
+	if tx.Error != nil {
+		log.Printf("Erreur lors de la création de la transaction : %v", tx.Error)
+		return nil, tx.Error
+	}
+
+	// Retourner l'objet transaction
+	return tx, nil
 }
