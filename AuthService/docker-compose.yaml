@@ -24,6 +24,17 @@ services:
     env_file:
       - .env
 
+  test-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder 
+    depends_on:
+      - db
+    environment:
+      RUN_TESTS: "true"
+    command: ["sh", "-c", "go test -v ./..."]
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
