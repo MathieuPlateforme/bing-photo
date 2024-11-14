@@ -12,7 +12,6 @@ type User struct {
     FirstName      string
     LastName       string
     Email          string `gorm:"unique;not null"`
-    IsEmailVerified bool
     GoogleID       string
     PhoneNumber    string
 	BirthDate      time.Time

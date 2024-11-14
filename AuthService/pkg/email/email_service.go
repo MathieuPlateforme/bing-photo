@@ -85,7 +85,3 @@ func SendPasswordResetEmail(email string) {
 	fmt.Println("Email sent successfully to: ", email)
 }
 
-func checkEmailStatus(email string) bool {
-	// Vérifie si l'adresse email est valide et active
-	return true
-}
