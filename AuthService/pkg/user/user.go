@@ -19,10 +19,6 @@ type User struct {
 	UpdatedAt      time.Time
 }
 
-// Méthode pour hacher le mot de passe
-func (u *User) HashPassword() {
-    // Logique de hachage de mot de passe
-}
 
 // Méthode pour valider le mot de passe
 func (u *User) ValidatePassword() {

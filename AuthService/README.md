@@ -2,15 +2,17 @@
 
 **cmd/main.go** : Point d'entrée principal de l'application.
 
-**pkg/auth/auth_service.go** : Contient la logique du service d'authentification, y compris loginWithEmail, registerWithEmail, forgotPassword, resetPassword, loginWithGoogle, et validateToken.
+**Services/auth_service.go** : Contient la logique du service d'authentification, y compris loginWithEmail, registerWithEmail, forgotPassword, resetPassword, loginWithGoogle, et validateToken.
 
-**pkg/user/user.go** : Définit la structure de la classe User et ses méthodes associées (hashPassword, validatePassword, generatePasswordResetToken).
+**Models/user/user.go** : Définit la structure de la classe User et ses méthodes associées (hashPassword, validatePassword, generatePasswordResetToken).
 
-**pkg/jwt/jwt.go** : Gère la logique de génération et de vérification des tokens JWT.
+**Services/jwt/jwt.go** : Gère la logique de génération et de vérification des tokens JWT.
 
-**pkg/email/email_service.go** : Contient les fonctions pour envoyer des emails de vérification et de réinitialisation de mot de passe.
+**Services/email_service.go** : Contient les fonctions pour envoyer des emails de vérification et de réinitialisation de mot de passe.
 
-**pkg/db/db_manager.go** : Gère la connexion à la base de données et l'exécution des requêtes.
+**Services/db_manager_service.go** : Gère la connexion à la base de données et l'exécution des requêtes.
+
+
 
 # Dépendences
 
