@@ -3,6 +3,9 @@ package security
 import (
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
+	"crypto/rand"
+	"encoding/hex"
+	"log"
 )
 
 // SecurityService structure
@@ -37,11 +40,23 @@ func ComparePasswords(hashedPassword string, password string) bool {
 		fmt.Println("Passwords do not match")
 		return false
 	}
-	
+
 	return true
 }
 
 func GenerateSecureToken() string {
-	// Logique de génération de jeton JWT
-	return "Token"
+	// Logique de génération de jeton 
+
+	// Taille du jeton en octets (32 octets = 256 bits)
+		tokenSize := 32
+		token := make([]byte, tokenSize)
+	
+		// Génère des octets aléatoires sécurisés
+		_, err := rand.Read(token)
+		if err != nil {
+			log.Fatalf("Erreur while generate token : %v", err)
+		}
+	
+		// Convertit les octets en une chaîne hexadécimale
+		return hex.EncodeToString(token)
 }
