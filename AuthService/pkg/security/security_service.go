@@ -29,6 +29,15 @@ func HashPassword(password string) string {
 
 func ComparePasswords(hashedPassword string, password string) bool {
 	// Logique de comparaison de mot de passe
+	hashedPasswordBytes := []byte(hashedPassword)
+	passwordBytes := []byte(password)
+
+	err := bcrypt.CompareHashAndPassword(hashedPasswordBytes, passwordBytes)
+	if err != nil {
+		fmt.Println("Passwords do not match")
+		return false
+	}
+	
 	return true
 }
 
