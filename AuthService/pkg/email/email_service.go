@@ -2,6 +2,8 @@ package email
 
 import (
 	"fmt"
+	"net/smtp"
+	"os"
 )
 
 type EmailService struct {
@@ -16,6 +18,36 @@ func NewEmailService() (*EmailService, error) {
 
 func SendEmailVerification(email string) {
 	// Logique pour envoyer un email de vérification
+	from := "alizeamasse@gmail.com"
+	password := os.Getenv("APP_MAIL_PASSWORD")
+
+	// Configuration de l'authentification SMTP
+
+	smtpHost := "smtp.gmail.com"
+	smtpPort := "587"
+
+	// Destinataire
+
+	to := []string{email}
+
+	// Corps du mail
+
+	subject := "Sujet : Vérification de l'adresse email\n"
+	body := "Veuillez cliquer sur ce lien pour verifier votre mail : localhost:5050/verify?email=" + email
+	message := []byte(subject + "\n" + body)
+
+	// Authentification avec le serveur SMTP
+
+	auth := smtp.PlainAuth("", from, password, smtpHost)
+
+	// envoi du mail
+
+	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, message)
+	if err != nil {
+		fmt.Println("Error sending email: ", err)
+	}
+
+	fmt.Println("Email sent successfully to: ", email)
 }
 
 func SendPasswordResetEmail(email string) {
