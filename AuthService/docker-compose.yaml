@@ -33,6 +33,7 @@ services:
       - db
     environment:
       RUN_TESTS: ${RUN_TESTS}
+      APP_MAIL_PASSWORD: ${APP_MAIL_PASSWORD}
     command: > 
       sh -c "if [ \"$RUN_TESTS\" = \"true\" ]; then go test -v ./...; else echo 'Tests are skipped.'; fi"
 
