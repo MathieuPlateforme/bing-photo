@@ -16,7 +16,7 @@ func NewEmailService() (*EmailService, error) {
 	return &EmailService{}, nil
 }
 
-func SendEmailVerification(email string) {
+func (s *EmailService) SendEmailVerification(email string) error {
 	// Logique pour envoyer un email de vérification
 	from := "alizeamasse@gmail.com"
 	password := os.Getenv("APP_MAIL_PASSWORD")
@@ -48,6 +48,7 @@ func SendEmailVerification(email string) {
 	}
 
 	fmt.Println("Email sent successfully to: ", email)
+	return nil
 }
 
 func SendPasswordResetEmail(email string) {

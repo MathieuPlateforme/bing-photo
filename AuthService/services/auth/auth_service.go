@@ -8,8 +8,9 @@ import (
 	"AuthService/pkg/email"
 	"AuthService/pkg/google"
 	"AuthService/pkg/jwt"
-	"AuthService/pkg/logger"
 	"AuthService/pkg/security"
+	"errors"
+	"gorm.io/gorm"
 )
 
 // AuthService structure
@@ -18,7 +19,6 @@ type AuthService struct {
 	EmailService  *email.EmailService
 	GoogleAuthService *google.GoogleAuthService
 	JWTService    *jwt.JWTService
-	Logger        *logger.LoggerService
 	Security      *security.SecurityService
 }
 
@@ -47,11 +47,6 @@ func Initialize() (*AuthService, error) {
 		log.Fatalf("Erreur lors de l'initialisation du service JWTService : %v", err)
 	}
 
-	loggerService, err := logger.NewLoggerService()
-	if err != nil {
-		log.Fatalf("Erreur lors de l'initialisation du service LoggerService : %v", err)
-	}
-
 	securityService, err := security.NewSecurityService()
 	if err != nil {
 		log.Fatalf("Erreur lors de l'initialisation du service SecurityService : %v", err)
@@ -62,23 +57,63 @@ func Initialize() (*AuthService, error) {
 		EmailService:  emailService,
 		GoogleAuthService: googleService,
 		JWTService:    jwtService,
-		Logger:        loggerService,
 		Security:      securityService,
 	}
 	return authService, nil
 }
 
-func (s *AuthService) LoginWithEmail(u user.User) {
-	// Logique de connexion
+func (s *AuthService) LoginWithEmail(u user.User, password string) (string, error) {
+	// 1. Vérifier si l'utilisateur existe dans la base de données
+	var existingUser user.User
+	err := s.DBManager.DB.Where("email = ?", u.Email).First(&existingUser).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", fmt.Errorf("utilisateur introuvable avec cet email : %s", u.Email)
+		}
+		return "", fmt.Errorf("erreur lors de la recherche de l'utilisateur : %v", err)
+	}
+
+	// 2. Comparer le mot de passe fourni avec le mot de passe haché dans la base de données
+	if !s.Security.ComparePasswords(existingUser.Password, password) {
+		return "", errors.New("mot de passe incorrect")
+	}
+
+	// 3. Générer un token JWT pour l'utilisateur
+	token, err := s.JWTService.GenerateToken(existingUser.Username)
+	if err != nil {
+		return "", fmt.Errorf("erreur lors de la génération du token JWT : %v", err)
+	}
+
+	// 4. Retourner le token JWT généré
+	return token, nil
 }
 
+
 func (s *AuthService) RegisterWithEmail(u user.User) (bool, error) {
-    // 1. Vérifier si l'utilisateur existe déjà
-    // 2. Hacher le mot de passe
+	// 1. Vérifier si l'utilisateur existe déjà
+	var existingUser user.User
+	err := s.DBManager.DB.Where("email = ?", u.Email).First(&existingUser).Error
+	if err == nil {
+		return false, errors.New("l'utilisateur avec cet email existe déjà")
+	}
+
+	// 2. Hacher le mot de passe
+	u.Password = s.Security.HashPassword(u.Password)
+
     // 3. Enregistrer l'utilisateur dans la base de données
-    // 4. Envoyer un email de vérification
-    // 5. Retourner un booléen indiquant le succès et une erreur si nécessaire
-    return true, nil
+	err = u.CreateUser(s.DBManager.DB)
+	if err != nil {
+		return false, fmt.Errorf("erreur lors de la création de l'utilisateur : %v", err)
+	}
+
+	// 4. Envoyer un email de vérification
+	// err = s.EmailService.SendEmailVerification(u.Email)
+	err = s.EmailService.SendEmailVerification("alizeamasse@gmail.com")
+	if err != nil {
+		return false, fmt.Errorf("erreur lors de l'envoi de l'email de vérification : %v", err)
+	}
+
+	return true, nil
 }
 
 func (s *AuthService) ForgotPassword(email string) {

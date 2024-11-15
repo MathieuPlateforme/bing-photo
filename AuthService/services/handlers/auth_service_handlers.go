@@ -6,6 +6,9 @@ import (
 	"AuthService/pkg/google"
 	"golang.org/x/oauth2"
 	"fmt"
+	"io/ioutil"
+	"encoding/json"
+	"AuthService/pkg/user"
 )
 
 // Déclaration de AuthHandlers pour encapsuler AuthService
@@ -31,8 +34,36 @@ func (h *AuthHandlers) LoginWithEmailHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *AuthHandlers) RegisterWithEmailHandler(w http.ResponseWriter, r *http.Request) {
-	// Logique d'inscription avec email et mot de passe
-	w.Write([]byte("RegisterWithEmail endpoint"))
+	// Lire le corps de la requête
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Erreur lors de la lecture du corps de la requête", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	// Décode le JSON reçu en un objet User
+	var newUser user.User
+	err = json.Unmarshal(body, &newUser)
+	if err != nil {
+		http.Error(w, "Erreur de parsing JSON", http.StatusBadRequest)
+		return
+	}
+
+	// Appeler le service d'inscription
+	success, err := h.Service.RegisterWithEmail(newUser)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erreur lors de l'inscription : %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Retourner une réponse de succès
+	if success {
+		w.WriteHeader(http.StatusCreated)
+		w.Write([]byte("Inscription réussie"))
+	} else {
+		http.Error(w, "Erreur lors de l'inscription", http.StatusConflict)
+	}
 }
 
 func (h *AuthHandlers) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
