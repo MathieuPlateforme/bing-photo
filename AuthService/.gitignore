@@ -1,0 +1,8 @@
+# Configuration files
+.env
+go.mod
+go.sum
+docker-compose.yml
+Dockerfile
+
+
