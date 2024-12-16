@@ -9,12 +9,17 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"AuthService/pkg/user"
+	"AuthService/pkg/email"
+	"strings"
+	"AuthService/pkg/jwt"
 )
 
 // Déclaration de AuthHandlers pour encapsuler AuthService
 type AuthHandlers struct {
-	Service *auth.AuthService
+	AuthService *auth.AuthService
+	EmailService *email.EmailService
 	GoogleAuthService *google.GoogleAuthService
+	JWTService *jwt.JWTService
 }
 
 func NewAuthHandlers(service *auth.AuthService) (*AuthHandlers,error) {
@@ -25,7 +30,20 @@ func NewAuthHandlers(service *auth.AuthService) (*AuthHandlers,error) {
 		return nil, err
 	}
 
-	return &AuthHandlers{Service: service, GoogleAuthService: googleAuthService}, nil
+	// Initialiser le service EmailService
+	emailService, err := email.NewEmailService()
+	if err != nil {
+		return nil, err
+	}
+
+	// Initialiser le service JWTService
+
+	JWTService, err := jwt.NewJWTService()
+	if err != nil {
+		return nil, err
+	}
+
+	return &AuthHandlers{AuthService: service, GoogleAuthService: googleAuthService, EmailService: emailService, JWTService: JWTService}, nil
 }
 
 func (h *AuthHandlers) LoginWithEmailHandler(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +69,7 @@ func (h *AuthHandlers) RegisterWithEmailHandler(w http.ResponseWriter, r *http.R
 	}
 
 	// Appeler le service d'inscription
-	success, err := h.Service.RegisterWithEmail(newUser)
+	success, err := h.AuthService.RegisterWithEmail(newUser)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Erreur lors de l'inscription : %v", err), http.StatusInternalServerError)
 		return
@@ -67,13 +85,68 @@ func (h *AuthHandlers) RegisterWithEmailHandler(w http.ResponseWriter, r *http.R
 }
 
 func (h *AuthHandlers) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
-	// Logique pour envoyer un email de réinitialisation de mot de passe
-	w.Write([]byte("ForgotPassword endpoint"))
+	// Vérifier que la méthode est POST
+	if r.Method != http.MethodPost {
+		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Décoder le corps de la requête JSON
+	var req struct {
+		Email string `json:"email"`
+	}
+
+	// Décoder la requête entrante
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil || req.Email == "" {
+		http.Error(w, "Email manquant ou invalide", http.StatusBadRequest)
+		return
+	}
+
+	// Appeler le service ForgotPassword
+	err = h.AuthService.ForgotPassword(req.Email)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erreur lors de l'envoi de l'email de réinitialisation : %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Répondre avec un message de succès
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte(`{"message": "Email de réinitialisation envoyé avec succès"}`))
 }
 
 func (h *AuthHandlers) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
-	// Logique pour réinitialiser le mot de passe de l'utilisateur
-	w.Write([]byte("ResetPassword endpoint"))
+	// Vérifier que la méthode est POST
+	if r.Method != http.MethodPost {
+		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Décoder le corps de la requête JSON
+	var req struct {
+		Email       string `json:"email"`
+		Token       string `json:"token"`
+		NewPassword string `json:"new_password"`
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil || req.Email == "" || req.Token == "" || req.NewPassword == "" {
+		http.Error(w, "Paramètres manquants ou invalides", http.StatusBadRequest)
+		return
+	}
+
+	// Appeler la fonction de service
+	err = h.AuthService.ResetPassword(req.Email, req.Token, req.NewPassword)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Répondre avec un message de succès
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte(`{"message": "Mot de passe réinitialisé avec succès"}`))
 }
 
 func (h *AuthHandlers) LoginWithGoogleHandler(w http.ResponseWriter, r *http.Request) {
@@ -119,9 +192,39 @@ func (h *AuthHandlers) GoogleAuthCallbackHandler(w http.ResponseWriter, r *http.
 }
 
 func (h *AuthHandlers) ValidateTokenHandler(w http.ResponseWriter, r *http.Request) {
-	// Logique pour valider un token JWT
-	w.Write([]byte("ValidateToken endpoint"))
+	// Vérifie que la méthode est GET
+	if r.Method != http.MethodGet {
+		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Extraire le token JWT de l'en-tête Authorization
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+		http.Error(w, "Token manquant ou invalide", http.StatusUnauthorized)
+		return
+	}
+
+	// Supprimer le préfixe "Bearer "
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+	// Valider le token
+	err := h.JWTService.VerifyToken(tokenString)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Token invalide : %v", err), http.StatusUnauthorized)
+		return
+	}
+
+	// Répondre avec les informations du token
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	response := map[string]interface{}{
+		"message": "Token valide",
+		"token":   tokenString,
+	}
+	json.NewEncoder(w).Encode(response)
 }
+
 
 func (h *AuthHandlers) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	// Logique pour déconnecter un utilisateur

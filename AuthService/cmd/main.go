@@ -62,6 +62,7 @@ func main() {
 	}
 
 	// Configurer les routes avec les handlers
+	//todo
 	http.HandleFunc("/login", authHandlers.LoginWithEmailHandler)
 	http.HandleFunc("/register", authHandlers.RegisterWithEmailHandler)
 	http.HandleFunc("/forgot-password", authHandlers.ForgotPasswordHandler)
@@ -69,6 +70,7 @@ func main() {
 	http.HandleFunc("/login-google", authHandlers.LoginWithGoogleHandler)
 	http.HandleFunc("/oauth2/callback",authHandlers.GoogleAuthCallbackHandler)
 	http.HandleFunc("/validate-token", authHandlers.ValidateTokenHandler)
+	//todo
 	http.HandleFunc("/logout", authHandlers.LogoutHandler)
 
 	// Démarrer le serveur HTTP

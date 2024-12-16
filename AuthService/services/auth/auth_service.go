@@ -116,22 +116,69 @@ func (s *AuthService) RegisterWithEmail(u user.User) (bool, error) {
 	return true, nil
 }
 
-func (s *AuthService) ForgotPassword(email string) {
-	// Envoie un email de réinitialisation de mot de passe au client.
-	// 1. Vérifie si l'adresse email existe dans la base de données.
-	// 2. Génère un token de réinitialisation sécurisé avec une durée d'expiration.
-	// 3. Stocke le token associé à l'utilisateur pour validation ultérieure.
-	// 4. Utilise le service EmailService pour envoyer un lien de réinitialisation.
+func (s *AuthService) ForgotPassword(email string) error {
+	// 1. Vérifier si l'adresse email existe dans la base de données
+	existingUser, err := user.GetUserByEmail(s.DBManager.DB, email)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("Utilisateur non trouvé")
+		}
+		return fmt.Errorf("Erreur lors de la récupération de l'utilisateur : %v", err)
+	}
+
+	// 2. Générer un token de réinitialisation sécurisé
+	token := s.Security.GenerateSecureToken()
+
+	// 3. Mettre à jour le token dans la base de données
+	err = existingUser.UpdateResetToken(s.DBManager.DB, token)
+	if err != nil {
+		return fmt.Errorf("Erreur lors de la mise à jour du token : %v", err)
+	}
+
+	// 4. Construire le lien de réinitialisation
+	resetLink := fmt.Sprintf("http://localhost:8080/reset-password?token=%s", token)
+
+	// 5. Envoyer l'email
+	err = s.EmailService.SendPasswordResetEmail(email, resetLink)
+	if err != nil {
+		return fmt.Errorf("Erreur lors de l'envoi de l'email de réinitialisation : %v", err)
+	}
+
+	return nil
 }
 
-func (s *AuthService) ResetPassword(token string, newPassword string) {
-	// Réinitialise le mot de passe de l'utilisateur à l'aide d'un token.
-	// 1. Vérifie la validité et l'expiration du token fourni.
-	// 2. Recherche l'utilisateur associé au token.
+
+func (s *AuthService) ResetPassword(email, token, newPassword string) error {
+	// Vérifier si l'utilisateur existe
+	existingUser, err := user.GetUserByEmail(s.DBManager.DB, email)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("utilisateur non trouvé")
+		}
+		return fmt.Errorf("erreur lors de la récupération de l'utilisateur : %v", err)
+	}
+
+	// Valider le token de réinitialisation
+	if existingUser.ResetToken != token {
+		return fmt.Errorf("token invalide ou expiré")
+	}
+
 	// 3. Hache le nouveau mot de passe avec le service SecurityService.
+	hashedPassword := s.Security.HashPassword(newPassword)
 	// 4. Met à jour le mot de passe dans la base de données.
+	err = existingUser.UpdatePassword(s.DBManager.DB, hashedPassword)
+	if err != nil {
+		return fmt.Errorf("erreur lors de la mise à jour du mot de passe : %v", err)
+	}
 	// 5. Invalide le token après utilisation pour des raisons de sécurité.
+	err = existingUser.UpdateResetToken(s.DBManager.DB, "")
+	if err != nil {
+		return fmt.Errorf("erreur lors de l'invalidation du token : %v", err)
+	}
+
+	return nil
 }
+
 
 func (s *AuthService) LoginWithGoogle() {
 	// Logique de connexion avec Google
