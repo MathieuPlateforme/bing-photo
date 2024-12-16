@@ -7,6 +7,8 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"AuthService/pkg/user"
+	"context"
+	"time"
 )
 
 type DBManagerService struct {
@@ -72,4 +74,18 @@ func (manager *DBManagerService) BeginTransaction() (*gorm.DB, error) {
 
 	// Retourner l'objet transaction
 	return tx, nil
+}
+
+func (manager *DBManagerService) Ping(tx *gorm.DB) error {
+	// Créez un contexte avec un délai d'expiration
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	// Utilisez le contexte pour exécuter la requête
+	err := tx.WithContext(ctx).Exec("SELECT 1").Error
+	if err != nil {
+		log.Printf("Erreur lors de la vérification de la connexion à la base de données : %v", err)
+		return err
+	}
+	return nil
 }

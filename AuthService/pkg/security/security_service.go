@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"log"
-	"AuthService/pkg/user"
 	"gorm.io/gorm"
 )
 
@@ -64,22 +63,17 @@ func (s *SecurityService) GenerateSecureToken() string {
 		return hex.EncodeToString(token)
 }
 
-func (s *SecurityService) GeneratePasswordResetLink(email string) string {
+func (s *SecurityService) GeneratePasswordResetLink(email string, updateTokenFunc func(email, token string) error) (string, error) {
 	// Logique pour générer un lien de réinitialisation de mot de passe
-	token := s.GenerateSecureToken()
+    token := s.GenerateSecureToken()
 
-	// stocker le token dans la base de données
-	var u user.User
-	if err := s.DB.Where("email = ?", email).First(&u).Error; err != nil {
-		log.Fatalf("Error while getting user from database: %v", err)
-	}
-
-	if err := u.UpdateResetToken(s.DB, token); err != nil {
-		log.Fatalf("Error while updating reset token: %v", err)
-	}
+    // Appelle la fonction de mise à jour du token, fournie comme argument
+    if err := updateTokenFunc(email, token); err != nil {
+        return "", fmt.Errorf("erreur lors de la mise à jour du token de réinitialisation : %v", err)
+    }
 
 	//Générer le lien de réinitialisation de mot de passe
 
 	resetLink := "http://localhost:5050/reset-password?token=" + token + "&email=" + email
-	return resetLink
+    return resetLink, nil
 }
