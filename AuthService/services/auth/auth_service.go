@@ -3,7 +3,7 @@ package auth
 import (
 	"fmt"
 	"log"
-	"AuthService/pkg/user"
+	"AuthService/models"
 	"AuthService/pkg/db"
 	"AuthService/pkg/email"
 	"AuthService/pkg/google"
@@ -62,9 +62,9 @@ func Initialize() (*AuthService, error) {
 	return authService, nil
 }
 
-func (s *AuthService) LoginWithEmail(u user.User, password string) (string, error) {
+func (s *AuthService) LoginWithEmail(u models.User, password string) (string, error) {
 	// 1. Vérifier si l'utilisateur existe dans la base de données
-	var existingUser user.User
+	var existingUser models.User
 	err := s.DBManager.DB.Where("email = ?", u.Email).First(&existingUser).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -89,9 +89,9 @@ func (s *AuthService) LoginWithEmail(u user.User, password string) (string, erro
 }
 
 
-func (s *AuthService) RegisterWithEmail(u user.User) (bool, error) {
+func (s *AuthService) RegisterWithEmail(u models.User) (bool, error) {
 	// 1. Vérifier si l'utilisateur existe déjà
-	var existingUser user.User
+	var existingUser models.User
 	err := s.DBManager.DB.Where("email = ?", u.Email).First(&existingUser).Error
 	if err == nil {
 		return false, errors.New("l'utilisateur avec cet email existe déjà")
@@ -118,12 +118,14 @@ func (s *AuthService) RegisterWithEmail(u user.User) (bool, error) {
 
 func (s *AuthService) ForgotPassword(email string) error {
 	// 1. Vérifier si l'adresse email existe dans la base de données
-	existingUser, err := user.GetUserByEmail(s.DBManager.DB, email)
+	var existingUser models.User
+	err := existingUser.GetUserByEmail(s.DBManager.DB, email)
+
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("Utilisateur non trouvé")
+			return fmt.Errorf("utilisateur non trouvé")
 		}
-		return fmt.Errorf("Erreur lors de la récupération de l'utilisateur : %v", err)
+		return fmt.Errorf("erreur lors de la récupération de l'utilisateur : %v", err)
 	}
 
 	// 2. Générer un token de réinitialisation sécurisé
@@ -132,7 +134,7 @@ func (s *AuthService) ForgotPassword(email string) error {
 	// 3. Mettre à jour le token dans la base de données
 	err = existingUser.UpdateResetToken(s.DBManager.DB, token)
 	if err != nil {
-		return fmt.Errorf("Erreur lors de la mise à jour du token : %v", err)
+		return fmt.Errorf("erreur lors de la mise à jour du token : %v", err)
 	}
 
 	// 4. Construire le lien de réinitialisation
@@ -141,7 +143,7 @@ func (s *AuthService) ForgotPassword(email string) error {
 	// 5. Envoyer l'email
 	err = s.EmailService.SendPasswordResetEmail(email, resetLink)
 	if err != nil {
-		return fmt.Errorf("Erreur lors de l'envoi de l'email de réinitialisation : %v", err)
+		return fmt.Errorf("erreur lors de l'envoi de l'email de réinitialisation : %v", err)
 	}
 
 	return nil
@@ -150,7 +152,8 @@ func (s *AuthService) ForgotPassword(email string) error {
 
 func (s *AuthService) ResetPassword(email, token, newPassword string) error {
 	// Vérifier si l'utilisateur existe
-	existingUser, err := user.GetUserByEmail(s.DBManager.DB, email)
+	var existingUser models.User
+	err := existingUser.GetUserByEmail(s.DBManager.DB, email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fmt.Errorf("utilisateur non trouvé")
@@ -179,11 +182,6 @@ func (s *AuthService) ResetPassword(email, token, newPassword string) error {
 	return nil
 }
 
-
-func (s *AuthService) LoginWithGoogle() {
-	// Logique de connexion avec Google
-}
-
 func (s *AuthService) ValidateToken(token string) {
 	// Valide un token JWT pour vérifier l'authenticité de l'utilisateur.
 	// 1. Vérifie la signature du token avec la clé secrète.
@@ -199,9 +197,31 @@ func (s *AuthService) GeneratePasswordResetToken() {
 	// 3. Renvoie le token généré pour être envoyé par e-mail.
 }
 
-func (s *AuthService) Logout() {
-	// Logique de déconnexion
+func (s *AuthService) Logout(token string) error {
+	// Vérifie si le token JWT est valide
+	claims, err := s.JWTService.VerifyToken(token)
+	if err != nil {
+		return fmt.Errorf("token invalide ou expiré")
+	}
+
+	// Extraire le nom d'utilisateur des claims
+	username, ok := claims["username"].(string)
+	if !ok {
+		return fmt.Errorf("erreur lors de l'extraction du nom d'utilisateur")
+	}
+
+	// Invalider le token en l'ajoutant à une liste de révocation
+	var revokedToken models.RevokedToken
+	err = revokedToken.RevokeToken(s.DBManager.DB, token, username)
+	if err != nil {
+		log.Printf("Erreur lors de l'invalidation du token : %v", err)
+		return fmt.Errorf("erreur lors de l'invalidation du token")
+	}
+
+	return nil
 }
+
+
 
 
 

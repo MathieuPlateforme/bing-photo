@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"encoding/json"
-	"AuthService/pkg/user"
+	"AuthService/models"
 	"AuthService/pkg/email"
 	"strings"
 	"AuthService/pkg/jwt"
@@ -47,8 +47,37 @@ func NewAuthHandlers(service *auth.AuthService) (*AuthHandlers,error) {
 }
 
 func (h *AuthHandlers) LoginWithEmailHandler(w http.ResponseWriter, r *http.Request) {
-	// Logique de connexion avec email et mot de passe
-	w.Write([]byte("LoginWithEmail endpoint"))
+	// Vérifie que la méthode est POST
+	if r.Method != http.MethodPost {
+		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Décode le corps de la requête
+	var req struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	// Lire et décoder la requête
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil || req.Email == "" || req.Password == "" {
+		http.Error(w, "Paramètres manquants ou invalides", http.StatusBadRequest)
+		return
+	}
+
+	// Appeler le service d'authentification
+	token, err := h.AuthService.LoginWithEmail(models.User{Email: req.Email}, req.Password)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erreur lors de la connexion : %v", err), http.StatusUnauthorized)
+		return
+	}
+
+	// Répondre avec le token JWT
+	response := map[string]string{"token": token}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }
 
 func (h *AuthHandlers) RegisterWithEmailHandler(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +90,7 @@ func (h *AuthHandlers) RegisterWithEmailHandler(w http.ResponseWriter, r *http.R
 	defer r.Body.Close()
 
 	// Décode le JSON reçu en un objet User
-	var newUser user.User
+	var newUser models.User
 	err = json.Unmarshal(body, &newUser)
 	if err != nil {
 		http.Error(w, "Erreur de parsing JSON", http.StatusBadRequest)
@@ -209,7 +238,7 @@ func (h *AuthHandlers) ValidateTokenHandler(w http.ResponseWriter, r *http.Reque
 	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
 	// Valider le token
-	err := h.JWTService.VerifyToken(tokenString)
+	claims, err := h.JWTService.VerifyToken(tokenString)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Token invalide : %v", err), http.StatusUnauthorized)
 		return
@@ -220,13 +249,38 @@ func (h *AuthHandlers) ValidateTokenHandler(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusOK)
 	response := map[string]interface{}{
 		"message": "Token valide",
-		"token":   tokenString,
+		"claims":   claims,
 	}
 	json.NewEncoder(w).Encode(response)
 }
 
 
 func (h *AuthHandlers) LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	// Logique pour déconnecter un utilisateur
-	w.Write([]byte("Logout endpoint"))
+	// Vérifie que la méthode est POST
+	if r.Method != http.MethodPost {
+		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Extraire le token JWT de l'en-tête Authorization
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+		http.Error(w, "Token manquant ou invalide", http.StatusUnauthorized)
+		return
+	}
+
+	// Supprimer le préfixe "Bearer "
+	token := strings.TrimPrefix(authHeader, "Bearer ")
+
+	// Appeler le service d'authentification pour la déconnexion
+	err := h.AuthService.Logout(token)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Erreur lors de la déconnexion : %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Répondre avec un message de succès
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte(`{"message": "Déconnexion réussie"}`))
 }

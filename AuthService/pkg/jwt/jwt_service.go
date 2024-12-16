@@ -11,20 +11,20 @@ type JWTService struct {
 	Token     string
 	Expiration int64
 	IssuedAt  int64
-	secretKey  []byte
+	SecretKey  []byte
 }
 
 func NewJWTService() (*JWTService, error) {
 	// Initialiser un nouveau service JWT
 
 	// Charger la clé secrète à partir des variables d'environnement
-	secretKey := []byte(os.Getenv("JWT_SECRET_KEY"))
-	if len(secretKey) == 0 {
+	SecretKey := []byte(os.Getenv("JWT_SECRET_KEY"))
+	if len(SecretKey) == 0 {
 		return nil, fmt.Errorf("clé secrète JWT non configurée")
 	}
 
 	return &JWTService{
-		secretKey: secretKey,
+		SecretKey: SecretKey,
 	}, nil
 }
 
@@ -41,7 +41,7 @@ func (s *JWTService) GenerateToken(username string) (string, error) {
 	})
 
 	// Signer le token avec la clé secrète
-	tokenString, err := token.SignedString(s.secretKey)
+	tokenString, err := token.SignedString(s.SecretKey)
 	if err != nil {
 		return "", err
 	}
@@ -51,23 +51,21 @@ func (s *JWTService) GenerateToken(username string) (string, error) {
 	return tokenString, nil
 }
 
-func (s *JWTService) VerifyToken(tokenString string) error {
-	// Analyser le token
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Vérifier la méthode de signature
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("méthode de signature inattendue : %v", token.Header["alg"])
-		}
-		return s.secretKey, nil
+func (j *JWTService) VerifyToken(token string) (map[string]interface{}, error) {
+	// Parse et valide le token
+	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		return []byte(j.SecretKey), nil
 	})
-
-	if err != nil {
-		return err
+	if err != nil || !parsedToken.Valid {
+		return nil, fmt.Errorf("token invalide ou expiré")
 	}
 
-	if !token.Valid {
-		return fmt.Errorf("token invalide")
+	// Extraire les claims
+	claims, ok := parsedToken.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, fmt.Errorf("claims introuvables")
 	}
 
-	return nil
+	return claims, nil
 }
+

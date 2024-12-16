@@ -3,7 +3,7 @@ package reset_password_test
 import (
 	"testing"
 	"AuthService/services/auth"
-	"AuthService/pkg/user"
+	"AuthService/models"
 )
 
 func TestResetPassword(t *testing.T) {
@@ -14,7 +14,7 @@ func TestResetPassword(t *testing.T) {
 	}
 
 	// Simuler un utilisateur existant
-	existingUser := &user.User{
+	existingUser := &models.User{
 		Email:      "testuser@example.com",
 		ResetToken: "valid_token",
 		Password:   authService.Security.HashPassword("OldPassword123"),
@@ -33,7 +33,7 @@ func TestResetPassword(t *testing.T) {
 	}
 
 	// Vérifier la mise à jour dans la base de données
-	var updatedUser user.User
+	var updatedUser models.User
 	err = authService.DBManager.DB.Where("email = ?", existingUser.Email).First(&updatedUser).Error
 	if err != nil {
 		t.Fatalf("Erreur lors de la récupération de l'utilisateur mis à jour : %v", err)
