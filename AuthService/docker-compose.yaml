@@ -5,7 +5,7 @@ services:
     image: postgres:latest
     container_name: postgres_db
     ports:
-      - "5432:5432"
+      - "5432:${POSTGRES_PORT}"
     volumes:
       - db_data:/var/lib/postgresql/data
     env_file:
@@ -16,7 +16,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "50051:50051"
     depends_on:
       - db
     env_file:

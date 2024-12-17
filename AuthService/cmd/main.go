@@ -1,88 +1,95 @@
 package main
 
 import (
+	"context"
 	"log"
-	"fmt"
-	"net/http"
+	"net"
+
+	"AuthService/pkg/user"
+	proto "AuthService/proto"
 	"AuthService/services/auth"
-	"AuthService/pkg/db"
-	"AuthService/services/handlers"
-	"AuthService/pkg/google"
-	"time"
-	_ "AuthService/docs"   
-	"github.com/swaggo/http-swagger"         
+
+	"google.golang.org/grpc"
 )
 
-// @title AuthService API
-// @version 1.0
-// @description API de gestion de l'authentification pour Bing Photo
-// @contact.name Support API
-// @contact.email support@authservice.com
-// @host localhost:8080
-// @BasePath /
-
-func waitForDatabaseConnection(dbManager *db.DBManagerService) {
-	maxRetries := 20
-	for i := 0; i < maxRetries; i++ {
-		err := dbManager.Ping(dbManager.DB)
-		if err == nil {
-			return
-		}
-		log.Println("Attente de la disponibilité de la base de données...")
-		time.Sleep(5 * time.Second)
-	}
-	log.Fatal("La base de données n'est pas disponible après plusieurs tentatives")
+type authServer struct {
+	proto.UnimplementedAuthServiceServer
+	authService *auth.AuthService
 }
 
-func main() {
-	
-	// Initialiser le service DBManager
-	dbManager, err := db.NewDBManagerService()
+// LoginWithEmail handles user login using email and password
+func (s *authServer) Login(ctx context.Context, req *proto.LoginRequest) (*proto.LoginResponse, error) {
+	// Delegate to the LoginWithEmail function in AuthService
+	token, err := s.authService.LoginWithEmail(user.User{
+		Email: req.Email,
+	}, req.Password)
+
 	if err != nil {
-		log.Fatalf("Erreur lors de l'initialisation du service DBManager : %v", err)
+		return &proto.LoginResponse{Message: "Login failed"}, err
 	}
-	waitForDatabaseConnection(dbManager)
-	
-	// Initialiser le service d'authentification
+
+	return &proto.LoginResponse{Token: token, Message: "Login successful"}, nil
+}
+
+// RegisterWithEmail handles user registration
+func (s *authServer) Register(ctx context.Context, req *proto.RegisterRequest) (*proto.RegisterResponse, error) {
+	// Delegate to the RegisterWithEmail function in AuthService
+	success, err := s.authService.RegisterWithEmail(user.User{
+		Email:     req.Email,
+		Password:  req.Password,
+		Username:  req.Username,
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+	})
+
+	if err != nil || !success {
+		return &proto.RegisterResponse{Message: "Registration failed"}, err
+	}
+
+	return &proto.RegisterResponse{Message: "Registration successful"}, nil
+}
+
+// ValidateToken validates the provided JWT token
+/*
+func (s *authServer) ValidateToken(ctx context.Context, req *proto.ValidateTokenRequest) (*proto.ValidateTokenResponse, error) {
+	// Delegate to the ValidateToken function in AuthService
+	valid := false
+	err := s.authService.ValidateToken(req.Token)
+
+	if err != nil {
+		return &proto.ValidateTokenResponse{Valid: false, Message: "Token validation failed"}, err
+	}
+
+	if valid {
+		return &proto.ValidateTokenResponse{Valid: true, Message: "Token is valid"}, nil
+	}
+
+	return &proto.ValidateTokenResponse{Valid: false, Message: "Invalid token"}, nil
+}*/
+
+func main() {
+	// Initialize AuthService (and other services as needed)
 	authService, err := auth.Initialize()
 	if err != nil {
-		log.Fatalf("Erreur lors de l'initialisation d'AuthService : %v", err)
+		log.Fatalf("Failed to initialize AuthService: %v", err)
 	}
-	fmt.Println("AuthService initialisé avec succès :", authService)
 
+	// Create gRPC server
+	server := grpc.NewServer()
+	proto.RegisterAuthServiceServer(server, &authServer{authService: authService})
 
-	// Initialiser le service GoogleAuthService
-	googleAuthService, err := google.NewGoogleAuthService()
+	if err := authService.DBManager.AutoMigrate(); err != nil {
+		log.Fatalf("Failed to migrate database: %v", err)
+	}
+
+	// Listen on a specific port
+	listener, err := net.Listen("tcp", ":50051") // gRPC port for AuthService
 	if err != nil {
-		log.Fatalf("Erreur lors de l'initialisation de GoogleAuthService : %v", err)
-	}
-	fmt.Println("GoogleAuthService initialisé avec succès :", googleAuthService)
-
-	// Initialiser AuthHandlers avec AuthService 
-	authHandlers, err := handlers.NewAuthHandlers(authService)
-	if err != nil {
-		log.Fatalf("Erreur lors de l'initialisation des gestionnaires : %v", err)
-	}
-	fmt.Println("AuthHandlers initialisé avec succès :", authHandlers)
-
-	
-	// Exécuter la migration de la base de données
-	if err := dbManager.AutoMigrate(); err != nil {
-		log.Fatalf("Erreur lors de la migration de la base de données : %v", err)
+		log.Fatalf("Failed to listen: %v", err)
 	}
 
-	// Configurer les routes avec les handlers
-	http.HandleFunc("/login", authHandlers.LoginWithEmailHandler)
-	http.HandleFunc("/register", authHandlers.RegisterWithEmailHandler)
-	http.HandleFunc("/forgot-password", authHandlers.ForgotPasswordHandler)
-	http.HandleFunc("/reset-password", authHandlers.ResetPasswordHandler)
-	http.HandleFunc("/login-google", authHandlers.LoginWithGoogleHandler)
-	http.HandleFunc("/oauth2/callback",authHandlers.GoogleAuthCallbackHandler)
-	http.HandleFunc("/validate-token", authHandlers.ValidateTokenHandler)
-	http.HandleFunc("/logout", authHandlers.LogoutHandler)
-	http.Handle("/swagger/", httpSwagger.WrapHandler)
-
-
-	// Démarrer le serveur HTTP
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Println("AuthService gRPC server is running on port 50051")
+	if err := server.Serve(listener); err != nil {
+		log.Fatalf("Failed to serve: %v", err)
+	}
 }
