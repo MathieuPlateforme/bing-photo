@@ -182,6 +182,21 @@ func (s *AuthService) ResetPassword(email, token, newPassword string) error {
 	return nil
 }
 
+func (s *AuthService) ValidateToken(token string) {
+	// Valide un token JWT pour vérifier l'authenticité de l'utilisateur.
+	// 1. Vérifie la signature du token avec la clé secrète.
+	// 2. Vérifie la validité et l'expiration du token.
+	// 3. Extrait les informations utilisateur du token.
+	// 4. Renvoie l'identifiant de l'utilisateur pour une utilisation ultérieure.
+}
+
+func (s *AuthService) GeneratePasswordResetToken() {
+	// Génère un token de réinitialisation de mot de passe sécurisé pour l'utilisateur.
+	// 1. Crée un token unique avec une durée d'expiration.
+	// 2. Stocke le token associé à l'utilisateur pour validation ultérieure.
+	// 3. Renvoie le token généré pour être envoyé par e-mail.
+}
+
 func (s *AuthService) Logout(token string) error {
 	// Vérifie si le token JWT est valide
 	claims, err := s.JWTService.VerifyToken(token)
