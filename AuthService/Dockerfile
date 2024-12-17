@@ -22,19 +22,12 @@ WORKDIR /root/
 
 # Copier l'exécutable depuis l'étape de construction
 COPY --from=builder /app/main .
-COPY entrypoint.sh /entrypoint.sh
-
-# Rendre l'exécutable et le script d'entrée accessibles
-RUN chmod +x /root/main /entrypoint.sh
 
 # Lister les fichiers pour vérifier la présence de `main`
 RUN ls -la
 
 # Exposer le port
 EXPOSE 8080
-
-# Point d'entrée pour exécuter le script
-ENTRYPOINT ["/entrypoint.sh"]
 
 # Commande par défaut pour exécuter l'application
 CMD ["./main"]

@@ -1,8 +1,6 @@
 package auth
 
 import (
-	"fmt"
-	"log"
 	"AuthService/models"
 	"AuthService/pkg/db"
 	"AuthService/pkg/email"
@@ -10,16 +8,19 @@ import (
 	"AuthService/pkg/jwt"
 	"AuthService/pkg/security"
 	"errors"
+	"fmt"
+	"log"
+
 	"gorm.io/gorm"
 )
 
 // AuthService structure
 type AuthService struct {
-	DBManager     *db.DBManagerService
-	EmailService  *email.EmailService
+	DBManager         *db.DBManagerService
+	EmailService      *email.EmailService
 	GoogleAuthService *google.GoogleAuthService
-	JWTService    *jwt.JWTService
-	Security      *security.SecurityService
+	JWTService        *jwt.JWTService
+	Security          *security.SecurityService
 }
 
 // Initialize démarre le service d'authentification
@@ -31,7 +32,7 @@ func Initialize() (*AuthService, error) {
 	if err != nil {
 		log.Fatalf("Erreur lors de l'initialisation du service DBManager : %v", err)
 	}
-	
+
 	emailService, err := email.NewEmailService()
 	if err != nil {
 		log.Fatalf("Erreur lors de l'initialisation du service EmailService : %v", err)
@@ -53,11 +54,11 @@ func Initialize() (*AuthService, error) {
 	}
 
 	authService := &AuthService{
-		DBManager:     dbManager,
-		EmailService:  emailService,
+		DBManager:         dbManager,
+		EmailService:      emailService,
 		GoogleAuthService: googleService,
-		JWTService:    jwtService,
-		Security:      securityService,
+		JWTService:        jwtService,
+		Security:          securityService,
 	}
 	return authService, nil
 }
@@ -88,7 +89,6 @@ func (s *AuthService) LoginWithEmail(u models.User, password string) (string, er
 	return token, nil
 }
 
-
 func (s *AuthService) RegisterWithEmail(u models.User) (bool, error) {
 	// 1. Vérifier si l'utilisateur existe déjà
 	var existingUser models.User
@@ -100,7 +100,7 @@ func (s *AuthService) RegisterWithEmail(u models.User) (bool, error) {
 	// 2. Hacher le mot de passe
 	u.Password = s.Security.HashPassword(u.Password)
 
-    // 3. Enregistrer l'utilisateur dans la base de données
+	// 3. Enregistrer l'utilisateur dans la base de données
 	err = u.CreateUser(s.DBManager.DB)
 	if err != nil {
 		return false, fmt.Errorf("erreur lors de la création de l'utilisateur : %v", err)
@@ -148,7 +148,6 @@ func (s *AuthService) ForgotPassword(email string) error {
 
 	return nil
 }
-
 
 func (s *AuthService) ResetPassword(email, token, newPassword string) error {
 	// Vérifier si l'utilisateur existe
@@ -205,11 +204,3 @@ func (s *AuthService) Logout(token string) error {
 
 	return nil
 }
-
-
-
-
-
-
-
-

@@ -40,6 +40,7 @@ func (g *apiGateway) registerHandler(w http.ResponseWriter, r *http.Request) {
 	res, err := g.authClient.Register(context.Background(), req)
 	if err != nil {
 		http.Error(w, "Register failed", http.StatusInternalServerError)
+		log.Println(err)
 		return
 	}
 	w.Write([]byte("Message: " + res.Message))

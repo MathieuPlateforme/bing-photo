@@ -5,7 +5,7 @@ import (
 	"log"
 	"net"
 
-	"AuthService/pkg/user"
+	"AuthService/models"
 	proto "AuthService/proto"
 	"AuthService/services/auth"
 
@@ -17,10 +17,9 @@ type authServer struct {
 	authService *auth.AuthService
 }
 
-// LoginWithEmail handles user login using email and password
 func (s *authServer) Login(ctx context.Context, req *proto.LoginRequest) (*proto.LoginResponse, error) {
 	// Delegate to the LoginWithEmail function in AuthService
-	token, err := s.authService.LoginWithEmail(user.User{
+	token, err := s.authService.LoginWithEmail(models.User{
 		Email: req.Email,
 	}, req.Password)
 
@@ -34,7 +33,7 @@ func (s *authServer) Login(ctx context.Context, req *proto.LoginRequest) (*proto
 // RegisterWithEmail handles user registration
 func (s *authServer) Register(ctx context.Context, req *proto.RegisterRequest) (*proto.RegisterResponse, error) {
 	// Delegate to the RegisterWithEmail function in AuthService
-	success, err := s.authService.RegisterWithEmail(user.User{
+	success, err := s.authService.RegisterWithEmail(models.User{
 		Email:     req.Email,
 		Password:  req.Password,
 		Username:  req.Username,
