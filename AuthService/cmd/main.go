@@ -9,7 +9,17 @@ import (
 	"AuthService/services/handlers"
 	"AuthService/pkg/google"
 	"time"
+	_ "AuthService/docs"   
+	"github.com/swaggo/http-swagger"         
 )
+
+// @title AuthService API
+// @version 1.0
+// @description API de gestion de l'authentification pour Bing Photo
+// @contact.name Support API
+// @contact.email support@authservice.com
+// @host localhost:8080
+// @BasePath /
 
 func waitForDatabaseConnection(dbManager *db.DBManagerService) {
 	maxRetries := 20
@@ -70,6 +80,8 @@ func main() {
 	http.HandleFunc("/oauth2/callback",authHandlers.GoogleAuthCallbackHandler)
 	http.HandleFunc("/validate-token", authHandlers.ValidateTokenHandler)
 	http.HandleFunc("/logout", authHandlers.LogoutHandler)
+	http.Handle("/swagger/", httpSwagger.WrapHandler)
+
 
 	// Démarrer le serveur HTTP
 	log.Fatal(http.ListenAndServe(":8080", nil))

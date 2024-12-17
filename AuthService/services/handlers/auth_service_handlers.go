@@ -14,82 +14,104 @@ import (
 	"AuthService/pkg/jwt"
 )
 
-// Déclaration de AuthHandlers pour encapsuler AuthService
+// AuthHandlers encapsule les services nécessaires
+// @title AuthService API
+// @version 1.0
+// @description API pour gérer l'authentification
+// @contact.name Support API
+// @contact.email support@authservice.com
+// @host localhost:8080
+// @BasePath /
 type AuthHandlers struct {
-	AuthService *auth.AuthService
-	EmailService *email.EmailService
+	AuthService       *auth.AuthService
+	EmailService      *email.EmailService
 	GoogleAuthService *google.GoogleAuthService
-	JWTService *jwt.JWTService
+	JWTService        *jwt.JWTService
 }
 
-func NewAuthHandlers(service *auth.AuthService) (*AuthHandlers,error) {
-
-	// Initialiser le service GoogleAuthService
+func NewAuthHandlers(service *auth.AuthService) (*AuthHandlers, error) {
 	googleAuthService, err := google.NewGoogleAuthService()
 	if err != nil {
 		return nil, err
 	}
 
-	// Initialiser le service EmailService
 	emailService, err := email.NewEmailService()
 	if err != nil {
 		return nil, err
 	}
-
-	// Initialiser le service JWTService
 
 	JWTService, err := jwt.NewJWTService()
 	if err != nil {
 		return nil, err
 	}
 
-	return &AuthHandlers{AuthService: service, GoogleAuthService: googleAuthService, EmailService: emailService, JWTService: JWTService}, nil
+	return &AuthHandlers{
+		AuthService:       service,
+		GoogleAuthService: googleAuthService,
+		EmailService:      emailService,
+		JWTService:        JWTService,
+	}, nil
 }
 
+// LoginWithEmailHandler gère la connexion par email et mot de passe
+// @Summary Connexion utilisateur
+// @Description Permet à un utilisateur de se connecter en utilisant son email et mot de passe
+// @Tags Authentification
+// @Accept json
+// @Produce json
+// @Param user body models.LoginRequest true "Informations de connexion"
+// @Success 200 {string} string "Jeton JWT généré"
+// @Failure 400 {string} string "Paramètres invalides"
+// @Failure 401 {string} string "Non autorisé"
+// @Router /login [post]
 func (h *AuthHandlers) LoginWithEmailHandler(w http.ResponseWriter, r *http.Request) {
-	// Vérifie que la méthode est POST
 	if r.Method != http.MethodPost {
 		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Décode le corps de la requête
 	var req struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
 
-	// Lire et décoder la requête
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil || req.Email == "" || req.Password == "" {
 		http.Error(w, "Paramètres manquants ou invalides", http.StatusBadRequest)
 		return
 	}
 
-	// Appeler le service d'authentification
 	token, err := h.AuthService.LoginWithEmail(models.User{Email: req.Email}, req.Password)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Erreur lors de la connexion : %v", err), http.StatusUnauthorized)
 		return
 	}
 
-	// Répondre avec le token JWT
 	response := map[string]string{"token": token}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
 }
 
+// RegisterWithEmailHandler gère l'inscription d'un nouvel utilisateur
+// @Summary Inscription utilisateur
+// @Description Crée un compte utilisateur avec email et mot de passe
+// @Tags Authentification
+// @Accept json
+// @Produce json
+// @Param user body models.RegisterRequest true "Informations de l'utilisateur"
+// @Success 201 {string} string "Inscription réussie"
+// @Failure 400 {string} string "Requête invalide"
+// @Failure 409 {string} string "Conflit - Utilisateur déjà existant"
+// @Router /register [post]
 func (h *AuthHandlers) RegisterWithEmailHandler(w http.ResponseWriter, r *http.Request) {
-	// Lire le corps de la requête
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Erreur lors de la lecture du corps de la requête", http.StatusBadRequest)
+		http.Error(w, "Erreur de lecture de la requête", http.StatusBadRequest)
 		return
 	}
 	defer r.Body.Close()
 
-	// Décode le JSON reçu en un objet User
 	var newUser models.User
 	err = json.Unmarshal(body, &newUser)
 	if err != nil {
@@ -97,14 +119,12 @@ func (h *AuthHandlers) RegisterWithEmailHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// Appeler le service d'inscription
 	success, err := h.AuthService.RegisterWithEmail(newUser)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Erreur lors de l'inscription : %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	// Retourner une réponse de succès
 	if success {
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte("Inscription réussie"))
@@ -113,38 +133,56 @@ func (h *AuthHandlers) RegisterWithEmailHandler(w http.ResponseWriter, r *http.R
 	}
 }
 
+// ForgotPasswordHandler envoie un email de réinitialisation de mot de passe
+// @Summary Réinitialisation du mot de passe
+// @Description Envoie un email pour réinitialiser le mot de passe d'un utilisateur
+// @Tags Authentification
+// @Accept json
+// @Produce json
+// @Param user body models.ForgotPasswordRequest true "Informations de l'utilisateur"
+// @Success 200 {string} string "Email envoyé avec succès"
+// @Failure 400 {string} string "Email invalide"
+// @Failure 500 {string} string "Erreur interne"
+// @Router /forgot-password [post]
 func (h *AuthHandlers) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
-	// Vérifier que la méthode est POST
 	if r.Method != http.MethodPost {
 		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Décoder le corps de la requête JSON
 	var req struct {
 		Email string `json:"email"`
 	}
 
-	// Décoder la requête entrante
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil || req.Email == "" {
 		http.Error(w, "Email manquant ou invalide", http.StatusBadRequest)
 		return
 	}
 
-	// Appeler le service ForgotPassword
 	err = h.AuthService.ForgotPassword(req.Email)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Erreur lors de l'envoi de l'email de réinitialisation : %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Erreur lors de l'envoi de l'email : %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	// Répondre avec un message de succès
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte(`{"message": "Email de réinitialisation envoyé avec succès"}`))
+	w.Write([]byte(`{"message": "Email de réinitialisation envoyé avec succès"}`))
 }
 
+
+// ResetPasswordHandler gère la réinitialisation de mot de passe
+// @Summary Réinitialisation de mot de passe
+// @Description Permet de réinitialiser un mot de passe via un jeton
+// @Tags Authentification
+// @Accept json
+// @Produce json
+// @Param user body models.ResetPasswordRequest true "Informations de l'utilisateur"
+// @Success 200 {string} string "Mot de passe réinitialisé avec succès"
+// @Failure 400 {string} string "Paramètres invalides"
+// @Failure 500 {string} string "Erreur interne"
+// @Router /reset-password [post]
 func (h *AuthHandlers) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	// Vérifier que la méthode est POST
 	if r.Method != http.MethodPost {
@@ -178,48 +216,61 @@ func (h *AuthHandlers) ResetPasswordHandler(w http.ResponseWriter, r *http.Reque
 	_, _ = w.Write([]byte(`{"message": "Mot de passe réinitialisé avec succès"}`))
 }
 
+// LoginWithGoogleHandler gère la connexion avec Google
+// @Summary Connexion via Google
+// @Description Authentifie un utilisateur via Google OAuth2
+// @Tags Authentification
+// @Success 302 {string} string "Redirection vers Google Auth"
+// @Router /login-google [get]
 func (h *AuthHandlers) LoginWithGoogleHandler(w http.ResponseWriter, r *http.Request) {
-	// Appeler AuthenticateWithGoogle pour obtenir l'URL d'authentification
 	authURL := h.GoogleAuthService.AuthenticateWithGoogle()
-
-	// Rediriger l'utilisateur vers l'URL d'authentification Google
 	http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
 }
 
+// GoogleAuthCallbackHandler gère le retour de l'authentification Google
+// @Summary Callback Google Auth
+// @Description Traite le retour de Google après l'authentification OAuth2
+// @Tags Authentification
+// @Success 200 {string} string "Informations utilisateur"
+// @Failure 400 {string} string "Code ou état invalide"
+// @Failure 500 {string} string "Erreur interne"
+// @Router /oauth2/callback [get]
 func (h *AuthHandlers) GoogleAuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
-	// Récupérer le code d'authentification de Google
 	code := r.URL.Query().Get("code")
 	if code == "" {
 		http.Error(w, "Code d'authentification manquant", http.StatusBadRequest)
 		return
 	}
 
-	// Récupérer l'état de l'authentification
 	state := r.URL.Query().Get("state")
 	if state != "state-token" {
 		http.Error(w, "État d'authentification invalide", http.StatusBadRequest)
 		return
 	}
 
-	// Échanger le code d'authentification contre un jeton d'accès
 	token, err := h.GoogleAuthService.Config.Exchange(oauth2.NoContext, code)
-	// log.Println("Token FOR TEST : ", token)
 	if err != nil {
 		http.Error(w, "Échec de l'échange de jeton : "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Obtenir le profil utilisateur en utilisant GoogleAuthService
 	userInfo, err := h.GoogleAuthService.GetGoogleUserProfile(token)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Renvoyer ou traiter les informations utilisateur 
 	fmt.Fprintf(w, "Informations utilisateur : %+v", userInfo)
 }
 
+
+// ValidateTokenHandler vérifie la validité d'un token JWT
+// @Summary Validation du token JWT
+// @Description Vérifie si le token JWT est valide
+// @Tags Authentification
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {string} string "Token invalide"
+// @Router /validate-token [get]
 func (h *AuthHandlers) ValidateTokenHandler(w http.ResponseWriter, r *http.Request) {
 	// Vérifie que la méthode est GET
 	if r.Method != http.MethodGet {
@@ -254,7 +305,13 @@ func (h *AuthHandlers) ValidateTokenHandler(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(response)
 }
 
-
+// LogoutHandler gère la déconnexion
+// @Summary Déconnexion utilisateur
+// @Description Déconnecte l'utilisateur actuel
+// @Tags Authentification
+// @Success 200 {string} string "Déconnexion réussie"
+// @Failure 401 {string} string "Non autorisé"
+// @Router /logout [post]
 func (h *AuthHandlers) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	// Vérifie que la méthode est POST
 	if r.Method != http.MethodPost {

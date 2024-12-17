@@ -1,0 +1,228 @@
+basePath: /
+definitions:
+  models.ForgotPasswordRequest:
+    properties:
+      email:
+        type: string
+    type: object
+  models.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  models.RegisterRequest:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  models.ResetPasswordRequest:
+    properties:
+      email:
+        type: string
+      new_password:
+        type: string
+      token:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@authservice.com
+    name: Support API
+  description: API de gestion de l'authentification pour Bing Photo
+  title: AuthService API
+  version: "1.0"
+paths:
+  /forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Envoie un email pour réinitialiser le mot de passe d'un utilisateur
+      parameters:
+      - description: Informations de l'utilisateur
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Email envoyé avec succès
+          schema:
+            type: string
+        "400":
+          description: Email invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur interne
+          schema:
+            type: string
+      summary: Réinitialisation du mot de passe
+      tags:
+      - Authentification
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Permet à un utilisateur de se connecter en utilisant son email
+        et mot de passe
+      parameters:
+      - description: Informations de connexion
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Jeton JWT généré
+          schema:
+            type: string
+        "400":
+          description: Paramètres invalides
+          schema:
+            type: string
+        "401":
+          description: Non autorisé
+          schema:
+            type: string
+      summary: Connexion utilisateur
+      tags:
+      - Authentification
+  /login-google:
+    get:
+      description: Authentifie un utilisateur via Google OAuth2
+      responses:
+        "302":
+          description: Redirection vers Google Auth
+          schema:
+            type: string
+      summary: Connexion via Google
+      tags:
+      - Authentification
+  /logout:
+    post:
+      description: Déconnecte l'utilisateur actuel
+      responses:
+        "200":
+          description: Déconnexion réussie
+          schema:
+            type: string
+        "401":
+          description: Non autorisé
+          schema:
+            type: string
+      summary: Déconnexion utilisateur
+      tags:
+      - Authentification
+  /oauth2/callback:
+    get:
+      description: Traite le retour de Google après l'authentification OAuth2
+      responses:
+        "200":
+          description: Informations utilisateur
+          schema:
+            type: string
+        "400":
+          description: Code ou état invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur interne
+          schema:
+            type: string
+      summary: Callback Google Auth
+      tags:
+      - Authentification
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Crée un compte utilisateur avec email et mot de passe
+      parameters:
+      - description: Informations de l'utilisateur
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Inscription réussie
+          schema:
+            type: string
+        "400":
+          description: Requête invalide
+          schema:
+            type: string
+        "409":
+          description: Conflit - Utilisateur déjà existant
+          schema:
+            type: string
+      summary: Inscription utilisateur
+      tags:
+      - Authentification
+  /reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Permet de réinitialiser un mot de passe via un jeton
+      parameters:
+      - description: Informations de l'utilisateur
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Mot de passe réinitialisé avec succès
+          schema:
+            type: string
+        "400":
+          description: Paramètres invalides
+          schema:
+            type: string
+        "500":
+          description: Erreur interne
+          schema:
+            type: string
+      summary: Réinitialisation de mot de passe
+      tags:
+      - Authentification
+  /validate-token:
+    get:
+      description: Vérifie si le token JWT est valide
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Token invalide
+          schema:
+            type: string
+      summary: Validation du token JWT
+      tags:
+      - Authentification
+swagger: "2.0"
