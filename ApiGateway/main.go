@@ -34,8 +34,8 @@ func (g *apiGateway) registerHandler(w http.ResponseWriter, r *http.Request) {
 		Email:     r.FormValue("email"),
 		Password:  r.FormValue("password"),
 		Username:  r.FormValue("username"),
-		FirstName: r.FormValue("first_name"),
-		LastName:  r.FormValue("last_name"),
+		FirstName: r.FormValue("firstName"),
+		LastName:  r.FormValue("lastName"),
 	}
 	res, err := g.authClient.Register(context.Background(), req)
 	if err != nil {
