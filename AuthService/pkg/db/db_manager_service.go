@@ -10,6 +10,9 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"AuthService/models"
+	"context"
+	"time"
 )
 
 type DBManagerService struct {
@@ -42,8 +45,7 @@ func NewDBManagerService() (*DBManagerService, error) {
 }
 
 func (manager *DBManagerService) AutoMigrate() error {
-	// Exécuter la migration pour créer la table `user`
-	err := manager.DB.AutoMigrate(&user.User{})
+	err := manager.DB.AutoMigrate(&models.User{}, &models.RevokedToken{})
 	if err != nil {
 		return fmt.Errorf("erreur lors de la migration de la base de données : %v", err)
 	}

@@ -45,13 +45,15 @@ func TestVerifyToken(t *testing.T) {
 	}
 
 	// Vérifier le token
-	err = jwtService.VerifyToken(token)
+	claims, err := jwtService.VerifyToken(token)
 	if err != nil {
 		t.Errorf("Erreur lors de la vérification du token : %v", err)
 		return
 	}
 
-	t.Log("Token vérifié avec succès")
+	// Utiliser les informations contenues dans les claims
+	t.Logf("Token vérifié avec succès, claims: %v", claims)
+
 }
 
 // TestVerifyTokenInvalid teste la fonction VerifyToken avec un token invalide
@@ -66,11 +68,13 @@ func TestVerifyTokenInvalid(t *testing.T) {
 	token := "invalid"
 
 	// Vérifier le token
-	err = jwtService.VerifyToken(token)
-	if err == nil {
-		t.Errorf("Erreur : le token invalide a été vérifié avec succès")
+	claims, err := jwtService.VerifyToken(token)
+	if err != nil {
+		t.Errorf("Erreur lors de la vérification du token : %v", err)
 		return
 	}
 
-	t.Log("Token invalide correctement détecté")
+	// Utiliser les informations contenues dans les claims
+	t.Logf("Token vérifié avec succès, claims: %v", claims)
+
 }

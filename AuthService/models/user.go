@@ -1,4 +1,4 @@
-package user
+package models
 
 import (
 	"time" 
@@ -33,26 +33,25 @@ func (u *User) CreateUser(db *gorm.DB) error {
 	return db.Create(&u).Error
 }
 
-func GetUserByEmail(db *gorm.DB, email string) (*User, error) {
-	var user User
-	if err := db.Where("email = ?", email).First(&user).Error; err != nil {
+func (u *User) GetUserByEmail(db *gorm.DB, email string) error {
+	if err := db.Where("email = ?", email).First(u).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("utilisateur non trouvé")
+			return errors.New("utilisateur non trouvé")
 		}
-		return nil, err
+		return err
 	}
-	return &user, nil
+	return nil
 }
 
-func GetUserByID(db *gorm.DB, id int) (*User, error) {
-	var user User
-	if err := db.First(&user, id).Error; err != nil {
+// GetUserByID récupère un utilisateur par ID
+func (u *User) GetUserByID(db *gorm.DB, id uint) error {
+	if err := db.First(u, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("utilisateur non trouvé")
+			return errors.New("utilisateur non trouvé")
 		}
-		return nil, err
+		return err
 	}
-	return &user, nil
+	return nil
 }
 
 func (u *User) UpdatePassword(db *gorm.DB, newPassword string) error {
