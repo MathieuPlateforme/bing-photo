@@ -1,28 +1,29 @@
 package handlers
 
 import (
-	"net/http"
-	"AuthService/services/auth" 
-	"AuthService/pkg/google"
-	"golang.org/x/oauth2"
-	"fmt"
-	"io/ioutil"
-	"encoding/json"
 	"AuthService/models"
 	"AuthService/pkg/email"
-	"strings"
+	"AuthService/pkg/google"
 	"AuthService/pkg/jwt"
+	"AuthService/services/auth"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
+
+	"golang.org/x/oauth2"
 )
 
 // Déclaration de AuthHandlers pour encapsuler AuthService
 type AuthHandlers struct {
-	AuthService *auth.AuthService
-	EmailService *email.EmailService
+	AuthService       *auth.AuthService
+	EmailService      *email.EmailService
 	GoogleAuthService *google.GoogleAuthService
-	JWTService *jwt.JWTService
+	JWTService        *jwt.JWTService
 }
 
-func NewAuthHandlers(service *auth.AuthService) (*AuthHandlers,error) {
+func NewAuthHandlers(service *auth.AuthService) (*AuthHandlers, error) {
 
 	// Initialiser le service GoogleAuthService
 	googleAuthService, err := google.NewGoogleAuthService()
@@ -216,7 +217,7 @@ func (h *AuthHandlers) GoogleAuthCallbackHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	// Renvoyer ou traiter les informations utilisateur 
+	// Renvoyer ou traiter les informations utilisateur
 	fmt.Fprintf(w, "Informations utilisateur : %+v", userInfo)
 }
 
@@ -249,11 +250,10 @@ func (h *AuthHandlers) ValidateTokenHandler(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusOK)
 	response := map[string]interface{}{
 		"message": "Token valide",
-		"claims":   claims,
+		"claims":  claims,
 	}
 	json.NewEncoder(w).Encode(response)
 }
-
 
 func (h *AuthHandlers) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	// Vérifie que la méthode est POST

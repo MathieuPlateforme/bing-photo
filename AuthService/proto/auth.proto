@@ -8,8 +8,14 @@ service AuthService {
   rpc Login (LoginRequest) returns (LoginResponse);
   rpc Register (RegisterRequest) returns (RegisterResponse);
   rpc ValidateToken (ValidateTokenRequest) returns (ValidateTokenResponse);
+  rpc ForgotPassword (ForgotPasswordRequest) returns (ForgotPasswordResponse);
+  rpc ResetPassword (ResetPasswordRequest) returns (ResetPasswordResponse);
+  rpc LoginWithGoogle (GoogleAuthRequest) returns (GoogleAuthResponse);
+  rpc GoogleAuthCallback (GoogleAuthCallbackRequest) returns (GoogleAuthCallbackResponse);
+  rpc Logout (LogoutRequest) returns (LogoutResponse);
 }
 
+// Request and response messages
 message LoginRequest {
   string email = 1;
   string password = 2;
@@ -39,4 +45,45 @@ message ValidateTokenRequest {
 message ValidateTokenResponse {
   bool valid = 1;
   string message = 2;
+}
+
+message ForgotPasswordRequest {
+  string email = 1;
+}
+
+message ForgotPasswordResponse {
+  string message = 1;
+}
+
+message ResetPasswordRequest {
+  string email = 1;
+  string token = 2;
+  string new_password = 3;
+}
+
+message ResetPasswordResponse {
+  string message = 1;
+}
+
+message GoogleAuthRequest {}
+
+message GoogleAuthResponse {
+  string authUrl = 1;
+}
+
+message GoogleAuthCallbackRequest {
+  string code = 1;
+}
+
+message GoogleAuthCallbackResponse {
+  string message = 1;
+  string userInfo = 2;
+}
+
+message LogoutRequest {
+  string token = 1;
+}
+
+message LogoutResponse {
+  string message = 1;
 }

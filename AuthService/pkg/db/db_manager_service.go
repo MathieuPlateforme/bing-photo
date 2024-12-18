@@ -1,18 +1,16 @@
 package db
 
 import (
-	"AuthService/pkg/user"
 	"context"
 	"fmt"
 	"log"
 	"os"
 	"time"
 
+	"AuthService/models"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"AuthService/models"
-	"context"
-	"time"
 )
 
 type DBManagerService struct {
