@@ -47,6 +47,36 @@ func (s *authServer) Register(ctx context.Context, req *proto.RegisterRequest) (
 	return &proto.RegisterResponse{Message: "Registration successful"}, nil
 }
 
+func (s *authServer) ForgotPassword(ctx context.Context, req *proto.ForgotPasswordRequest) (*proto.ForgotPasswordResponse, error) {
+	err := s.authService.ForgotPassword(req.Email)
+
+	if err != nil {
+		return &proto.ForgotPasswordResponse{Message: "Email not found"}, err
+	}
+
+	return &proto.ForgotPasswordResponse{Message: "Email succesfully sent"}, nil
+}
+
+func (s *authServer) ResetPassword(ctx context.Context, req *proto.ResetPasswordRequest) (*proto.ResetPasswordResponse, error) {
+	err := s.authService.ResetPassword(req.Email, req.Token, req.NewPassword)
+
+	if err != nil {
+		return &proto.ResetPasswordResponse{}, err
+	}
+
+	return &proto.ResetPasswordResponse{}, nil
+}
+
+func (s *authServer) Logout(ctx context.Context, req *proto.LogoutRequest) (*proto.LogoutResponse, error) {
+	err := s.authService.Logout(req.Token)
+
+	if err != nil {
+		return &proto.LogoutResponse{}, err
+	}
+
+	return &proto.LogoutResponse{}, nil
+}
+
 func main() {
 	// Initialize AuthService (and other services as needed)
 	authService, err := auth.Initialize()

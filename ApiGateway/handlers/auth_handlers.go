@@ -55,3 +55,63 @@ func (g *ApiGateway) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Message: " + res.Message))
 }
+
+func (g *ApiGateway) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
+
+	req := &proto.ForgotPasswordRequest{}
+	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		log.Printf("Failed to parse request: %v\n", err)
+		return
+	}
+
+	res, err := g.AuthClient.ForgotPassword(context.Background(), req)
+	if err != nil {
+		http.Error(w, "Forgot password failed", http.StatusInternalServerError)
+		log.Printf("Forgot password error: %v\n", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Message: " + res.Message))
+}
+
+func (g *ApiGateway) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+
+	req := &proto.ResetPasswordRequest{}
+	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		log.Printf("Failed to parse request: %v\n", err)
+		return
+	}
+
+	res, err := g.AuthClient.ResetPassword(context.Background(), req)
+	if err != nil {
+		http.Error(w, "Reset password failed", http.StatusInternalServerError)
+		log.Printf("Reset password error: %v\n", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Message: " + res.Message))
+}
+
+func (g *ApiGateway) LogoutHandler(w http.ResponseWriter, r *http.Request) {
+
+	req := &proto.LogoutRequest{}
+	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		log.Printf("Failed to parse request: %v\n", err)
+		return
+	}
+
+	res, err := g.AuthClient.Logout(context.Background(), req)
+	if err != nil {
+		http.Error(w, "Logout failed", http.StatusInternalServerError)
+		log.Printf("Logout error: %v\n", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Message: " + res.Message))
+}
