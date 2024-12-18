@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 	"net/http"
 
 	proto "ApiGateway/proto"
@@ -16,30 +18,40 @@ func NewApiGateway(authClient proto.AuthServiceClient) *ApiGateway {
 }
 
 func (g *ApiGateway) LoginHandler(w http.ResponseWriter, r *http.Request) {
-	req := &proto.LoginRequest{
-		Email:    r.FormValue("email"),
-		Password: r.FormValue("password"),
+	req := &proto.LoginRequest{}
+	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		log.Printf("Failed to parse request: %v\n", err)
+		return
 	}
+
 	res, err := g.AuthClient.Login(context.Background(), req)
 	if err != nil {
 		http.Error(w, "Login failed", http.StatusInternalServerError)
+		log.Printf("Login error: %v\n", err)
 		return
 	}
+
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Token: " + res.Token))
 }
 
 func (g *ApiGateway) RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	req := &proto.RegisterRequest{
-		Email:     r.FormValue("email"),
-		Password:  r.FormValue("password"),
-		Username:  r.FormValue("username"),
-		FirstName: r.FormValue("firstName"),
-		LastName:  r.FormValue("lastName"),
+
+	req := &proto.RegisterRequest{}
+	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		log.Printf("Failed to parse request: %v\n", err)
+		return
 	}
+
 	res, err := g.AuthClient.Register(context.Background(), req)
 	if err != nil {
 		http.Error(w, "Register failed", http.StatusInternalServerError)
+		log.Printf("Register error: %v\n", err)
 		return
 	}
+
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Message: " + res.Message))
 }

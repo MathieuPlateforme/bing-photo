@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"net/http"
 	"time"
@@ -11,50 +10,12 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"ApiGateway/handlers"
 	proto "ApiGateway/proto"
 )
 
 type apiGateway struct {
 	authClient proto.AuthServiceClient
-}
-
-func (g *apiGateway) loginHandler(w http.ResponseWriter, r *http.Request) {
-	req := &proto.LoginRequest{}
-	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		log.Printf("Failed to parse request: %v\n", err)
-		return
-	}
-
-	res, err := g.authClient.Login(context.Background(), req)
-	if err != nil {
-		http.Error(w, "Login failed", http.StatusInternalServerError)
-		log.Printf("Login error: %v\n", err)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Token: " + res.Token))
-}
-
-func (g *apiGateway) registerHandler(w http.ResponseWriter, r *http.Request) {
-
-	req := &proto.RegisterRequest{}
-	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		log.Printf("Failed to parse request: %v\n", err)
-		return
-	}
-
-	res, err := g.authClient.Register(context.Background(), req)
-	if err != nil {
-		http.Error(w, "Register failed", http.StatusInternalServerError)
-		log.Printf("Register error: %v\n", err)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Message: " + res.Message))
 }
 
 func connectToService(address string) (*grpc.ClientConn, error) {
@@ -78,12 +39,12 @@ func main() {
 	defer authConn.Close()
 
 	authClient := proto.NewAuthServiceClient(authConn)
-	gateway := &apiGateway{authClient: authClient}
+	authHandler := handlers.NewApiGateway(authClient)
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/login", gateway.loginHandler).Methods("POST")
-	r.HandleFunc("/register", gateway.registerHandler).Methods("POST")
+	r.HandleFunc("/login", authHandler.LoginHandler).Methods("POST")
+	r.HandleFunc("/register", authHandler.RegisterHandler).Methods("POST")
 
 	server := &http.Server{
 		Handler:      r,
