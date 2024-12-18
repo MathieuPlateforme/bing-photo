@@ -47,24 +47,6 @@ func (s *authServer) Register(ctx context.Context, req *proto.RegisterRequest) (
 	return &proto.RegisterResponse{Message: "Registration successful"}, nil
 }
 
-// ValidateToken validates the provided JWT token
-/*
-func (s *authServer) ValidateToken(ctx context.Context, req *proto.ValidateTokenRequest) (*proto.ValidateTokenResponse, error) {
-	// Delegate to the ValidateToken function in AuthService
-	valid := false
-	err := s.authService.ValidateToken(req.Token)
-
-	if err != nil {
-		return &proto.ValidateTokenResponse{Valid: false, Message: "Token validation failed"}, err
-	}
-
-	if valid {
-		return &proto.ValidateTokenResponse{Valid: true, Message: "Token is valid"}, nil
-	}
-
-	return &proto.ValidateTokenResponse{Valid: false, Message: "Invalid token"}, nil
-}*/
-
 func main() {
 	// Initialize AuthService (and other services as needed)
 	authService, err := auth.Initialize()
