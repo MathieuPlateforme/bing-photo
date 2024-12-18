@@ -92,6 +92,7 @@ func (s *AuthService) LoginWithEmail(u models.User, password string) (string, er
 func (s *AuthService) RegisterWithEmail(u models.User) (bool, error) {
 	// 1. Vérifier si l'utilisateur existe déjà
 	var existingUser models.User
+	println(u.Email)
 	err := s.DBManager.DB.Where("email = ?", u.Email).First(&existingUser).Error
 	if err == nil {
 		return false, errors.New("l'utilisateur avec cet email existe déjà")

@@ -32,7 +32,6 @@ func (s *authServer) Login(ctx context.Context, req *proto.LoginRequest) (*proto
 
 // RegisterWithEmail handles user registration
 func (s *authServer) Register(ctx context.Context, req *proto.RegisterRequest) (*proto.RegisterResponse, error) {
-	// Delegate to the RegisterWithEmail function in AuthService
 	success, err := s.authService.RegisterWithEmail(models.User{
 		Email:     req.Email,
 		Password:  req.Password,

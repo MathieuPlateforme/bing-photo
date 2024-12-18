@@ -7,6 +7,7 @@ toolchain go1.23.0
 require google.golang.org/grpc v1.68.0
 
 require (
+	github.com/gorilla/mux v1.8.1 // indirect
 	golang.org/x/net v0.29.0 // indirect
 	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/text v0.18.0 // indirect

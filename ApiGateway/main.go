@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/gorilla/mux"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -17,37 +19,45 @@ type apiGateway struct {
 }
 
 func (g *apiGateway) loginHandler(w http.ResponseWriter, r *http.Request) {
-	req := &proto.LoginRequest{
-		Email:    r.FormValue("email"),
-		Password: r.FormValue("password"),
+	req := &proto.LoginRequest{}
+	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		log.Printf("Failed to parse request: %v\n", err)
+		return
 	}
+
 	res, err := g.authClient.Login(context.Background(), req)
 	if err != nil {
 		http.Error(w, "Login failed", http.StatusInternalServerError)
+		log.Printf("Login error: %v\n", err)
 		return
 	}
+
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Token: " + res.Token))
 }
 
 func (g *apiGateway) registerHandler(w http.ResponseWriter, r *http.Request) {
-	req := &proto.RegisterRequest{
-		Email:     r.FormValue("email"),
-		Password:  r.FormValue("password"),
-		Username:  r.FormValue("username"),
-		FirstName: r.FormValue("first_name"),
-		LastName:  r.FormValue("last_name"),
+
+	req := &proto.RegisterRequest{}
+	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		log.Printf("Failed to parse request: %v\n", err)
+		return
 	}
+
 	res, err := g.authClient.Register(context.Background(), req)
 	if err != nil {
 		http.Error(w, "Register failed", http.StatusInternalServerError)
-		log.Println(err)
+		log.Printf("Register error: %v\n", err)
 		return
 	}
+
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Message: " + res.Message))
 }
 
 func connectToService(address string) (*grpc.ClientConn, error) {
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -68,12 +78,20 @@ func main() {
 	defer authConn.Close()
 
 	authClient := proto.NewAuthServiceClient(authConn)
-
 	gateway := &apiGateway{authClient: authClient}
 
-	http.HandleFunc("/login", gateway.loginHandler)
-	http.HandleFunc("/register", gateway.registerHandler)
+	r := mux.NewRouter()
+
+	r.HandleFunc("/login", gateway.loginHandler).Methods("POST")
+	r.HandleFunc("/register", gateway.registerHandler).Methods("POST")
+
+	server := &http.Server{
+		Handler:      r,
+		Addr:         ":8080",
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
+	}
 
 	log.Println("API Gateway is running on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(server.ListenAndServe())
 }
