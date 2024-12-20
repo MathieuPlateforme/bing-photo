@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -32,7 +33,9 @@ func connectToService(address string) (*grpc.ClientConn, error) {
 
 func main() {
 
-	authConn, err := connectToService("localhost:50051")
+	authServiceAddress := os.Getenv("AUTH_SERVICE")
+
+	authConn, err := connectToService(authServiceAddress)
 	if err != nil {
 		log.Fatalf("Failed to connect to AuthService: %v", err)
 	}

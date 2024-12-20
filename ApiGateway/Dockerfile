@@ -11,7 +11,7 @@ RUN go mod download
 COPY . .
 
 # Construire l'application avec CGO désactivé (nécessaire pour Alpine)
-RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o main ./main.go
 
 # Vérifier que l'exécutable est bien créé
 RUN ls -la /app
@@ -27,7 +27,7 @@ COPY --from=builder /app/main .
 RUN ls -la
 
 # Exposer le port
-EXPOSE 50051
+EXPOSE 8080
 
 # Commande par défaut pour exécuter l'application
 CMD ["./main"]
