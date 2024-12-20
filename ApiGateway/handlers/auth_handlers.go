@@ -27,7 +27,7 @@ func (g *ApiGateway) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := g.AuthClient.Login(context.Background(), req)
 	if err != nil {
-		http.Error(w, "Login failed", http.StatusInternalServerError)
+		http.Error(w, "Login failed"+err.Error(), http.StatusInternalServerError)
 		log.Printf("Login error: %v\n", err)
 		return
 	}
@@ -47,7 +47,7 @@ func (g *ApiGateway) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := g.AuthClient.Register(context.Background(), req)
 	if err != nil {
-		http.Error(w, "Register failed", http.StatusInternalServerError)
+		http.Error(w, "Register failed"+err.Error(), http.StatusInternalServerError)
 		log.Printf("Register error: %v\n", err)
 		return
 	}
@@ -67,7 +67,7 @@ func (g *ApiGateway) ForgotPasswordHandler(w http.ResponseWriter, r *http.Reques
 
 	res, err := g.AuthClient.ForgotPassword(context.Background(), req)
 	if err != nil {
-		http.Error(w, "Forgot password failed", http.StatusInternalServerError)
+		http.Error(w, "Forgot password failed"+err.Error(), http.StatusInternalServerError)
 		log.Printf("Forgot password error: %v\n", err)
 		return
 	}
@@ -87,7 +87,7 @@ func (g *ApiGateway) ResetPasswordHandler(w http.ResponseWriter, r *http.Request
 
 	res, err := g.AuthClient.ResetPassword(context.Background(), req)
 	if err != nil {
-		http.Error(w, "Reset password failed", http.StatusInternalServerError)
+		http.Error(w, "Reset password failed: "+err.Error(), http.StatusInternalServerError)
 		log.Printf("Reset password error: %v\n", err)
 		return
 	}
