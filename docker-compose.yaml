@@ -41,6 +41,29 @@ services:
     env_file:
       - ./AuthService/.env
 
+  gallery-service:
+    build:
+      context: ./GalleryService
+      dockerfile: Dockerfile
+    ports:
+      - "50052:50052"
+    depends_on:
+      - db
+      - my-s3-clone
+    env_file:
+      - ./GalleryService/.env
+
+  my-s3-clone:
+    build:
+      context: ./my-s3-clone
+      dockerfile: Dockerfile
+    container_name: my-s3-clone
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./buckets:/mydata/data
+    env_file:
+      - ./my-s3-clone/.env
 
   pgadmin:
     image: dpage/pgadmin4
@@ -54,3 +77,4 @@ services:
       
 volumes:
   db_data:
+  s3_data:
