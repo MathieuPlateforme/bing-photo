@@ -1,13 +1,14 @@
 package google
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
+	"os"
+
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"os"
-	"errors"
-	"encoding/json"
-	"net/http"
 )
 
 // GoogleAuthService structure
@@ -32,16 +33,24 @@ func NewGoogleAuthService() (*GoogleAuthService, error) {
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		RedirectURL:  redirectURL,
-		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email","https://www.googleapis.com/auth/userinfo.profile"},
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"},
 		Endpoint:     google.Endpoint,
 	}
 
 	return &GoogleAuthService{Config: config}, nil
 }
 
-func (s *GoogleAuthService) AuthenticateWithGoogle() string {
-	// Génère et renvoie l'URL d'authentification Google
-	return s.Config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+func (s *GoogleAuthService) AuthenticateWithGoogle() (string, error) {
+	if s.Config == nil {
+		return "", errors.New("OAuth2 configuration is not initialized")
+	}
+
+	authURL := s.Config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+	if authURL == "" {
+		return "", errors.New("Failed to generate Google authentication URL")
+	}
+
+	return authURL, nil
 }
 
 func (s *GoogleAuthService) GetGoogleUserProfile(token *oauth2.Token) (map[string]interface{}, error) {
