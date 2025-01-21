@@ -127,3 +127,21 @@ func(g *ApiGateway) GoogleHandler(w http.ResponseWriter,r *http.Request){
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Message: " + res.AuthUrl))
 }
+func (g *ApiGateway) GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
+	req := &proto.GoogleAuthCallbackRequest{}
+	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		log.Printf("Failed to parse request: %v\n", err)
+		return
+	}
+
+	res, err := g.AuthClient.GoogleAuthCallback(context.Background(), req)
+	if err != nil {
+		http.Error(w, "Google callback failed"+err.Error(), http.StatusInternalServerError)
+		log.Printf("Google callback error: %v\n", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Token: " + res.Message+"user: "+res.UserInfo))
+}
