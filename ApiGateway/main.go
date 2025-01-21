@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -45,6 +46,20 @@ func main() {
 	authHandler := handlers.NewApiGateway(authClient)
 
 	r := mux.NewRouter()
+
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
+	})
+
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			next.ServeHTTP(w, r)
+		})
+	})
+
+	r.Use(c.Handler)
 
 	r.HandleFunc("/login", authHandler.LoginHandler).Methods("POST")
 	r.HandleFunc("/register", authHandler.RegisterHandler).Methods("POST")
