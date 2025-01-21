@@ -79,7 +79,7 @@ func (s *authServer) Logout(ctx context.Context, req *proto.LogoutRequest) (*pro
 
 	return &proto.LogoutResponse{}, nil
 }
-func (s *authServer) GoogleLogin(ctx context.Context, req *proto.GoogleAuthRequest) (*proto.GoogleAuthResponse, error) {
+func (s *authServer) LoginWithGoogle(ctx context.Context, req *proto.GoogleAuthRequest) (*proto.GoogleAuthResponse, error) {
 	authUrl, err := s.authService.GoogleAuthService.AuthenticateWithGoogle()
 
 	if err != nil {
@@ -88,7 +88,7 @@ func (s *authServer) GoogleLogin(ctx context.Context, req *proto.GoogleAuthReque
 
 	return &proto.GoogleAuthResponse{AuthUrl: authUrl}, nil
 }
-func (s *authServer) GoogleCallback(ctx context.Context, req *proto.GoogleAuthCallbackRequest) (*proto.GoogleAuthCallbackResponse, error) {
+func (s *authServer) GoogleAuthCallback(ctx context.Context, req *proto.GoogleAuthCallbackRequest) (*proto.GoogleAuthCallbackResponse, error) {
 	token, err := s.authService.GoogleAuthService.Config.Exchange(oauth2.NoContext, req.Code)
 	userInfo, err := s.authService.GoogleAuthService.GetGoogleUserProfile(token)
 
