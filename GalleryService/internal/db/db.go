@@ -61,6 +61,8 @@ func (manager *DBManagerService) AutoMigrate() error {
 		&models.Media{},
 		&models.Access{},
 		&models.UserAccess{},
+		&models.SimilarGroup{},
+		&models.SimilarMedia{},
 	)
 	if err != nil {
 		return fmt.Errorf("erreur lors de la migration de la base de données : %v", err)

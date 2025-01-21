@@ -12,18 +12,40 @@ type User struct {
 }
 
 type Album struct {
-	ID     int    `gorm:"primaryKey"`
-	Name   string
-	UserID int
+	ID          uint      `gorm:"primaryKey"`
+	Name        string    `gorm:"unique;not null"`
+	UserID      uint      `gorm:"not null"`
+	Description string    
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+
+	// Champ pour indiquer si le bucket existe dans S3 
+	ExistsInS3 bool `gorm:"-"`
 }
 
 type Media struct {
-	ID        int    `gorm:"primaryKey"`
-	MediaPath string
-	Type      string
-	AlbumID   int
-	PHash     string 
+	ID         uint   `gorm:"primaryKey"`
+	AlbumID    uint   `gorm:"not null"`
+	Path       string `gorm:"not null"`
+	Name       string `gorm:"not null"`
+	Type       string
+	IsFavorite bool   `gorm:"default:false"`
+	Hash       string `gorm:"not null"`
 }
+
+type SimilarGroup struct {
+	ID        uint      `gorm:"primaryKey"`
+	UserID    uint      `gorm:"not null"`
+	CreatedAt time.Time `gorm:"autoCreateTime"`
+}
+
+type SimilarMedia struct {
+	ID             uint    `gorm:"primaryKey"`
+	SimilarGroupID uint    `gorm:"not null"`
+	MediaID        uint    `gorm:"not null"`
+	SimilarityScore float64 `gorm:"not null"` 
+}
+
 
 type Access struct {
 	ID             int    `gorm:"primaryKey"`

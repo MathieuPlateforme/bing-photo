@@ -32,3 +32,18 @@ func (h *AlbumHandler) CreateAlbum(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Album created successfully"})
 }
+
+func (h *AlbumHandler) GetAlbums(w http.ResponseWriter, r *http.Request) {
+	// Appel du service pour récupérer les albums
+	albums, err := h.AlbumService.ListAlbums()
+	if err != nil {
+		http.Error(w, "Erreur lors de la récupération des albums : "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Encoder la réponse en JSON
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(albums); err != nil {
+		http.Error(w, "Erreur lors de l'encodage de la réponse : "+err.Error(), http.StatusInternalServerError)
+	}
+}

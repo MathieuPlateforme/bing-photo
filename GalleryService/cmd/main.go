@@ -9,6 +9,7 @@ import (
 
 	"GalleryService/internal/api"
 	"GalleryService/internal/db"
+	"GalleryService/internal/services"
 
 	"github.com/joho/godotenv"
 )
@@ -34,8 +35,11 @@ func main() {
 		log.Fatalf("Erreur lors de la migration des modèles : %v", err)
 	}
 
+	// Initialiser le S3Service
+	s3Service := services.NewS3Service("http://my-s3-clone:9090")
+
 	// Initialiser le routeur HTTP
-	router := api.NewRouter(dbManager)
+	router := api.NewRouter(dbManager, s3Service)
 
 	// Configurer le serveur HTTP
 	server := &http.Server{

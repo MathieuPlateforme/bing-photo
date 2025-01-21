@@ -39,3 +39,36 @@ func (s *AlbumService) CreateAlbum(album models.Album) error {
 	return nil
 }
 
+func (s *AlbumService) ListAlbums() ([]models.Album, error) {
+	// Étape 1 : Récupérer les albums depuis la base de données
+	var albums []models.Album
+	err := s.DBManager.DB.Find(&albums).Error
+	if err != nil {
+		log.Printf("Erreur lors de la récupération des albums depuis la base de données : %v", err)
+		return nil, fmt.Errorf("failed to fetch albums from database: %v", err)
+	}
+
+	// Étape 2 : Enrichir avec les données du S3 (si nécessaire)
+	s3Buckets, err := s.S3Service.ListBuckets()
+	if err != nil {
+		log.Printf("Erreur lors de la récupération des buckets depuis l'API S3 : %v", err)
+	}
+
+	// ajouter une indication si le bucket existe
+	bucketExists := make(map[string]bool)
+	for _, bucket := range s3Buckets {
+		bucketExists[bucket.Name] = true
+	}
+	for i := range albums {
+		if _, exists := bucketExists[albums[i].Name]; exists {
+			albums[i].ExistsInS3 = true
+		} else {
+			albums[i].ExistsInS3 = false
+		}
+	}
+
+	return albums, nil
+}
+
+
+
