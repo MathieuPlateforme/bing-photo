@@ -82,3 +82,28 @@ func (s *S3Service) ListBuckets() ([]Bucket, error) {
 
 	return bucketsResponse.Buckets, nil
 }
+
+func (s *S3Service) DeleteBucket(bucketName string) error {
+	// Construire l'URL pour supprimer le bucket
+	url := fmt.Sprintf("%s/%s/", s.APIURL, bucketName)
+
+	// Envoyer une requête HTTP DELETE
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		return fmt.Errorf("échec de la création de la requête de suppression : %v", err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("échec de la suppression du bucket : %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Vérifier le code de réponse
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("échec de la suppression du bucket, statut : %s", resp.Status)
+	}
+
+	return nil
+}
+

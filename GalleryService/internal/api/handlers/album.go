@@ -82,3 +82,25 @@ func (h *AlbumHandler) UpdateAlbum(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "Album %d mis à jour avec succès", albumID)
 }
+
+// DeleteAlbum gère la suppression d'un album
+func (h *AlbumHandler) DeleteAlbum(w http.ResponseWriter, r *http.Request) {
+	// Récupérer l'ID de l'album depuis l'URL
+	vars := mux.Vars(r)
+	albumID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "ID invalide", http.StatusBadRequest)
+		return
+	}
+
+	// Appeler le service pour supprimer l'album
+	err = h.AlbumService.DeleteAlbum(uint(albumID))
+	if err != nil {
+		http.Error(w, "Erreur lors de la suppression de l'album : "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Répondre avec un statut de succès
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Album supprimé avec succès"))
+}

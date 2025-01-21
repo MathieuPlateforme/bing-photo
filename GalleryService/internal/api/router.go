@@ -20,6 +20,7 @@ func NewRouter(dbManager *db.DBManagerService, s3Service *services.S3Service) *m
 	router.HandleFunc("/albums", albumHandler.CreateAlbum).Methods("POST") 
 	router.HandleFunc("/albums", albumHandler.GetAlbums).Methods("GET")
 	router.HandleFunc("/albums/{id}", albumHandler.UpdateAlbum).Methods("PUT")
+	router.HandleFunc("/albums/{id}", albumHandler.DeleteAlbum).Methods("DELETE")
 
 
 	return router

@@ -93,5 +93,28 @@ func (s *AlbumService) UpdateAlbum(id uint, name string, description string) err
 	return nil
 }
 
+func (s *AlbumService) DeleteAlbum(albumID uint) error {
+	// Récupérer l'album dans la base de données
+	var album models.Album
+	err := s.DBManager.DB.First(&album, albumID).Error
+	if err != nil {
+		return fmt.Errorf("album non trouvé : %v", err)
+	}
+
+	// Supprimer le bucket associé dans S3
+	err = s.S3Service.DeleteBucket(album.BucketName)
+	if err != nil {
+		return fmt.Errorf("échec de la suppression du bucket S3 : %v", err)
+	}
+
+	// Supprimer l'album de la base de données
+	err = s.DBManager.DB.Delete(&album).Error
+	if err != nil {
+		return fmt.Errorf("échec de la suppression de l'album : %v", err)
+	}
+
+	return nil
+}
+
 
 
