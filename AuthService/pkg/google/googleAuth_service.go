@@ -39,9 +39,19 @@ func NewGoogleAuthService() (*GoogleAuthService, error) {
 	return &GoogleAuthService{Config: config}, nil
 }
 
-func (s *GoogleAuthService) AuthenticateWithGoogle() string {
+func (s *GoogleAuthService) AuthenticateWithGoogle() (string, error) {
+	// Vérifiez si la configuration OAuth2 est présente
+	if s.Config == nil {
+		return "", errors.New("OAuth2 configuration is not initialized")
+	}
+
 	// Génère et renvoie l'URL d'authentification Google
-	return s.Config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+	authURL := s.Config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+	if authURL == "" {
+		return "", errors.New("Failed to generate Google authentication URL")
+	}
+
+	return authURL, nil
 }
 
 func (s *GoogleAuthService) GetGoogleUserProfile(token *oauth2.Token) (map[string]interface{}, error) {
