@@ -5,6 +5,7 @@ import (
 	"GalleryService/internal/models"
 	"fmt"
 	"log"
+	"time"
 )
 
 type AlbumService struct {
@@ -21,8 +22,11 @@ func NewAlbumService(dbManager *db.DBManagerService, S3Service *S3Service) *Albu
 }
 
 func (s *AlbumService) CreateAlbum(album models.Album) error {
+	// Générer un nom unique pour le bucket
+	album.BucketName = fmt.Sprintf("bucket-%d", time.Now().UnixNano())
+
 	// Étape 1 : Créer un bucket pour l'album
-	err := s.S3Service.CreateBucket(album.Name)
+	err := s.S3Service.CreateBucket(album.BucketName)
 	if err != nil {
 		return fmt.Errorf("failed to create bucket: %v", err)
 	}
@@ -68,6 +72,25 @@ func (s *AlbumService) ListAlbums() ([]models.Album, error) {
 	}
 
 	return albums, nil
+}
+
+func (s *AlbumService) UpdateAlbum(id uint, name string, description string) error {
+	// Récupérer l'album
+	var album models.Album
+	if err := s.DBManager.DB.First(&album, id).Error; err != nil {
+		return fmt.Errorf("album non trouvé : %v", err)
+	}
+
+	// Mettre à jour les champs modifiables
+	album.Name = name
+	album.Description = description
+
+	// Sauvegarder les modifications
+	if err := s.DBManager.DB.Save(&album).Error; err != nil {
+		return fmt.Errorf("échec de la mise à jour de l'album : %v", err)
+	}
+
+	return nil
 }
 
 

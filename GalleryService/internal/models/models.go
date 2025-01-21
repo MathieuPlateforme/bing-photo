@@ -15,6 +15,7 @@ type Album struct {
 	ID          uint      `gorm:"primaryKey"`
 	Name        string    `gorm:"unique;not null"`
 	UserID      uint      `gorm:"not null"`
+	BucketName  string    `gorm:"not null"`
 	Description string    
 	CreatedAt   time.Time
 	UpdatedAt   time.Time

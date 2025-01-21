@@ -5,6 +5,9 @@ import (
 	"GalleryService/internal/services"
 	"encoding/json"
 	"net/http"
+	"fmt"
+	"github.com/gorilla/mux"
+	"strconv"
 )
 
 type AlbumHandler struct {
@@ -46,4 +49,36 @@ func (h *AlbumHandler) GetAlbums(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(albums); err != nil {
 		http.Error(w, "Erreur lors de l'encodage de la réponse : "+err.Error(), http.StatusInternalServerError)
 	}
+}
+
+// UpdateAlbum gère la mise à jour d'un album
+func (h *AlbumHandler) UpdateAlbum(w http.ResponseWriter, r *http.Request) {
+	// Récupérer l'ID depuis les paramètres de l'URL
+	vars := mux.Vars(r)
+	albumID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "ID invalide", http.StatusBadRequest)
+		return
+	}
+
+	// Lire et décoder le corps de la requête
+	var updateData struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&updateData); err != nil {
+		http.Error(w, "Requête invalide : "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Appeler le service pour mettre à jour l'album
+	err = h.AlbumService.UpdateAlbum(uint(albumID), updateData.Name, updateData.Description)
+	if err != nil {
+		http.Error(w, "Erreur lors de la mise à jour de l'album : "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Réponse en cas de succès
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "Album %d mis à jour avec succès", albumID)
 }
