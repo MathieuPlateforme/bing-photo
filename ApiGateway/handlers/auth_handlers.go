@@ -115,3 +115,15 @@ func (g *ApiGateway) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Message: " + res.Message))
 }
+func(g *ApiGateway) GoogleHandler(w http.ResponseWriter,r *http.Request){
+ 
+	res,err :=g.AuthClient.LoginWithGoogle(context.Background(),&proto.GoogleAuthRequest{})
+	if err != nil {
+		http.Error(w, "Logout failed", http.StatusInternalServerError)
+		log.Printf("Logout error: %v\n", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Message: " + res.AuthUrl))
+}
