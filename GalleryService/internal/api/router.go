@@ -30,6 +30,7 @@ func NewRouter(dbManager *db.DBManagerService, s3Service *services.S3Service) *m
 
 	// Route pour Medias
 	router.HandleFunc("/media", mediaHandler.AddMedia).Methods("POST")
+	router.HandleFunc("/users/{id}/media", mediaHandler.GetMediaByUser).Methods("GET")
 
 	return router
 }

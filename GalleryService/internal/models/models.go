@@ -27,7 +27,7 @@ type Album struct {
 type Media struct {
 	ID         uint   `gorm:"primaryKey"`
 	AlbumID    uint   `gorm:"not null"`
-	Album      Album  `gorm:"foreignKey:AlbumID"`
+	Album      *Album  `gorm:"foreignKey:AlbumID"`
 	Path       string `gorm:"not null"`
 	Name       string `gorm:"not null"`
 	Type       string

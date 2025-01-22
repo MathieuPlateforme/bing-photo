@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"github.com/gorilla/mux"
 )
 
 type MediaHandler struct {
@@ -61,3 +62,28 @@ func (h *MediaHandler) AddMedia(w http.ResponseWriter, r *http.Request) {
 		"message": "Fichier ajouté avec succès",
 	})
 }
+
+func (h *MediaHandler) GetMediaByUser(w http.ResponseWriter, r *http.Request) {
+	// Récupérer l'ID de l'utilisateur depuis les paramètres de la route
+	vars := mux.Vars(r)
+	userIDStr := vars["id"]
+
+	// Convertir l'ID en uint
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		http.Error(w, "ID d'utilisateur invalide", http.StatusBadRequest)
+		return
+	}
+
+	// Appeler le service pour récupérer les médias
+	mediaList, err := h.MediaService.GetMediaByUser(uint(userID))
+	if err != nil {
+		http.Error(w, "Erreur lors de la récupération des fichiers : "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Répondre avec les médias sous forme JSON
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(mediaList)
+}
+
