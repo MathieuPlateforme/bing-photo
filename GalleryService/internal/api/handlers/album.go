@@ -36,9 +36,20 @@ func (h *AlbumHandler) CreateAlbum(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "Album created successfully"})
 }
 
-func (h *AlbumHandler) GetAlbums(w http.ResponseWriter, r *http.Request) {
-	// Appel du service pour récupérer les albums
-	albums, err := h.AlbumService.ListAlbums()
+func (h *AlbumHandler) GetAlbumsByUser(w http.ResponseWriter, r *http.Request) {
+	// Récupérer l'ID de l'utilisateur depuis les paramètres de la route
+	vars := mux.Vars(r)
+	userIDStr := vars["id"]
+
+	// Convertir l'ID en uint
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		http.Error(w, "ID d'utilisateur invalide", http.StatusBadRequest)
+		return
+	}
+
+	// Appel du service pour récupérer les albums par user
+	albums, err := h.AlbumService.GetAlbumsByUser(uint(userID))
 	if err != nil {
 		http.Error(w, "Erreur lors de la récupération des albums : "+err.Error(), http.StatusInternalServerError)
 		return
