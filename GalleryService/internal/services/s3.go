@@ -6,6 +6,7 @@ import (
 	"net/http"
     "encoding/xml"
     "time"
+	"io"
 )
 
 // S3Service gère la communication avec l'API S3-like
@@ -102,6 +103,35 @@ func (s *S3Service) DeleteBucket(bucketName string) error {
 	// Vérifier le code de réponse
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("échec de la suppression du bucket, statut : %s", resp.Status)
+	}
+
+	return nil
+}
+
+func (s *S3Service) UploadFile(objectPath string, file io.Reader, fileSize int64) error {
+	// Construire l'URL pour téléverser l'objet
+	url := fmt.Sprintf("%s/%s", s.APIURL, objectPath)
+
+	// Créer une requête PUT pour téléverser le fichier
+	req, err := http.NewRequest("PUT", url, file)
+	if err != nil {
+		return fmt.Errorf("échec de la création de la requête : %v", err)
+	}
+
+	// Ajouter les en-têtes requis
+	req.Header.Set("Content-Type", "application/octet-stream")
+	req.Header.Set("X-Amz-Decoded-Content-Length", fmt.Sprintf("%d", fileSize))
+
+	// Envoyer la requête
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("échec de l'upload : %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Vérifier la réponse
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("upload échoué, statut : %s", resp.Status)
 	}
 
 	return nil

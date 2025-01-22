@@ -27,11 +27,15 @@ type Album struct {
 type Media struct {
 	ID         uint   `gorm:"primaryKey"`
 	AlbumID    uint   `gorm:"not null"`
+	Album      Album  `gorm:"foreignKey:AlbumID"`
 	Path       string `gorm:"not null"`
 	Name       string `gorm:"not null"`
 	Type       string
 	IsFavorite bool   `gorm:"default:false"`
 	Hash       string `gorm:"not null"`
+	FileSize   uint   `gorm:"not null"`
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 type SimilarGroup struct {
