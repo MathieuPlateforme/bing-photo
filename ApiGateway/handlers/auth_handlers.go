@@ -32,8 +32,14 @@ func (g *ApiGateway) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	response := map[string]string{"Token": res.Token}
+
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Token: " + res.Token))
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode response: %v\n", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (g *ApiGateway) RegisterHandler(w http.ResponseWriter, r *http.Request) {
@@ -52,8 +58,14 @@ func (g *ApiGateway) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	response := map[string]string{"Message": res.Message}
+
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Message: " + res.Message))
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode response: %v\n", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (g *ApiGateway) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
@@ -71,9 +83,14 @@ func (g *ApiGateway) ForgotPasswordHandler(w http.ResponseWriter, r *http.Reques
 		log.Printf("Forgot password error: %v\n", err)
 		return
 	}
+	response := map[string]string{"Message": res.Message}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Message: " + res.Message))
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode response: %v\n", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (g *ApiGateway) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
@@ -92,8 +109,14 @@ func (g *ApiGateway) ResetPasswordHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	response := map[string]string{"Message": res.Message}
+
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Message: " + res.Message))
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode response: %v\n", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (g *ApiGateway) LogoutHandler(w http.ResponseWriter, r *http.Request) {
@@ -113,7 +136,12 @@ func (g *ApiGateway) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Message: " + res.Message))
+	response := map[string]string{"Message": res.Message}
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode response: %v\n", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 }
 func (g *ApiGateway) GoogleHandler(w http.ResponseWriter, r *http.Request) {
 

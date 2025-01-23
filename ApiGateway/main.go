@@ -32,8 +32,11 @@ func connectToService(address string) (*grpc.ClientConn, error) {
 	return conn, nil
 }
 
-func main() {
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+}
 
+func main() {
 	authServiceAddress := os.Getenv("AUTH_SERVICE")
 
 	authConn, err := connectToService(authServiceAddress)
@@ -49,25 +52,29 @@ func main() {
 
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
-		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
+		AllowedHeaders: []string{"Content-Type", "Authorization"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		Debug:          true,
 	})
+
+	r.Use(c.Handler)
 
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
+			enableCors(&w)
 			next.ServeHTTP(w, r)
 		})
 	})
 
 	r.Use(c.Handler)
 
-	r.HandleFunc("/login", authHandler.LoginHandler).Methods("POST")
-	r.HandleFunc("/register", authHandler.RegisterHandler).Methods("POST")
-	r.HandleFunc("/google", authHandler.GoogleHandler).Methods("POST")
-	r.HandleFunc("/oauth2/callback", authHandler.GoogleCallbackHandler).Methods("POST")
-	r.HandleFunc("/forgot-password", authHandler.ForgotPasswordHandler).Methods("POST")
-	r.HandleFunc("/reset-password", authHandler.ResetPasswordHandler).Methods("POST")
-	r.HandleFunc("/logout", authHandler.LogoutHandler).Methods("POST")
+	r.HandleFunc("/login", authHandler.LoginHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/register", authHandler.RegisterHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/google", authHandler.GoogleHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/oauth2/callback", authHandler.GoogleCallbackHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/forgot-password", authHandler.ForgotPasswordHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/reset-password", authHandler.ResetPasswordHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/logout", authHandler.LogoutHandler).Methods("POST", "OPTIONS")
 
 	server := &http.Server{
 		Handler:      r,
