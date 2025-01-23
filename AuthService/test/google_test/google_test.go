@@ -28,7 +28,10 @@ func TestNewGoogleAuthService(t *testing.T) {
 // Test pour vérifier que AuthenticateWithGoogle renvoie une URL d'authentification valide
 func TestAuthenticateWithGoogle(t *testing.T) {
 	googleAuthService := initGoogleAuthService(t)
-	authURL := googleAuthService.AuthenticateWithGoogle()
+	authURL,err := googleAuthService.AuthenticateWithGoogle()
+	if(err != nil){	
+		t.Errorf("Erreur lors de la génération de l'URL d'authentification Google : %v", err)
+	}
 	if authURL == "" {
 		t.Error("URL d'authentification Google vide")
 	}

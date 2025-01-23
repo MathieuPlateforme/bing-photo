@@ -66,8 +66,12 @@ func main() {
 		})
 	})
 
+	r.Use(c.Handler)
+
 	r.HandleFunc("/login", authHandler.LoginHandler).Methods("POST", "OPTIONS")
 	r.HandleFunc("/register", authHandler.RegisterHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/google", authHandler.GoogleHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/oauth2/callback", authHandler.GoogleCallbackHandler).Methods("POST", "OPTIONS")
 	r.HandleFunc("/forgot-password", authHandler.ForgotPasswordHandler).Methods("POST", "OPTIONS")
 	r.HandleFunc("/reset-password", authHandler.ResetPasswordHandler).Methods("POST", "OPTIONS")
 	r.HandleFunc("/logout", authHandler.LogoutHandler).Methods("POST", "OPTIONS")
