@@ -47,7 +47,7 @@ func NewRouter(dbManager *db.DBManagerService, s3Service *services.S3Service, au
 	router.HandleFunc("/users/{id}/media", mediaHandler.GetMediaByUser).Methods("GET")
 	router.HandleFunc("/media/{id}/private", mediaHandler.MarkAsPrivate).Methods("PUT")
 	router.HandleFunc("/media/private", mediaHandler.GetPrivateMedia).Methods("GET")
-
+	router.HandleFunc("/media/{id}", mediaHandler.DownloadMedia).Methods("GET")
 
 	return router
 }

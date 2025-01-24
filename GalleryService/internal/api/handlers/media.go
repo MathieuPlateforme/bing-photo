@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"github.com/gorilla/mux"
 	"GalleryService/internal/utils"
+	"fmt"
+	"log"
 )
 
 type MediaHandler struct {
@@ -170,4 +172,25 @@ func (h *MediaHandler) MarkMediaAsPrivate(w http.ResponseWriter, r *http.Request
     json.NewEncoder(w).Encode(map[string]string{
         "message": "Média marqué comme privé avec succès",
     })
+}
+
+func (h *MediaHandler) DownloadMedia(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	mediaID, err := strconv.ParseUint(vars["id"], 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid media ID", http.StatusBadRequest)
+		log.Printf("Invalid media ID: %v", err)
+		return
+	}
+
+	// Télécharger le média
+	if err := h.MediaService.DownloadMedia(uint(mediaID), w); err != nil {
+		http.Error(w, "Error downloading media", http.StatusInternalServerError)
+		log.Printf("Error downloading media: %v", err)
+		return
+	}
+
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", vars["id"]))
+	w.WriteHeader(http.StatusOK)
+	log.Printf("Media %d downloaded successfully", mediaID)
 }

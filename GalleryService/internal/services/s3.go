@@ -7,6 +7,7 @@ import (
     "encoding/xml"
     "time"
 	"io"
+	"log"
 )
 
 // S3Service gère la communication avec l'API S3-like
@@ -172,5 +173,30 @@ func (s *S3Service) MoveObject(sourceBucket, sourceKey, targetBucket string) err
 	}
 
 	// Déplacement réussi
+	return nil
+}
+
+func (s *S3Service) DownloadFile(path string, w io.Writer) error {
+	// Construire l'URL pour télécharger le fichier
+	url := fmt.Sprintf("%s/%s", s.APIURL, path)
+
+	// Envoyer une requête HTTP GET
+	resp, err := http.Get(url)
+	if err != nil {
+		return fmt.Errorf("échec de la requête de téléchargement : %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Vérifier le code de réponse
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("échec du téléchargement, statut : %s", resp.Status)
+	}
+
+	// Copier le contenu de la réponse dans le writer fourni
+	if _, err := io.Copy(w, resp.Body); err != nil {
+		return fmt.Errorf("échec de l'écriture des données téléchargées : %v", err)
+	}
+
+	log.Printf("Fichier téléchargé avec succès depuis %s", url)
 	return nil
 }

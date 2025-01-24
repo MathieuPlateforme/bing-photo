@@ -165,3 +165,27 @@ func (s *MediaService) MarkAsPrivate(mediaID uint, userID uint) error {
 
     return nil
 }
+
+func (s *MediaService) DownloadMedia(mediaID uint, w io.Writer) error {
+	// Récupérer le média à partir de la base de données
+	var media models.Media
+	if err := s.DBManager.DB.First(&media, mediaID).Error; err != nil {
+		return fmt.Errorf("média non trouvé pour l'ID %d : %v", mediaID, err)
+	}
+
+	// Vérifier si l'album existe
+	var album models.Album
+	if err := s.DBManager.DB.First(&album, media.AlbumID).Error; err != nil {
+		return fmt.Errorf("album non trouvé pour l'ID %d : %v", media.AlbumID, err)
+	}
+
+	// Télécharger le fichier depuis S3
+	mediaPath := fmt.Sprintf("%s/%s", album.BucketName, media.Name)
+	if err := s.S3Service.DownloadFile(mediaPath, w); err != nil {
+		return fmt.Errorf("échec du téléchargement du fichier : %v", err)
+	}
+
+	log.Printf("Média téléchargé avec succès : %s", mediaPath)
+	return nil
+}
+
