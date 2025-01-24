@@ -200,3 +200,52 @@ func (s *S3Service) DownloadFile(path string, w io.Writer) error {
 	log.Printf("Fichier téléchargé avec succès depuis %s", url)
 	return nil
 }
+
+func (s *S3Service) DeleteObject(bucketName, objectName string) error {
+    // Journaliser la tentative de suppression
+    log.Printf("Tentative de suppression : bucket=%s, key=%s", bucketName, objectName)
+
+    // Construire l'URL pour supprimer l'objet
+    url := fmt.Sprintf("%s/%s/?delete=", s.APIURL, bucketName)
+    log.Printf("URL construite pour la suppression : %s", url)
+
+    // Construire le corps de la requête en XML
+    payload := fmt.Sprintf(`
+    <Delete>
+        <Object>
+            <Key>%s</Key>
+        </Object>
+    </Delete>
+    `, objectName)
+    log.Printf("Corps XML généré : %s", payload)
+
+    // Créer une requête HTTP POST
+    req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(payload)))
+    if err != nil {
+        return fmt.Errorf("échec de la création de la requête de suppression : %v", err)
+    }
+    req.Header.Set("Content-Type", "application/xml")
+
+    // Journaliser les en-têtes
+    log.Printf("Headers envoyés : %v", req.Header)
+
+    // Envoyer la requête HTTP
+    resp, err := http.DefaultClient.Do(req)
+    if err != nil {
+        return fmt.Errorf("échec de la requête de suppression : %v", err)
+    }
+    defer resp.Body.Close()
+
+    // Lire le corps de la réponse pour le log
+    responseBody, _ := io.ReadAll(resp.Body)
+    log.Printf("Code de réponse HTTP : %d, Corps : %s", resp.StatusCode, string(responseBody))
+
+    // Vérifier le code de réponse
+    if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+        return fmt.Errorf("échec de la suppression de l'objet, statut : %s", resp.Status)
+    }
+
+    // Journaliser la réussite
+    log.Printf("Objet supprimé avec succès : %s/%s", bucketName, objectName)
+    return nil
+}

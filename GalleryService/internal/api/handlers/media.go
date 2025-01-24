@@ -194,3 +194,28 @@ func (h *MediaHandler) DownloadMedia(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	log.Printf("Media %d downloaded successfully", mediaID)
 }
+
+func (h *MediaHandler) DeleteMedia(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    mediaID, err := strconv.ParseUint(vars["id"], 10, 64)
+    if err != nil {
+        http.Error(w, "Invalid media ID", http.StatusBadRequest)
+        return
+    }
+
+    // Récupérer le userID à partir du contexte
+    userID, err := utils.GetUserIDFromContext(r.Context())
+    if err != nil {
+        http.Error(w, "Unauthorized: userID missing in context", http.StatusUnauthorized)
+        return
+    }
+
+    // Supprimer le média
+    if err := h.MediaService.DeleteMedia(uint(mediaID), userID); err != nil {
+        log.Printf("Error deleting media: %v", err)
+        http.Error(w, fmt.Sprintf("Failed to delete media: %v", err), http.StatusInternalServerError)
+        return
+    }
+
+    w.WriteHeader(http.StatusNoContent)
+}

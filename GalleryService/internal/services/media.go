@@ -189,3 +189,32 @@ func (s *MediaService) DownloadMedia(mediaID uint, w io.Writer) error {
 	return nil
 }
 
+func (s *MediaService) DeleteMedia(mediaID uint, userID uint) error {
+    // Récupérer le média à partir de son ID
+    var media models.Media
+    if err := s.DBManager.DB.First(&media, mediaID).Error; err != nil {
+        return fmt.Errorf("média introuvable pour mediaID : %d", mediaID)
+    }
+
+    // Vérifier si l'utilisateur est propriétaire de l'album contenant le média
+    var album models.Album
+    if err := s.DBManager.DB.First(&album, media.AlbumID).Error; err != nil {
+        return fmt.Errorf("album introuvable pour albumID : %d", media.AlbumID)
+    }
+    if album.UserID != userID {
+        return fmt.Errorf("l'utilisateur %d n'est pas propriétaire de ce média", userID)
+    }
+
+    // Appeler la méthode du S3Service pour supprimer l'objet
+    if err := s.S3Service.DeleteObject(album.BucketName, media.Name); err != nil {
+        return fmt.Errorf("échec de la suppression du média dans S3 : %v", err)
+    }
+
+    // Supprimer le média de la base de données
+    if err := s.DBManager.DB.Delete(&media).Error; err != nil {
+        return fmt.Errorf("échec de la suppression du média de la base de données : %v", err)
+    }
+
+    log.Printf("Média supprimé avec succès : mediaID=%d, path=%s", mediaID, media.Path)
+    return nil
+}
