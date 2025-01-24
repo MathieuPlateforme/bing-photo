@@ -508,3 +508,93 @@ func HandleBucketDelimiter(s storage.Storage) http.HandlerFunc {
             
     }
 }
+
+type MoveObjectRequest struct {
+	XMLName   xml.Name        `xml:"Move"`
+	Objects   []ObjectToMove  `xml:"Object"`
+	TargetBucket string       `xml:"TargetBucket"`
+}
+
+// ObjectToMove représente un objet à déplacer
+type ObjectToMove struct {
+	Key string `xml:"Key"`
+}
+
+// HandleMoveObject gère les requêtes pour déplacer des objets entre des buckets
+func HandleMoveObject(s storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+			return
+		}
+		log.Printf("Received POST ?move request for moving objects: %s %s", r.Method, r.URL.Path)
+
+		vars := mux.Vars(r)
+		sourceBucket := vars["bucketName"]
+
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Error reading request body", http.StatusInternalServerError)
+			log.Printf("Error reading request body: %v", err)
+			return
+		}
+		log.Printf("Request body: %s", string(body))
+
+		var moveReq MoveObjectRequest
+		err = xml.Unmarshal(body, &moveReq)
+		if err != nil {
+			http.Error(w, "Error parsing XML", http.StatusBadRequest)
+			log.Printf("Error parsing XML: %v", err)
+			return
+		}
+
+		if moveReq.TargetBucket == "" {
+			http.Error(w, "TargetBucket is missing in the request", http.StatusBadRequest)
+			log.Println("Error: TargetBucket is missing")
+			return
+		}
+
+		var movedObjects []dto.Deleted
+		for _, objectToMove := range moveReq.Objects {
+			log.Printf("Attempting to move object: %s", objectToMove.Key)
+
+			// Copier l'objet
+			err := s.CopyObject(sourceBucket, objectToMove.Key, moveReq.TargetBucket, objectToMove.Key)
+			if err != nil {
+				http.Error(w, "Error moving object", http.StatusInternalServerError)
+				log.Printf("Error moving object %s: %v", objectToMove.Key, err)
+				return
+			}
+
+			// Supprimer l'objet source
+			err = s.DeleteObject(sourceBucket, objectToMove.Key)
+			if err != nil {
+				http.Error(w, "Error deleting source object after move", http.StatusInternalServerError)
+				log.Printf("Error deleting object %s: %v", objectToMove.Key, err)
+				return
+			}
+
+			log.Printf("Successfully moved object: %s", objectToMove.Key)
+			movedObjects = append(movedObjects, dto.Deleted{Key: objectToMove.Key})
+		}
+
+		moveResult := dto.DeleteResult{
+			DeletedResult: movedObjects,
+		}
+
+		response, err := xml.Marshal(moveResult)
+		if err != nil {
+			http.Error(w, "Error generating XML response", http.StatusInternalServerError)
+			log.Printf("Error generating XML response: %v", err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/xml")
+		w.WriteHeader(http.StatusOK)
+		w.Write(response)
+
+		// Log response status and body
+		log.Printf("Response status: %d", http.StatusOK)
+		log.Printf("Response body: %s", string(response))
+	}
+}

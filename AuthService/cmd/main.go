@@ -1,20 +1,29 @@
 package main
 
 import (
+	"AuthService/middleware"
+	"AuthService/pkg/jwt"
 	"context"
 	"log"
 	"net"
+	"net/http"
+	"encoding/json"
+	"bytes"
+	"fmt"
 
 	"AuthService/models"
 	proto "AuthService/proto"
 	"AuthService/services/auth"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type authServer struct {
 	proto.UnimplementedAuthServiceServer
 	authService *auth.AuthService
+	JWTService  *jwt.JWTService 
 }
 
 func (s *authServer) Login(ctx context.Context, req *proto.LoginRequest) (*proto.LoginResponse, error) {
@@ -36,16 +45,56 @@ func (s *authServer) Register(ctx context.Context, req *proto.RegisterRequest) (
 		Email:     req.Email,
 		Password:  req.Password,
 		Username:  req.Username,
-		FirstName: req.FirstName,
-		LastName:  req.LastName,
 	})
 
 	if err != nil || !success {
 		return &proto.RegisterResponse{Message: "Registration failed"}, err
 	}
 
+	// Appeler GalleryService pour synchroniser l'utilisateur
+	err = s.syncWithGalleryService(ctx, req.Email, req.Username)
+	if err != nil {
+		return &proto.RegisterResponse{Message: "Failed to sync with GalleryService"}, err
+	}
+
 	return &proto.RegisterResponse{Message: "Registration successful"}, nil
 }
+
+func (s *authServer) syncWithGalleryService(ctx context.Context, email string, username string) error {
+    // Construire la requête pour GalleryService
+    url := "http://gallery-service:50052/users"
+    payload := map[string]string{
+        "email":    email,
+        "username": username,
+    }
+    body, err := json.Marshal(payload)
+    if err != nil {
+        return fmt.Errorf("erreur lors de la construction du payload : %v", err)
+    }
+
+    // Envoyer la requête HTTP POST
+    req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
+    if err != nil {
+        return fmt.Errorf("erreur lors de la création de la requête : %v", err)
+    }
+    req.Header.Set("Content-Type", "application/json")
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        return fmt.Errorf("erreur lors de l'envoi de la requête à GalleryService : %v", err)
+    }
+    defer resp.Body.Close()
+
+    // Vérifier la réponse
+    if resp.StatusCode != http.StatusCreated {
+        return fmt.Errorf("échec de la synchronisation avec GalleryService, statut : %d", resp.StatusCode)
+    }
+
+    log.Println("Utilisateur synchronisé avec succès dans GalleryService")
+    return nil
+}
+
 
 func (s *authServer) ForgotPassword(ctx context.Context, req *proto.ForgotPasswordRequest) (*proto.ForgotPasswordResponse, error) {
 	err := s.authService.ForgotPassword(req.Email)
@@ -78,16 +127,28 @@ func (s *authServer) Logout(ctx context.Context, req *proto.LogoutRequest) (*pro
 }
 
 func main() {
+
+	JWTService, err := jwt.NewJWTService()
+	if err != nil {
+		log.Fatalf("Failed to initialize JWTService: %v", err)
+	}
 	// Initialize AuthService (and other services as needed)
 	authService, err := auth.Initialize()
 	if err != nil {
 		log.Fatalf("Failed to initialize AuthService: %v", err)
 	}
 
-	// Create gRPC server
-	server := grpc.NewServer()
-	proto.RegisterAuthServiceServer(server, &authServer{authService: authService})
+	// Définir les méthodes nécessitant une vérification d'authentification
+	methodsToIntercept := map[string]bool{
+		"/proto.AuthService/Login": true,
+	}
 
+	// Create gRPC server
+	server := grpc.NewServer(grpc.UnaryInterceptor(middleware.AuthInterceptor(JWTService, methodsToIntercept)))
+	proto.RegisterAuthServiceServer(server, &authServer{
+		authService: authService,
+		JWTService:  JWTService,
+	})
 	if err := authService.DBManager.AutoMigrate(); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
@@ -102,4 +163,22 @@ func main() {
 	if err := server.Serve(listener); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}
+}
+
+func (s *authServer) ValidateToken(ctx context.Context, req *proto.ValidateTokenRequest) (*proto.ValidateTokenResponse, error) {
+	log.Printf("Token reçu pour validation : %s", req.Token)
+
+	// Vérifier le token avec le service JWT
+	claims, err := s.JWTService.VerifyToken(req.Token)
+	if err != nil {
+		log.Printf("Erreur lors de la validation du token : %v", err)
+		return nil, status.Errorf(codes.Unauthenticated, "Token invalide : %v", err)
+	}
+
+	log.Printf("Token valide pour l'utilisateur : %v", claims["username"])
+
+	// Réponse avec succès
+	return &proto.ValidateTokenResponse{
+		Message: "Token valide",
+	}, nil
 }

@@ -137,3 +137,40 @@ func (s *S3Service) UploadFile(objectPath string, file io.Reader, fileSize int64
 	return nil
 }
 
+func (s *S3Service) MoveObject(sourceBucket, sourceKey, targetBucket string) error {
+	// Construire l'URL pour déplacer l'objet
+	url := fmt.Sprintf("%s/%s/?move", s.APIURL, sourceBucket)
+
+	// Construire le corps de la requête en XML
+	payload := fmt.Sprintf(`
+	<Move>
+		<Object>
+			<Key>%s</Key>
+		</Object>
+		<TargetBucket>%s</TargetBucket>
+	</Move>
+
+	`,sourceKey, targetBucket)
+
+	// Créer la requête HTTP POST
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(payload)))
+	if err != nil {
+		return fmt.Errorf("échec de la création de la requête de déplacement : %v", err)
+	}
+	req.Header.Set("Content-Type", "application/xml")
+
+	// Envoyer la requête
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("échec de la requête de déplacement : %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Vérifier le code de réponse
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("échec de la requête de déplacement, statut : %s", resp.Status)
+	}
+
+	// Déplacement réussi
+	return nil
+}

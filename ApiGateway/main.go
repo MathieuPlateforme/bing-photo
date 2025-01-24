@@ -51,6 +51,7 @@ func main() {
 	r.HandleFunc("/forgot-password", authHandler.ForgotPasswordHandler).Methods("POST")
 	r.HandleFunc("/reset-password", authHandler.ResetPasswordHandler).Methods("POST")
 	r.HandleFunc("/logout", authHandler.LogoutHandler).Methods("POST")
+	r.HandleFunc("/validateToken", authHandler.ValidateTokenHandler).Methods("POST")
 
 	server := &http.Server{
 		Handler:      r,

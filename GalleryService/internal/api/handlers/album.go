@@ -8,15 +8,17 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"strconv"
+	"GalleryService/internal/utils"
 )
 
 type AlbumHandler struct {
 	AlbumService *services.AlbumService
+	UserService  *services.UserService 
 }
 
 // NewAlbumHandler initialise un gestionnaire AlbumHandler
-func NewAlbumHandler(albumService *services.AlbumService) *AlbumHandler {
-	return &AlbumHandler{AlbumService: albumService}
+func NewAlbumHandler(albumService *services.AlbumService, userService *services.UserService) *AlbumHandler {
+	return &AlbumHandler{AlbumService: albumService, UserService: userService}
 }
 
 // CreateAlbum gère la création d'un album
@@ -114,4 +116,20 @@ func (h *AlbumHandler) DeleteAlbum(w http.ResponseWriter, r *http.Request) {
 	// Répondre avec un statut de succès
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Album supprimé avec succès"))
+}
+
+func (h *AlbumHandler) GetPrivateAlbum(w http.ResponseWriter, r *http.Request) {
+    userID, err := utils.GetUserIDFromContext(r.Context())
+    if err != nil {
+        http.Error(w, "Utilisateur non authentifié", http.StatusUnauthorized)
+        return
+    }
+
+    album, err := h.AlbumService.GetPrivateAlbum(userID)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    json.NewEncoder(w).Encode(album)
 }

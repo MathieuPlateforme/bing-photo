@@ -80,7 +80,7 @@ func (s *AuthService) LoginWithEmail(u models.User, password string) (string, er
 	}
 
 	// 3. Générer un token JWT pour l'utilisateur
-	token, err := s.JWTService.GenerateToken(existingUser.Username)
+	token, err := s.JWTService.GenerateToken(uint(existingUser.ID), existingUser.Username)
 	if err != nil {
 		return "", fmt.Errorf("erreur lors de la génération du token JWT : %v", err)
 	}
@@ -205,3 +205,4 @@ func (s *AuthService) Logout(token string) error {
 
 	return nil
 }
+

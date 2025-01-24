@@ -18,6 +18,7 @@ type Storage interface {
     ListBuckets() []string
     ListObjects(bucketName, prefix, marker string, maxKeys int) (dto.ListObjectsResponse, error)
     CreateBucket(bucketName string) error
+    CopyObject(sourceBucket, sourceKey, targetBucket, targetKey string) error
 }
 
 

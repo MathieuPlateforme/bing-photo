@@ -28,6 +28,7 @@ services:
       - "50051:50051"
     depends_on:
       - db
+      - gallery-service
     env_file:
       - ./AuthService/.env
 

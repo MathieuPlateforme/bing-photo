@@ -5,10 +5,14 @@ import (
 )
 
 type User struct {
-	ID       int    `gorm:"primaryKey"`
-	Username string `gorm:"unique"`
-	Email    string `gorm:"unique"`
-	Password string
+	ID               uint      `gorm:"primaryKey"`
+	Email            string    `gorm:"unique;not null"`
+	Username         string    `gorm:"not null"`
+	PrivateAlbumPin  string    `gorm:"default:null"` 
+	PrivateAlbumID   uint      `gorm:"default:null"`
+	PrivateAlbum     *Album     `gorm:"foreignKey:PrivateAlbumID"`
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
 }
 
 type Album struct {
@@ -16,6 +20,7 @@ type Album struct {
 	Name        string    `gorm:"unique;not null"`
 	UserID      uint      `gorm:"not null"`
 	BucketName  string    `gorm:"not null"`
+	IsPrivate   bool      `gorm:"default:false"` 
 	Description string    
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
@@ -32,6 +37,7 @@ type Media struct {
 	Name       string `gorm:"not null"`
 	Type       string
 	IsFavorite bool   `gorm:"default:false"`
+	IsPrivate  bool   `gorm:"default:false"`
 	Hash       string `gorm:"not null"`
 	FileSize   uint   `gorm:"not null"`
 	CreatedAt  time.Time
@@ -53,14 +59,15 @@ type SimilarMedia struct {
 
 
 type Access struct {
-	ID             int    `gorm:"primaryKey"`
-	MediaID        int
-	UserAccessID   int
-	ExpirationDate time.Time
-	Code           string
-	Status         string
-	Link           string
-	Type           string
+	ID             uint      `gorm:"primaryKey"`
+	MediaID        uint      `gorm:"not null"`
+	Code           string    `gorm:"unique;not null"` 
+	IsPrivate      bool      `gorm:"default:false"`   
+	Pin            string    `gorm:"-"`              
+	PinHash        string    `gorm:"default:null"`    
+	ExpirationDate time.Time `gorm:"default:null"`    
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 type UserAccess struct {

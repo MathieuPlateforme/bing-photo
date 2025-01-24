@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 
 	proto "ApiGateway/proto"
 )
@@ -115,3 +116,33 @@ func (g *ApiGateway) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Message: " + res.Message))
 }
+
+func (g *ApiGateway) ValidateTokenHandler(w http.ResponseWriter, r *http.Request) {
+	// Extraire le token de l'en-tête Authorization
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+		http.Error(w, "Token manquant ou invalide", http.StatusUnauthorized)
+		log.Println("Authorization header missing or invalid")
+		return
+	}
+
+	token := strings.TrimPrefix(authHeader, "Bearer ")
+
+	// Créer une requête gRPC pour valider le token
+	req := &proto.ValidateTokenRequest{
+		Token: token,
+	}
+
+	// Appeler le client AuthService pour valider le token
+	res, err := g.AuthClient.ValidateToken(context.Background(), req)
+	if err != nil {
+		http.Error(w, "Échec de validation du token", http.StatusInternalServerError)
+		log.Printf("Token validation error: %v\n", err)
+		return
+	}
+
+	// Répondre avec le message du service d'authentification
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Message: " + res.Message))
+}
+

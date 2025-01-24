@@ -320,3 +320,32 @@ func (fs *FileStorage) DeleteObject(bucketName, objectName string) error {
     log.Printf("Object %s in bucket %s successfully deleted", objectName, bucketName)
     return nil
 }
+
+func (fs *FileStorage) CopyObject(sourceBucket, sourceKey, targetBucket, targetKey string) error {
+	sourcePath := filepath.Join(storageRoot, sourceBucket, sourceKey)
+	targetPath := filepath.Join(storageRoot, targetBucket, targetKey)
+
+	// Assurez-vous que le répertoire cible existe
+	if err := os.MkdirAll(filepath.Dir(targetPath), os.ModePerm); err != nil {
+		return fmt.Errorf("impossible de créer le répertoire cible : %v", err)
+	}
+
+	// Copier le fichier
+	input, err := os.Open(sourcePath)
+	if err != nil {
+		return fmt.Errorf("impossible d'ouvrir le fichier source : %v", err)
+	}
+	defer input.Close()
+
+	output, err := os.Create(targetPath)
+	if err != nil {
+		return fmt.Errorf("impossible de créer le fichier cible : %v", err)
+	}
+	defer output.Close()
+
+	if _, err := io.Copy(output, input); err != nil {
+		return fmt.Errorf("erreur lors de la copie : %v", err)
+	}
+
+	return nil
+}

@@ -38,8 +38,12 @@ func main() {
 	// Initialiser le S3Service
 	s3Service := services.NewS3Service("http://my-s3-clone:9090")
 
+	// Initialiser le client Auth
+	authClient := services.NewAuthServiceClient("http://gateway-service:8080")
+
+
 	// Initialiser le routeur HTTP
-	router := api.NewRouter(dbManager, s3Service)
+	router := api.NewRouter(dbManager, s3Service, authClient)
 
 	// Configurer le serveur HTTP
 	server := &http.Server{

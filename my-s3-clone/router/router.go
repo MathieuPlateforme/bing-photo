@@ -40,6 +40,7 @@ func SetupRouterWithStorage(s storage.Storage) *mux.Router {
     r.HandleFunc("/{bucketName}/", handlers.HandleBucketLocation(s)).Queries("location", "").Methods("GET", "OPTIONS")
     r.HandleFunc("/{bucketName}/", handlers.HandleBucketLockConfig(s)).Queries("object-lock", "").Methods("GET", "OPTIONS")
     r.HandleFunc("/{bucketName}/", handlers.HandleBucketDelimiter(s)).Queries("delimiter", "").Methods("GET","OPTIONS")
+    r.HandleFunc("/{bucketName}/", handlers.HandleMoveObject(s)).Queries("move", "").Methods("POST", "OPTIONS")
     
 
     // Bucket-specific routes

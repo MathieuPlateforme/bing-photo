@@ -7,15 +7,17 @@ import (
 	"net/http"
 	"strconv"
 	"github.com/gorilla/mux"
+	"GalleryService/internal/utils"
 )
 
 type MediaHandler struct {
 	MediaService *services.MediaService
+    UserService  *services.UserService 
 }
 
 // NewMediaHandler initialise un gestionnaire MediaHandler
-func NewMediaHandler(mediaService *services.MediaService) *MediaHandler {
-	return &MediaHandler{MediaService: mediaService}
+func NewMediaHandler(mediaService *services.MediaService, userService *services.UserService) *MediaHandler {
+	return &MediaHandler{MediaService: mediaService, UserService: userService}
 }
 
 // AddMedia gère l'ajout d'un fichier
@@ -87,3 +89,85 @@ func (h *MediaHandler) GetMediaByUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(mediaList)
 }
 
+func (h *MediaHandler) MarkAsPrivate(w http.ResponseWriter, r *http.Request) {
+	userID, err := utils.GetUserIDFromContext(r.Context())
+	if err != nil {
+		http.Error(w, "Utilisateur non authentifié", http.StatusUnauthorized)
+		return
+	}
+		
+	mediaID, _ := strconv.Atoi(mux.Vars(r)["id"])
+
+	var request struct {
+		Pin string `json:"pin"`
+	}
+	json.NewDecoder(r.Body).Decode(&request)
+
+	err = h.UserService.SetPrivateAlbumPin(uint(userID), request.Pin)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = h.MediaService.MarkAsPrivate(uint(userID), uint(mediaID))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Photo marquée comme privée"})
+}
+
+func (h *MediaHandler) GetPrivateMedia(w http.ResponseWriter, r *http.Request) {
+	userID, err := utils.GetUserIDFromContext(r.Context())
+	if err != nil {
+		http.Error(w, "Utilisateur non authentifié", http.StatusUnauthorized)
+		return
+	}
+	
+	pin := r.URL.Query().Get("pin")
+
+	err = h.UserService.VerifyPrivateAlbumPin(uint(userID), pin)
+	if err != nil {
+		http.Error(w, "PIN incorrect", http.StatusUnauthorized)
+		return
+	}
+
+	media, err := h.MediaService.GetPrivateMedia(uint(userID))
+	if err != nil {
+		http.Error(w, "Erreur lors de la récupération des photos privées", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(media)
+}
+
+func (h *MediaHandler) MarkMediaAsPrivate(w http.ResponseWriter, r *http.Request) {
+    userID, err := utils.GetUserIDFromContext(r.Context())
+    if err != nil {
+        http.Error(w, "Utilisateur non authentifié", http.StatusUnauthorized)
+        return
+    }
+
+    var request struct {
+        MediaID uint `json:"mediaID"`
+    }
+
+    if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+        http.Error(w, "Données de requête invalides", http.StatusBadRequest)
+        return
+    }
+
+    err = h.MediaService.MarkAsPrivate(request.MediaID, userID)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    w.WriteHeader(http.StatusOK)
+    json.NewEncoder(w).Encode(map[string]string{
+        "message": "Média marqué comme privé avec succès",
+    })
+}
