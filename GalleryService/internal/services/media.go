@@ -7,6 +7,10 @@ import (
 	"io"
 	"log"
 	"strings"
+    "errors"
+    "GalleryService/internal/utils"
+    "os"
+    "time"
 )
 
 type MediaService struct {
@@ -218,3 +222,116 @@ func (s *MediaService) DeleteMedia(mediaID uint, userID uint) error {
     log.Printf("Média supprimé avec succès : mediaID=%d, path=%s", mediaID, media.Path)
     return nil
 }
+
+func (s *MediaService) DetectSimilarMedia(userID uint, albumID uint) ([]models.Media, error) {
+    log.Printf("Starting detection of similar media for userID=%d in albumID=%d", userID, albumID)
+
+    var album models.Album
+    if err := s.DBManager.DB.First(&album, albumID).Error; err != nil {
+        return nil, fmt.Errorf("album not found")
+    }
+    if album.UserID != userID {
+        return nil, fmt.Errorf("access denied")
+    }
+
+    fileNames, err := s.S3Service.GetFilesInAlbum(album.BucketName)
+    if err != nil {
+        return nil, fmt.Errorf("error retrieving files")
+    }
+    if len(fileNames) < 2 {
+        return nil, errors.New("not enough files to compare")
+    }
+
+    log.Printf("Number of files retrieved for albumID=%d: %d", albumID, len(fileNames))
+
+    newGroup := models.SimilarGroup{
+        UserID:    userID,
+        CreatedAt: time.Now(),
+    }
+    if err := s.DBManager.DB.Create(&newGroup).Error; err != nil {
+        return nil, fmt.Errorf("failed to create similarity group: %v", err)
+    }
+
+    hashes := make(map[string]uint64)
+    tempFiles := make(map[string]string)
+
+    for _, fileName := range fileNames {
+        tempFilePath, err := s.S3Service.DownloadTempFile(album.BucketName, fileName)
+        if err != nil {
+            log.Printf("Download error for %s: %v", fileName, err)
+            continue
+        }
+        tempFiles[tempFilePath] = fileName
+
+        hash, err := utils.ComputePHash(tempFilePath)
+        if err != nil {
+            log.Printf("Error computing pHash for %s: %v", tempFilePath, err)
+            continue
+        }
+        hashes[tempFilePath] = hash
+    }
+
+    if len(hashes) < 2 {
+        return nil, errors.New("not enough valid media for comparison")
+    }
+
+    similarEntries := []models.SimilarMedia{}
+    threshold := 20
+    files := make([]string, 0, len(hashes))
+    for file := range hashes {
+        files = append(files, file)
+    }
+
+    for i := 0; i < len(files); i++ {
+        for j := i + 1; j < len(files); j++ {
+            dist := utils.HammingDistance(hashes[files[i]], hashes[files[j]])
+            log.Printf("Hamming distance between %s and %s: %d", files[i], files[j], dist)
+            if dist < threshold {
+                log.Printf("Similar media found: %s and %s (distance: %d)", files[i], files[j], dist)
+
+                var media1, media2 models.Media
+                if err := s.DBManager.DB.Where("album_id = ? AND name = ?", albumID, tempFiles[files[i]]).First(&media1).Error; err != nil {
+                    continue
+                }
+                if err := s.DBManager.DB.Where("album_id = ? AND name = ?", albumID, tempFiles[files[j]]).First(&media2).Error; err != nil {
+                    continue
+                }
+
+                similarEntries = append(similarEntries, models.SimilarMedia{
+                    SimilarGroupID: newGroup.ID,
+                    MediaID:        media1.ID,
+                    SimilarityScore: float64(100 - dist), 
+                })
+                similarEntries = append(similarEntries, models.SimilarMedia{
+                    SimilarGroupID: newGroup.ID,
+                    MediaID:        media2.ID,
+                    SimilarityScore: float64(100 - dist),
+                })
+            }
+        }
+    }
+
+    if len(similarEntries) > 0 {
+        if err := s.DBManager.DB.Create(&similarEntries).Error; err != nil {
+            return nil, fmt.Errorf("failed to save similarity data: %v", err)
+        }
+    }
+
+    for tempPath := range tempFiles {
+        _ = os.Remove(tempPath)
+    }
+
+    var similarMedia []models.Media
+    if len(similarEntries) > 0 {
+        var mediaIDs []uint
+        for _, entry := range similarEntries {
+            mediaIDs = append(mediaIDs, entry.MediaID)
+        }
+        s.DBManager.DB.Where("id IN (?)", mediaIDs).Find(&similarMedia)
+    }
+
+    log.Printf("Similar media detection completed for albumID=%d: %d media found", albumID, len(similarMedia))
+
+    return similarMedia, nil
+}
+

@@ -49,6 +49,7 @@ func NewRouter(dbManager *db.DBManagerService, s3Service *services.S3Service, au
 	router.HandleFunc("/media/private", mediaHandler.GetPrivateMedia).Methods("GET")
 	router.HandleFunc("/media/{id}", mediaHandler.DownloadMedia).Methods("GET")
 	router.HandleFunc("/media/{id}", mediaHandler.DeleteMedia).Methods("DELETE")
+	router.HandleFunc("/{albumID}/media/similar", mediaHandler.DetectSimilarMedia).Methods("POST")
 
 	return router
 }

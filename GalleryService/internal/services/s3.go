@@ -8,6 +8,7 @@ import (
     "time"
 	"io"
 	"log"
+	"os"
 )
 
 // S3Service gère la communication avec l'API S3-like
@@ -248,4 +249,57 @@ func (s *S3Service) DeleteObject(bucketName, objectName string) error {
     // Journaliser la réussite
     log.Printf("Objet supprimé avec succès : %s/%s", bucketName, objectName)
     return nil
+}
+
+func (s *S3Service) GetFilesInAlbum(bucketName string) ([]string, error) {
+    url := fmt.Sprintf("%s/%s/", s.APIURL, bucketName)
+
+    resp, err := http.Get(url)
+    if err != nil {
+        return nil, fmt.Errorf("échec de la récupération des fichiers pour l'album %s : %v", bucketName, err)
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        return nil, fmt.Errorf("échec de la requête, statut HTTP : %d", resp.StatusCode)
+    }
+
+    var listResponse struct {
+        Objects []struct {
+            Key string `xml:"Key"`
+        } `xml:"Contents"`
+    }
+
+    err = xml.NewDecoder(resp.Body).Decode(&listResponse)
+    if err != nil {
+        return nil, fmt.Errorf("échec du décodage XML : %v", err)
+    }
+
+    fileNames := []string{}
+    for _, obj := range listResponse.Objects {
+        fileNames = append(fileNames, obj.Key)
+    }
+
+    log.Printf("Fichiers récupérés pour l'album %s : %v", bucketName, fileNames)
+    return fileNames, nil
+}
+
+
+func (s *S3Service) DownloadTempFile(bucketName, objectName string) (string, error) {
+    localPath := fmt.Sprintf("/tmp/%s", objectName)
+
+    file, err := os.Create(localPath)
+    if err != nil {
+        return "", fmt.Errorf("échec de la création du fichier temporaire: %v", err)
+    }
+    defer file.Close()
+
+    filePath := fmt.Sprintf("%s/%s", bucketName, objectName)
+    err = s.DownloadFile(filePath, file)
+    if err != nil {
+        return "", fmt.Errorf("échec du téléchargement du fichier: %v", err)
+    }
+
+    log.Printf("Fichier téléchargé temporairement : %s", localPath)
+    return localPath, nil
 }

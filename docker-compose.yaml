@@ -62,7 +62,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./buckets:/mydata/data
+      - ./my-s3-clone/buckets:/mydata/data
     env_file:
       - ./my-s3-clone/.env
 
@@ -78,4 +78,3 @@ services:
       
 volumes:
   db_data:
-  s3_data:

@@ -219,3 +219,49 @@ func (h *MediaHandler) DeleteMedia(w http.ResponseWriter, r *http.Request) {
 
     w.WriteHeader(http.StatusNoContent)
 }
+
+func (h *MediaHandler) DetectSimilarMedia(w http.ResponseWriter, r *http.Request) {
+    userID, err := utils.GetUserIDFromContext(r.Context())
+    if err != nil {
+        log.Printf("Error retrieving userID from context: %v", err)
+        http.Error(w, "User not authenticated", http.StatusUnauthorized)
+        return
+    }
+
+    vars := mux.Vars(r)
+    albumIDStr, exists := vars["albumID"]
+    if !exists {
+        http.Error(w, "albumID required in the URL", http.StatusBadRequest)
+        return
+    }
+
+    albumID, err := strconv.ParseUint(albumIDStr, 10, 32)
+    if err != nil {
+        http.Error(w, "Invalid albumID", http.StatusBadRequest)
+        return
+    }
+
+    log.Printf("Detecting similar media for userID=%d in albumID=%d", userID, albumID)
+
+    similarMedia, err := h.MediaService.DetectSimilarMedia(uint(userID), uint(albumID))
+    if err != nil {
+        log.Printf("Error detecting similar media: %v", err)
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    response, err := json.Marshal(similarMedia)
+    if err != nil {
+        log.Printf("Error generating JSON response: %v", err)
+        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
+    w.Write(response)
+
+    log.Printf("Successfully completed similar media detection for userID=%d and albumID=%d", userID, albumID)
+}
+
+
