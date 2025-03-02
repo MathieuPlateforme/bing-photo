@@ -181,8 +181,11 @@ func (h *AuthHandlers) ResetPasswordHandler(w http.ResponseWriter, r *http.Reque
 
 func (h *AuthHandlers) LoginWithGoogleHandler(w http.ResponseWriter, r *http.Request) {
 	// Appeler AuthenticateWithGoogle pour obtenir l'URL d'authentification
-	authURL := h.GoogleAuthService.AuthenticateWithGoogle()
-
+	authURL, err := h.GoogleAuthService.AuthenticateWithGoogle()
+	if err != nil {
+		http.Error(w, "Échec de l'échange de jeton : "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 	// Rediriger l'utilisateur vers l'URL d'authentification Google
 	http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
 }

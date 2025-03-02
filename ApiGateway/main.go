@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -31,8 +32,11 @@ func connectToService(address string) (*grpc.ClientConn, error) {
 	return conn, nil
 }
 
-func main() {
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+}
 
+func main() {
 	authServiceAddress := os.Getenv("AUTH_SERVICE")
 
 	authConn, err := connectToService(authServiceAddress)
@@ -46,12 +50,30 @@ func main() {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/login", authHandler.LoginHandler).Methods("POST")
-	r.HandleFunc("/register", authHandler.RegisterHandler).Methods("POST")
-	r.HandleFunc("/forgot-password", authHandler.ForgotPasswordHandler).Methods("POST")
-	r.HandleFunc("/reset-password", authHandler.ResetPasswordHandler).Methods("POST")
-	r.HandleFunc("/logout", authHandler.LogoutHandler).Methods("POST")
-	r.HandleFunc("/validateToken", authHandler.ValidateTokenHandler).Methods("POST")
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedHeaders: []string{"Content-Type", "Authorization"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		Debug:          true,
+	})
+
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			enableCors(&w)
+			next.ServeHTTP(w, r)
+		})
+	})
+
+	r.Use(c.Handler)
+
+	r.HandleFunc("/login", authHandler.LoginHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/register", authHandler.RegisterHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/google", authHandler.GoogleHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/oauth2/callback", authHandler.GoogleCallbackHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/forgot-password", authHandler.ForgotPasswordHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/reset-password", authHandler.ResetPasswordHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/logout", authHandler.LogoutHandler).Methods("POST", "OPTIONS")
+  r.HandleFunc("/validateToken", authHandler.ValidateTokenHandler).Methods("POST")
 
 	server := &http.Server{
 		Handler:      r,

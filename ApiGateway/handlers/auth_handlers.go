@@ -33,8 +33,14 @@ func (g *ApiGateway) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	response := map[string]string{"Token": res.Token}
+
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Token: " + res.Token))
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode response: %v\n", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (g *ApiGateway) RegisterHandler(w http.ResponseWriter, r *http.Request) {
@@ -53,8 +59,14 @@ func (g *ApiGateway) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	response := map[string]string{"Message": res.Message}
+
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Message: " + res.Message))
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode response: %v\n", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (g *ApiGateway) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
@@ -72,9 +84,14 @@ func (g *ApiGateway) ForgotPasswordHandler(w http.ResponseWriter, r *http.Reques
 		log.Printf("Forgot password error: %v\n", err)
 		return
 	}
+	response := map[string]string{"Message": res.Message}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Message: " + res.Message))
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode response: %v\n", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (g *ApiGateway) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
@@ -93,8 +110,14 @@ func (g *ApiGateway) ResetPasswordHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	response := map[string]string{"Message": res.Message}
+
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Message: " + res.Message))
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode response: %v\n", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (g *ApiGateway) LogoutHandler(w http.ResponseWriter, r *http.Request) {
@@ -114,7 +137,42 @@ func (g *ApiGateway) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Message: " + res.Message))
+	response := map[string]string{"Message": res.Message}
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode response: %v\n", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+}
+func (g *ApiGateway) GoogleHandler(w http.ResponseWriter, r *http.Request) {
+
+	res, err := g.AuthClient.LoginWithGoogle(context.Background(), &proto.GoogleAuthRequest{})
+	if err != nil {
+		http.Error(w, "Failed to generate URL", http.StatusInternalServerError)
+		log.Printf("Failed to generate URL: %v\n", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Message: " + res.AuthUrl))
+}
+func (g *ApiGateway) GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
+	req := &proto.GoogleAuthCallbackRequest{}
+	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		log.Printf("Failed to parse request: %v\n", err)
+		return
+	}
+
+	res, err := g.AuthClient.GoogleAuthCallback(context.Background(), req)
+	if err != nil {
+		http.Error(w, "Google callback failed"+err.Error(), http.StatusInternalServerError)
+		log.Printf("Google callback error: %v\n", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Token: " + res.Message + "user: " + res.UserInfo))
 }
 
 func (g *ApiGateway) ValidateTokenHandler(w http.ResponseWriter, r *http.Request) {

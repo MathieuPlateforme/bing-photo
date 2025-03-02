@@ -15,6 +15,9 @@ import (
 	proto "AuthService/proto"
 	"AuthService/services/auth"
 
+	"encoding/json"
+
+	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -125,7 +128,29 @@ func (s *authServer) Logout(ctx context.Context, req *proto.LogoutRequest) (*pro
 
 	return &proto.LogoutResponse{}, nil
 }
+func (s *authServer) LoginWithGoogle(ctx context.Context, req *proto.GoogleAuthRequest) (*proto.GoogleAuthResponse, error) {
+	authUrl, err := s.authService.GoogleAuthService.AuthenticateWithGoogle()
 
+	if err != nil {
+		return &proto.GoogleAuthResponse{AuthUrl: "Login failed"}, err
+	}
+
+	return &proto.GoogleAuthResponse{AuthUrl: authUrl}, nil
+}
+func (s *authServer) GoogleAuthCallback(ctx context.Context, req *proto.GoogleAuthCallbackRequest) (*proto.GoogleAuthCallbackResponse, error) {
+	token, err := s.authService.GoogleAuthService.Config.Exchange(oauth2.NoContext, req.Code)
+	userInfo, err := s.authService.GoogleAuthService.GetGoogleUserProfile(token)
+
+	if err != nil {
+		return &proto.GoogleAuthCallbackResponse{Message: "Login failed"}, err
+	}
+
+	userInfoJson, err := json.Marshal(userInfo)
+	if err != nil {
+		return &proto.GoogleAuthCallbackResponse{Message: "Failed to parse user info"}, err
+	}
+	return &proto.GoogleAuthCallbackResponse{UserInfo: string(userInfoJson), Message: "Login successful"}, nil
+}
 func main() {
 
 	JWTService, err := jwt.NewJWTService()
