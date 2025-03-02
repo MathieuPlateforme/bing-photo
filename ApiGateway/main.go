@@ -57,8 +57,6 @@ func main() {
 		Debug:          true,
 	})
 
-	r.Use(c.Handler)
-
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			enableCors(&w)
@@ -75,6 +73,7 @@ func main() {
 	r.HandleFunc("/forgot-password", authHandler.ForgotPasswordHandler).Methods("POST", "OPTIONS")
 	r.HandleFunc("/reset-password", authHandler.ResetPasswordHandler).Methods("POST", "OPTIONS")
 	r.HandleFunc("/logout", authHandler.LogoutHandler).Methods("POST", "OPTIONS")
+  r.HandleFunc("/validateToken", authHandler.ValidateTokenHandler).Methods("POST")
 
 	server := &http.Server{
 		Handler:      r,
