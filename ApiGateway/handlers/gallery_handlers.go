@@ -109,14 +109,14 @@ func (g *GalleryGateway) DeleteAlbumHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func (g *GalleryGateway) GetPrivateAlbumHandler(w http.ResponseWriter, r *http.Request) {
-	userID, err := strconv.ParseUint(r.URL.Query().Get("user_id"), 10, 32)
+	albumID, err := strconv.ParseUint(r.URL.Query().Get("album_id"), 10, 32)
 	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		http.Error(w, "Invalid album ID", http.StatusBadRequest)
 		return
 	}
 
 	req := &proto.GetPrivateAlbumRequest{
-		UserId: uint32(userID),
+		AlbumId: uint32(albumID),
 	}
 
 	res, err := g.GalleryClient.GetPrivateAlbum(context.Background(), req)
@@ -216,14 +216,17 @@ func (g *GalleryGateway) MarkAsPrivateHandler(w http.ResponseWriter, r *http.Req
 }
 
 func (g *GalleryGateway) GetPrivateMediaHandler(w http.ResponseWriter, r *http.Request) {
-	var req proto.GetPrivateMediaRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		log.Printf("Failed to parse request: %v\n", err)
+	userID, err := strconv.ParseUint(r.URL.Query().Get("user_id"), 10, 32)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 
-	res, err := g.MediaClient.GetPrivateMedia(context.Background(), &req)
+	req := &proto.GetPrivateMediaRequest{
+		UserId: uint32(userID),
+	}
+
+	res, err := g.MediaClient.GetPrivateMedia(context.Background(), req)
 	if err != nil {
 		http.Error(w, "Failed to get private media: "+err.Error(), http.StatusInternalServerError)
 		log.Printf("Get private media error: %v\n", err)
@@ -281,14 +284,17 @@ func (g *GalleryGateway) DeleteMediaHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func (g *GalleryGateway) DetectSimilarMediaHandler(w http.ResponseWriter, r *http.Request) {
-	var req proto.DetectSimilarMediaRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		log.Printf("Failed to parse request: %v\n", err)
+	mediaID, err := strconv.ParseUint(r.URL.Query().Get("media_id"), 10, 32)
+	if err != nil {
+		http.Error(w, "Invalid media ID", http.StatusBadRequest)
 		return
 	}
 
-	res, err := g.MediaClient.DetectSimilarMedia(context.Background(), &req)
+	req := &proto.DetectSimilarMediaRequest{
+		MediaId: uint32(mediaID),
+	}
+
+	res, err := g.MediaClient.DetectSimilarMedia(context.Background(), req)
 	if err != nil {
 		http.Error(w, "Failed to detect similar media: "+err.Error(), http.StatusInternalServerError)
 		log.Printf("Detect similar media error: %v\n", err)

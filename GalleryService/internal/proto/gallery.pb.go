@@ -408,7 +408,7 @@ func (x *DeleteAlbumResponse) GetMessage() string {
 
 type GetPrivateAlbumRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        uint32                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	AlbumId       uint32                 `protobuf:"varint,1,opt,name=album_id,json=albumId,proto3" json:"album_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -443,9 +443,9 @@ func (*GetPrivateAlbumRequest) Descriptor() ([]byte, []int) {
 	return file_proto_gallery_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *GetPrivateAlbumRequest) GetUserId() uint32 {
+func (x *GetPrivateAlbumRequest) GetAlbumId() uint32 {
 	if x != nil {
-		return x.UserId
+		return x.AlbumId
 	}
 	return 0
 }
@@ -689,9 +689,8 @@ func (x *GetMediaByUserResponse) GetMediaList() []*Media {
 
 type MarkAsPrivateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        uint32                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	MediaId       uint32                 `protobuf:"varint,2,opt,name=media_id,json=mediaId,proto3" json:"media_id,omitempty"`
-	Pin           string                 `protobuf:"bytes,3,opt,name=pin,proto3" json:"pin,omitempty"`
+	MediaId       uint32                 `protobuf:"varint,1,opt,name=media_id,json=mediaId,proto3" json:"media_id,omitempty"`
+	Pin           string                 `protobuf:"bytes,2,opt,name=pin,proto3" json:"pin,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -724,13 +723,6 @@ func (x *MarkAsPrivateRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use MarkAsPrivateRequest.ProtoReflect.Descriptor instead.
 func (*MarkAsPrivateRequest) Descriptor() ([]byte, []int) {
 	return file_proto_gallery_proto_rawDescGZIP(), []int{14}
-}
-
-func (x *MarkAsPrivateRequest) GetUserId() uint32 {
-	if x != nil {
-		return x.UserId
-	}
-	return 0
 }
 
 func (x *MarkAsPrivateRequest) GetMediaId() uint32 {
@@ -794,7 +786,6 @@ func (x *MarkAsPrivateResponse) GetMessage() string {
 type GetPrivateMediaRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        uint32                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Pin           string                 `protobuf:"bytes,2,opt,name=pin,proto3" json:"pin,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -834,13 +825,6 @@ func (x *GetPrivateMediaRequest) GetUserId() uint32 {
 		return x.UserId
 	}
 	return 0
-}
-
-func (x *GetPrivateMediaRequest) GetPin() string {
-	if x != nil {
-		return x.Pin
-	}
-	return ""
 }
 
 type GetPrivateMediaResponse struct {
@@ -1065,8 +1049,7 @@ func (x *DeleteMediaResponse) GetMessage() string {
 
 type DetectSimilarMediaRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        uint32                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	AlbumId       uint32                 `protobuf:"varint,2,opt,name=album_id,json=albumId,proto3" json:"album_id,omitempty"`
+	MediaId       uint32                 `protobuf:"varint,1,opt,name=media_id,json=mediaId,proto3" json:"media_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1101,16 +1084,9 @@ func (*DetectSimilarMediaRequest) Descriptor() ([]byte, []int) {
 	return file_proto_gallery_proto_rawDescGZIP(), []int{22}
 }
 
-func (x *DetectSimilarMediaRequest) GetUserId() uint32 {
+func (x *DetectSimilarMediaRequest) GetMediaId() uint32 {
 	if x != nil {
-		return x.UserId
-	}
-	return 0
-}
-
-func (x *DetectSimilarMediaRequest) GetAlbumId() uint32 {
-	if x != nil {
-		return x.AlbumId
+		return x.MediaId
 	}
 	return 0
 }
@@ -1162,8 +1138,8 @@ func (x *DetectSimilarMediaResponse) GetMedia() []*Media {
 // User messages
 type CreateUserRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
-	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1198,16 +1174,16 @@ func (*CreateUserRequest) Descriptor() ([]byte, []int) {
 	return file_proto_gallery_proto_rawDescGZIP(), []int{24}
 }
 
-func (x *CreateUserRequest) GetEmail() string {
+func (x *CreateUserRequest) GetUsername() string {
 	if x != nil {
-		return x.Email
+		return x.Username
 	}
 	return ""
 }
 
-func (x *CreateUserRequest) GetUsername() string {
+func (x *CreateUserRequest) GetEmail() string {
 	if x != nil {
-		return x.Username
+		return x.Email
 	}
 	return ""
 }
@@ -1256,6 +1232,447 @@ func (x *CreateUserResponse) GetMessage() string {
 	return ""
 }
 
+// S3 messages
+type ListBucketsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListBucketsRequest) Reset() {
+	*x = ListBucketsRequest{}
+	mi := &file_proto_gallery_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListBucketsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListBucketsRequest) ProtoMessage() {}
+
+func (x *ListBucketsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gallery_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListBucketsRequest.ProtoReflect.Descriptor instead.
+func (*ListBucketsRequest) Descriptor() ([]byte, []int) {
+	return file_proto_gallery_proto_rawDescGZIP(), []int{26}
+}
+
+type ListBucketsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Buckets       []*Bucket              `protobuf:"bytes,1,rep,name=buckets,proto3" json:"buckets,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListBucketsResponse) Reset() {
+	*x = ListBucketsResponse{}
+	mi := &file_proto_gallery_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListBucketsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListBucketsResponse) ProtoMessage() {}
+
+func (x *ListBucketsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gallery_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListBucketsResponse.ProtoReflect.Descriptor instead.
+func (*ListBucketsResponse) Descriptor() ([]byte, []int) {
+	return file_proto_gallery_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *ListBucketsResponse) GetBuckets() []*Bucket {
+	if x != nil {
+		return x.Buckets
+	}
+	return nil
+}
+
+type CreateBucketRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BucketName    string                 `protobuf:"bytes,1,opt,name=bucket_name,json=bucketName,proto3" json:"bucket_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateBucketRequest) Reset() {
+	*x = CreateBucketRequest{}
+	mi := &file_proto_gallery_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateBucketRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateBucketRequest) ProtoMessage() {}
+
+func (x *CreateBucketRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gallery_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateBucketRequest.ProtoReflect.Descriptor instead.
+func (*CreateBucketRequest) Descriptor() ([]byte, []int) {
+	return file_proto_gallery_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *CreateBucketRequest) GetBucketName() string {
+	if x != nil {
+		return x.BucketName
+	}
+	return ""
+}
+
+type CreateBucketResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateBucketResponse) Reset() {
+	*x = CreateBucketResponse{}
+	mi := &file_proto_gallery_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateBucketResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateBucketResponse) ProtoMessage() {}
+
+func (x *CreateBucketResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gallery_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateBucketResponse.ProtoReflect.Descriptor instead.
+func (*CreateBucketResponse) Descriptor() ([]byte, []int) {
+	return file_proto_gallery_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *CreateBucketResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type DeleteBucketRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BucketName    string                 `protobuf:"bytes,1,opt,name=bucket_name,json=bucketName,proto3" json:"bucket_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteBucketRequest) Reset() {
+	*x = DeleteBucketRequest{}
+	mi := &file_proto_gallery_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteBucketRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteBucketRequest) ProtoMessage() {}
+
+func (x *DeleteBucketRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gallery_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteBucketRequest.ProtoReflect.Descriptor instead.
+func (*DeleteBucketRequest) Descriptor() ([]byte, []int) {
+	return file_proto_gallery_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *DeleteBucketRequest) GetBucketName() string {
+	if x != nil {
+		return x.BucketName
+	}
+	return ""
+}
+
+type DeleteBucketResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteBucketResponse) Reset() {
+	*x = DeleteBucketResponse{}
+	mi := &file_proto_gallery_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteBucketResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteBucketResponse) ProtoMessage() {}
+
+func (x *DeleteBucketResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gallery_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteBucketResponse.ProtoReflect.Descriptor instead.
+func (*DeleteBucketResponse) Descriptor() ([]byte, []int) {
+	return file_proto_gallery_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *DeleteBucketResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type GetFilesInAlbumRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BucketName    string                 `protobuf:"bytes,1,opt,name=bucket_name,json=bucketName,proto3" json:"bucket_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetFilesInAlbumRequest) Reset() {
+	*x = GetFilesInAlbumRequest{}
+	mi := &file_proto_gallery_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetFilesInAlbumRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetFilesInAlbumRequest) ProtoMessage() {}
+
+func (x *GetFilesInAlbumRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gallery_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetFilesInAlbumRequest.ProtoReflect.Descriptor instead.
+func (*GetFilesInAlbumRequest) Descriptor() ([]byte, []int) {
+	return file_proto_gallery_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *GetFilesInAlbumRequest) GetBucketName() string {
+	if x != nil {
+		return x.BucketName
+	}
+	return ""
+}
+
+type GetFilesInAlbumResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FileNames     []string               `protobuf:"bytes,1,rep,name=file_names,json=fileNames,proto3" json:"file_names,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetFilesInAlbumResponse) Reset() {
+	*x = GetFilesInAlbumResponse{}
+	mi := &file_proto_gallery_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetFilesInAlbumResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetFilesInAlbumResponse) ProtoMessage() {}
+
+func (x *GetFilesInAlbumResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gallery_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetFilesInAlbumResponse.ProtoReflect.Descriptor instead.
+func (*GetFilesInAlbumResponse) Descriptor() ([]byte, []int) {
+	return file_proto_gallery_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *GetFilesInAlbumResponse) GetFileNames() []string {
+	if x != nil {
+		return x.FileNames
+	}
+	return nil
+}
+
+type DownloadTempFileRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BucketName    string                 `protobuf:"bytes,1,opt,name=bucket_name,json=bucketName,proto3" json:"bucket_name,omitempty"`
+	ObjectName    string                 `protobuf:"bytes,2,opt,name=object_name,json=objectName,proto3" json:"object_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DownloadTempFileRequest) Reset() {
+	*x = DownloadTempFileRequest{}
+	mi := &file_proto_gallery_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DownloadTempFileRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DownloadTempFileRequest) ProtoMessage() {}
+
+func (x *DownloadTempFileRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gallery_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DownloadTempFileRequest.ProtoReflect.Descriptor instead.
+func (*DownloadTempFileRequest) Descriptor() ([]byte, []int) {
+	return file_proto_gallery_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *DownloadTempFileRequest) GetBucketName() string {
+	if x != nil {
+		return x.BucketName
+	}
+	return ""
+}
+
+func (x *DownloadTempFileRequest) GetObjectName() string {
+	if x != nil {
+		return x.ObjectName
+	}
+	return ""
+}
+
+type DownloadTempFileResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	LocalPath     string                 `protobuf:"bytes,1,opt,name=local_path,json=localPath,proto3" json:"local_path,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DownloadTempFileResponse) Reset() {
+	*x = DownloadTempFileResponse{}
+	mi := &file_proto_gallery_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DownloadTempFileResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DownloadTempFileResponse) ProtoMessage() {}
+
+func (x *DownloadTempFileResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gallery_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DownloadTempFileResponse.ProtoReflect.Descriptor instead.
+func (*DownloadTempFileResponse) Descriptor() ([]byte, []int) {
+	return file_proto_gallery_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *DownloadTempFileResponse) GetLocalPath() string {
+	if x != nil {
+		return x.LocalPath
+	}
+	return ""
+}
+
 // Data structures
 type Album struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1269,7 +1686,7 @@ type Album struct {
 
 func (x *Album) Reset() {
 	*x = Album{}
-	mi := &file_proto_gallery_proto_msgTypes[26]
+	mi := &file_proto_gallery_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1281,7 +1698,7 @@ func (x *Album) String() string {
 func (*Album) ProtoMessage() {}
 
 func (x *Album) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gallery_proto_msgTypes[26]
+	mi := &file_proto_gallery_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1294,7 +1711,7 @@ func (x *Album) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Album.ProtoReflect.Descriptor instead.
 func (*Album) Descriptor() ([]byte, []int) {
-	return file_proto_gallery_proto_rawDescGZIP(), []int{26}
+	return file_proto_gallery_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *Album) GetId() uint32 {
@@ -1337,7 +1754,7 @@ type Media struct {
 
 func (x *Media) Reset() {
 	*x = Media{}
-	mi := &file_proto_gallery_proto_msgTypes[27]
+	mi := &file_proto_gallery_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1349,7 +1766,7 @@ func (x *Media) String() string {
 func (*Media) ProtoMessage() {}
 
 func (x *Media) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gallery_proto_msgTypes[27]
+	mi := &file_proto_gallery_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1362,7 +1779,7 @@ func (x *Media) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Media.ProtoReflect.Descriptor instead.
 func (*Media) Descriptor() ([]byte, []int) {
-	return file_proto_gallery_proto_rawDescGZIP(), []int{27}
+	return file_proto_gallery_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *Media) GetId() uint32 {
@@ -1393,6 +1810,82 @@ func (x *Media) GetFileSize() uint32 {
 	return 0
 }
 
+type Bucket struct {
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	Name               string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	CreationDate       string                 `protobuf:"bytes,2,opt,name=creation_date,json=creationDate,proto3" json:"creation_date,omitempty"`
+	LocationConstraint string                 `protobuf:"bytes,3,opt,name=location_constraint,json=locationConstraint,proto3" json:"location_constraint,omitempty"`
+	ObjectLockConfig   string                 `protobuf:"bytes,4,opt,name=object_lock_config,json=objectLockConfig,proto3" json:"object_lock_config,omitempty"`
+	ObjectDelimiter    string                 `protobuf:"bytes,5,opt,name=object_delimiter,json=objectDelimiter,proto3" json:"object_delimiter,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *Bucket) Reset() {
+	*x = Bucket{}
+	mi := &file_proto_gallery_proto_msgTypes[38]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Bucket) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Bucket) ProtoMessage() {}
+
+func (x *Bucket) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gallery_proto_msgTypes[38]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Bucket.ProtoReflect.Descriptor instead.
+func (*Bucket) Descriptor() ([]byte, []int) {
+	return file_proto_gallery_proto_rawDescGZIP(), []int{38}
+}
+
+func (x *Bucket) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Bucket) GetCreationDate() string {
+	if x != nil {
+		return x.CreationDate
+	}
+	return ""
+}
+
+func (x *Bucket) GetLocationConstraint() string {
+	if x != nil {
+		return x.LocationConstraint
+	}
+	return ""
+}
+
+func (x *Bucket) GetObjectLockConfig() string {
+	if x != nil {
+		return x.ObjectLockConfig
+	}
+	return ""
+}
+
+func (x *Bucket) GetObjectDelimiter() string {
+	if x != nil {
+		return x.ObjectDelimiter
+	}
+	return ""
+}
+
 var File_proto_gallery_proto protoreflect.FileDescriptor
 
 const file_proto_gallery_proto_rawDesc = "" +
@@ -1417,9 +1910,9 @@ const file_proto_gallery_proto_rawDesc = "" +
 	"\x12DeleteAlbumRequest\x12\x19\n" +
 	"\balbum_id\x18\x01 \x01(\rR\aalbumId\"/\n" +
 	"\x13DeleteAlbumResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"1\n" +
-	"\x16GetPrivateAlbumRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\rR\x06userId\"D\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"3\n" +
+	"\x16GetPrivateAlbumRequest\x12\x19\n" +
+	"\balbum_id\x18\x01 \x01(\rR\aalbumId\"D\n" +
 	"\x17GetPrivateAlbumResponse\x12)\n" +
 	"\x05album\x18\x01 \x01(\v2\x13.protogallery.AlbumR\x05album\"]\n" +
 	"\x0fAddMediaRequest\x12\x12\n" +
@@ -1432,16 +1925,14 @@ const file_proto_gallery_proto_rawDesc = "" +
 	"\auser_id\x18\x01 \x01(\rR\x06userId\"L\n" +
 	"\x16GetMediaByUserResponse\x122\n" +
 	"\n" +
-	"media_list\x18\x01 \x03(\v2\x13.protogallery.MediaR\tmediaList\"\\\n" +
-	"\x14MarkAsPrivateRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\rR\x06userId\x12\x19\n" +
-	"\bmedia_id\x18\x02 \x01(\rR\amediaId\x12\x10\n" +
-	"\x03pin\x18\x03 \x01(\tR\x03pin\"1\n" +
+	"media_list\x18\x01 \x03(\v2\x13.protogallery.MediaR\tmediaList\"C\n" +
+	"\x14MarkAsPrivateRequest\x12\x19\n" +
+	"\bmedia_id\x18\x01 \x01(\rR\amediaId\x12\x10\n" +
+	"\x03pin\x18\x02 \x01(\tR\x03pin\"1\n" +
 	"\x15MarkAsPrivateResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"C\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"1\n" +
 	"\x16GetPrivateMediaRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\rR\x06userId\x12\x10\n" +
-	"\x03pin\x18\x02 \x01(\tR\x03pin\"D\n" +
+	"\auser_id\x18\x01 \x01(\rR\x06userId\"D\n" +
 	"\x17GetPrivateMediaResponse\x12)\n" +
 	"\x05media\x18\x01 \x03(\v2\x13.protogallery.MediaR\x05media\"1\n" +
 	"\x14DownloadMediaRequest\x12\x19\n" +
@@ -1451,17 +1942,43 @@ const file_proto_gallery_proto_rawDesc = "" +
 	"\x12DeleteMediaRequest\x12\x19\n" +
 	"\bmedia_id\x18\x01 \x01(\rR\amediaId\"/\n" +
 	"\x13DeleteMediaResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"O\n" +
-	"\x19DetectSimilarMediaRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\rR\x06userId\x12\x19\n" +
-	"\balbum_id\x18\x02 \x01(\rR\aalbumId\"G\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"6\n" +
+	"\x19DetectSimilarMediaRequest\x12\x19\n" +
+	"\bmedia_id\x18\x01 \x01(\rR\amediaId\"G\n" +
 	"\x1aDetectSimilarMediaResponse\x12)\n" +
 	"\x05media\x18\x01 \x03(\v2\x13.protogallery.MediaR\x05media\"E\n" +
-	"\x11CreateUserRequest\x12\x14\n" +
-	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
-	"\busername\x18\x02 \x01(\tR\busername\".\n" +
+	"\x11CreateUserRequest\x12\x1a\n" +
+	"\busername\x18\x01 \x01(\tR\busername\x12\x14\n" +
+	"\x05email\x18\x02 \x01(\tR\x05email\".\n" +
 	"\x12CreateUserResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"f\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"\x14\n" +
+	"\x12ListBucketsRequest\"E\n" +
+	"\x13ListBucketsResponse\x12.\n" +
+	"\abuckets\x18\x01 \x03(\v2\x14.protogallery.BucketR\abuckets\"6\n" +
+	"\x13CreateBucketRequest\x12\x1f\n" +
+	"\vbucket_name\x18\x01 \x01(\tR\n" +
+	"bucketName\"0\n" +
+	"\x14CreateBucketResponse\x12\x18\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"6\n" +
+	"\x13DeleteBucketRequest\x12\x1f\n" +
+	"\vbucket_name\x18\x01 \x01(\tR\n" +
+	"bucketName\"0\n" +
+	"\x14DeleteBucketResponse\x12\x18\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"9\n" +
+	"\x16GetFilesInAlbumRequest\x12\x1f\n" +
+	"\vbucket_name\x18\x01 \x01(\tR\n" +
+	"bucketName\"8\n" +
+	"\x17GetFilesInAlbumResponse\x12\x1d\n" +
+	"\n" +
+	"file_names\x18\x01 \x03(\tR\tfileNames\"[\n" +
+	"\x17DownloadTempFileRequest\x12\x1f\n" +
+	"\vbucket_name\x18\x01 \x01(\tR\n" +
+	"bucketName\x12\x1f\n" +
+	"\vobject_name\x18\x02 \x01(\tR\n" +
+	"objectName\"9\n" +
+	"\x18DownloadTempFileResponse\x12\x1d\n" +
+	"\n" +
+	"local_path\x18\x01 \x01(\tR\tlocalPath\"f\n" +
 	"\x05Album\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\rR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
@@ -1471,7 +1988,13 @@ const file_proto_gallery_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\rR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x19\n" +
 	"\balbum_id\x18\x03 \x01(\rR\aalbumId\x12\x1b\n" +
-	"\tfile_size\x18\x04 \x01(\rR\bfileSize2\xca\x03\n" +
+	"\tfile_size\x18\x04 \x01(\rR\bfileSize\"\xcb\x01\n" +
+	"\x06Bucket\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12#\n" +
+	"\rcreation_date\x18\x02 \x01(\tR\fcreationDate\x12/\n" +
+	"\x13location_constraint\x18\x03 \x01(\tR\x12locationConstraint\x12,\n" +
+	"\x12object_lock_config\x18\x04 \x01(\tR\x10objectLockConfig\x12)\n" +
+	"\x10object_delimiter\x18\x05 \x01(\tR\x0fobjectDelimiter2\xca\x03\n" +
 	"\fAlbumService\x12R\n" +
 	"\vCreateAlbum\x12 .protogallery.CreateAlbumRequest\x1a!.protogallery.CreateAlbumResponse\x12^\n" +
 	"\x0fGetAlbumsByUser\x12$.protogallery.GetAlbumsByUserRequest\x1a%.protogallery.GetAlbumsByUserResponse\x12R\n" +
@@ -1488,7 +2011,13 @@ const file_proto_gallery_proto_rawDesc = "" +
 	"\x12DetectSimilarMedia\x12'.protogallery.DetectSimilarMediaRequest\x1a(.protogallery.DetectSimilarMediaResponse2^\n" +
 	"\vUserService\x12O\n" +
 	"\n" +
-	"CreateUser\x12\x1f.protogallery.CreateUserRequest\x1a .protogallery.CreateUserResponseB\x15Z\x13/proto;protogalleryb\x06proto3"
+	"CreateUser\x12\x1f.protogallery.CreateUserRequest\x1a .protogallery.CreateUserResponse2\xd0\x03\n" +
+	"\tS3Service\x12R\n" +
+	"\vListBuckets\x12 .protogallery.ListBucketsRequest\x1a!.protogallery.ListBucketsResponse\x12U\n" +
+	"\fCreateBucket\x12!.protogallery.CreateBucketRequest\x1a\".protogallery.CreateBucketResponse\x12U\n" +
+	"\fDeleteBucket\x12!.protogallery.DeleteBucketRequest\x1a\".protogallery.DeleteBucketResponse\x12^\n" +
+	"\x0fGetFilesInAlbum\x12$.protogallery.GetFilesInAlbumRequest\x1a%.protogallery.GetFilesInAlbumResponse\x12a\n" +
+	"\x10DownloadTempFile\x12%.protogallery.DownloadTempFileRequest\x1a&.protogallery.DownloadTempFileResponseB\x15Z\x13/proto;protogalleryb\x06proto3"
 
 var (
 	file_proto_gallery_proto_rawDescOnce sync.Once
@@ -1502,7 +2031,7 @@ func file_proto_gallery_proto_rawDescGZIP() []byte {
 	return file_proto_gallery_proto_rawDescData
 }
 
-var file_proto_gallery_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
+var file_proto_gallery_proto_msgTypes = make([]protoimpl.MessageInfo, 39)
 var file_proto_gallery_proto_goTypes = []any{
 	(*CreateAlbumRequest)(nil),         // 0: protogallery.CreateAlbumRequest
 	(*CreateAlbumResponse)(nil),        // 1: protogallery.CreateAlbumResponse
@@ -1530,46 +2059,68 @@ var file_proto_gallery_proto_goTypes = []any{
 	(*DetectSimilarMediaResponse)(nil), // 23: protogallery.DetectSimilarMediaResponse
 	(*CreateUserRequest)(nil),          // 24: protogallery.CreateUserRequest
 	(*CreateUserResponse)(nil),         // 25: protogallery.CreateUserResponse
-	(*Album)(nil),                      // 26: protogallery.Album
-	(*Media)(nil),                      // 27: protogallery.Media
+	(*ListBucketsRequest)(nil),         // 26: protogallery.ListBucketsRequest
+	(*ListBucketsResponse)(nil),        // 27: protogallery.ListBucketsResponse
+	(*CreateBucketRequest)(nil),        // 28: protogallery.CreateBucketRequest
+	(*CreateBucketResponse)(nil),       // 29: protogallery.CreateBucketResponse
+	(*DeleteBucketRequest)(nil),        // 30: protogallery.DeleteBucketRequest
+	(*DeleteBucketResponse)(nil),       // 31: protogallery.DeleteBucketResponse
+	(*GetFilesInAlbumRequest)(nil),     // 32: protogallery.GetFilesInAlbumRequest
+	(*GetFilesInAlbumResponse)(nil),    // 33: protogallery.GetFilesInAlbumResponse
+	(*DownloadTempFileRequest)(nil),    // 34: protogallery.DownloadTempFileRequest
+	(*DownloadTempFileResponse)(nil),   // 35: protogallery.DownloadTempFileResponse
+	(*Album)(nil),                      // 36: protogallery.Album
+	(*Media)(nil),                      // 37: protogallery.Media
+	(*Bucket)(nil),                     // 38: protogallery.Bucket
 }
 var file_proto_gallery_proto_depIdxs = []int32{
-	26, // 0: protogallery.GetAlbumsByUserResponse.albums:type_name -> protogallery.Album
-	26, // 1: protogallery.GetPrivateAlbumResponse.album:type_name -> protogallery.Album
-	27, // 2: protogallery.GetMediaByUserResponse.media_list:type_name -> protogallery.Media
-	27, // 3: protogallery.GetPrivateMediaResponse.media:type_name -> protogallery.Media
-	27, // 4: protogallery.DetectSimilarMediaResponse.media:type_name -> protogallery.Media
-	0,  // 5: protogallery.AlbumService.CreateAlbum:input_type -> protogallery.CreateAlbumRequest
-	2,  // 6: protogallery.AlbumService.GetAlbumsByUser:input_type -> protogallery.GetAlbumsByUserRequest
-	4,  // 7: protogallery.AlbumService.UpdateAlbum:input_type -> protogallery.UpdateAlbumRequest
-	6,  // 8: protogallery.AlbumService.DeleteAlbum:input_type -> protogallery.DeleteAlbumRequest
-	8,  // 9: protogallery.AlbumService.GetPrivateAlbum:input_type -> protogallery.GetPrivateAlbumRequest
-	10, // 10: protogallery.MediaService.AddMedia:input_type -> protogallery.AddMediaRequest
-	12, // 11: protogallery.MediaService.GetMediaByUser:input_type -> protogallery.GetMediaByUserRequest
-	14, // 12: protogallery.MediaService.MarkAsPrivate:input_type -> protogallery.MarkAsPrivateRequest
-	16, // 13: protogallery.MediaService.GetPrivateMedia:input_type -> protogallery.GetPrivateMediaRequest
-	18, // 14: protogallery.MediaService.DownloadMedia:input_type -> protogallery.DownloadMediaRequest
-	20, // 15: protogallery.MediaService.DeleteMedia:input_type -> protogallery.DeleteMediaRequest
-	22, // 16: protogallery.MediaService.DetectSimilarMedia:input_type -> protogallery.DetectSimilarMediaRequest
-	24, // 17: protogallery.UserService.CreateUser:input_type -> protogallery.CreateUserRequest
-	1,  // 18: protogallery.AlbumService.CreateAlbum:output_type -> protogallery.CreateAlbumResponse
-	3,  // 19: protogallery.AlbumService.GetAlbumsByUser:output_type -> protogallery.GetAlbumsByUserResponse
-	5,  // 20: protogallery.AlbumService.UpdateAlbum:output_type -> protogallery.UpdateAlbumResponse
-	7,  // 21: protogallery.AlbumService.DeleteAlbum:output_type -> protogallery.DeleteAlbumResponse
-	9,  // 22: protogallery.AlbumService.GetPrivateAlbum:output_type -> protogallery.GetPrivateAlbumResponse
-	11, // 23: protogallery.MediaService.AddMedia:output_type -> protogallery.AddMediaResponse
-	13, // 24: protogallery.MediaService.GetMediaByUser:output_type -> protogallery.GetMediaByUserResponse
-	15, // 25: protogallery.MediaService.MarkAsPrivate:output_type -> protogallery.MarkAsPrivateResponse
-	17, // 26: protogallery.MediaService.GetPrivateMedia:output_type -> protogallery.GetPrivateMediaResponse
-	19, // 27: protogallery.MediaService.DownloadMedia:output_type -> protogallery.DownloadMediaResponse
-	21, // 28: protogallery.MediaService.DeleteMedia:output_type -> protogallery.DeleteMediaResponse
-	23, // 29: protogallery.MediaService.DetectSimilarMedia:output_type -> protogallery.DetectSimilarMediaResponse
-	25, // 30: protogallery.UserService.CreateUser:output_type -> protogallery.CreateUserResponse
-	18, // [18:31] is the sub-list for method output_type
-	5,  // [5:18] is the sub-list for method input_type
-	5,  // [5:5] is the sub-list for extension type_name
-	5,  // [5:5] is the sub-list for extension extendee
-	0,  // [0:5] is the sub-list for field type_name
+	36, // 0: protogallery.GetAlbumsByUserResponse.albums:type_name -> protogallery.Album
+	36, // 1: protogallery.GetPrivateAlbumResponse.album:type_name -> protogallery.Album
+	37, // 2: protogallery.GetMediaByUserResponse.media_list:type_name -> protogallery.Media
+	37, // 3: protogallery.GetPrivateMediaResponse.media:type_name -> protogallery.Media
+	37, // 4: protogallery.DetectSimilarMediaResponse.media:type_name -> protogallery.Media
+	38, // 5: protogallery.ListBucketsResponse.buckets:type_name -> protogallery.Bucket
+	0,  // 6: protogallery.AlbumService.CreateAlbum:input_type -> protogallery.CreateAlbumRequest
+	2,  // 7: protogallery.AlbumService.GetAlbumsByUser:input_type -> protogallery.GetAlbumsByUserRequest
+	4,  // 8: protogallery.AlbumService.UpdateAlbum:input_type -> protogallery.UpdateAlbumRequest
+	6,  // 9: protogallery.AlbumService.DeleteAlbum:input_type -> protogallery.DeleteAlbumRequest
+	8,  // 10: protogallery.AlbumService.GetPrivateAlbum:input_type -> protogallery.GetPrivateAlbumRequest
+	10, // 11: protogallery.MediaService.AddMedia:input_type -> protogallery.AddMediaRequest
+	12, // 12: protogallery.MediaService.GetMediaByUser:input_type -> protogallery.GetMediaByUserRequest
+	14, // 13: protogallery.MediaService.MarkAsPrivate:input_type -> protogallery.MarkAsPrivateRequest
+	16, // 14: protogallery.MediaService.GetPrivateMedia:input_type -> protogallery.GetPrivateMediaRequest
+	18, // 15: protogallery.MediaService.DownloadMedia:input_type -> protogallery.DownloadMediaRequest
+	20, // 16: protogallery.MediaService.DeleteMedia:input_type -> protogallery.DeleteMediaRequest
+	22, // 17: protogallery.MediaService.DetectSimilarMedia:input_type -> protogallery.DetectSimilarMediaRequest
+	24, // 18: protogallery.UserService.CreateUser:input_type -> protogallery.CreateUserRequest
+	26, // 19: protogallery.S3Service.ListBuckets:input_type -> protogallery.ListBucketsRequest
+	28, // 20: protogallery.S3Service.CreateBucket:input_type -> protogallery.CreateBucketRequest
+	30, // 21: protogallery.S3Service.DeleteBucket:input_type -> protogallery.DeleteBucketRequest
+	32, // 22: protogallery.S3Service.GetFilesInAlbum:input_type -> protogallery.GetFilesInAlbumRequest
+	34, // 23: protogallery.S3Service.DownloadTempFile:input_type -> protogallery.DownloadTempFileRequest
+	1,  // 24: protogallery.AlbumService.CreateAlbum:output_type -> protogallery.CreateAlbumResponse
+	3,  // 25: protogallery.AlbumService.GetAlbumsByUser:output_type -> protogallery.GetAlbumsByUserResponse
+	5,  // 26: protogallery.AlbumService.UpdateAlbum:output_type -> protogallery.UpdateAlbumResponse
+	7,  // 27: protogallery.AlbumService.DeleteAlbum:output_type -> protogallery.DeleteAlbumResponse
+	9,  // 28: protogallery.AlbumService.GetPrivateAlbum:output_type -> protogallery.GetPrivateAlbumResponse
+	11, // 29: protogallery.MediaService.AddMedia:output_type -> protogallery.AddMediaResponse
+	13, // 30: protogallery.MediaService.GetMediaByUser:output_type -> protogallery.GetMediaByUserResponse
+	15, // 31: protogallery.MediaService.MarkAsPrivate:output_type -> protogallery.MarkAsPrivateResponse
+	17, // 32: protogallery.MediaService.GetPrivateMedia:output_type -> protogallery.GetPrivateMediaResponse
+	19, // 33: protogallery.MediaService.DownloadMedia:output_type -> protogallery.DownloadMediaResponse
+	21, // 34: protogallery.MediaService.DeleteMedia:output_type -> protogallery.DeleteMediaResponse
+	23, // 35: protogallery.MediaService.DetectSimilarMedia:output_type -> protogallery.DetectSimilarMediaResponse
+	25, // 36: protogallery.UserService.CreateUser:output_type -> protogallery.CreateUserResponse
+	27, // 37: protogallery.S3Service.ListBuckets:output_type -> protogallery.ListBucketsResponse
+	29, // 38: protogallery.S3Service.CreateBucket:output_type -> protogallery.CreateBucketResponse
+	31, // 39: protogallery.S3Service.DeleteBucket:output_type -> protogallery.DeleteBucketResponse
+	33, // 40: protogallery.S3Service.GetFilesInAlbum:output_type -> protogallery.GetFilesInAlbumResponse
+	35, // 41: protogallery.S3Service.DownloadTempFile:output_type -> protogallery.DownloadTempFileResponse
+	24, // [24:42] is the sub-list for method output_type
+	6,  // [6:24] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_proto_gallery_proto_init() }
@@ -1583,9 +2134,9 @@ func file_proto_gallery_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_gallery_proto_rawDesc), len(file_proto_gallery_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   28,
+			NumMessages:   39,
 			NumExtensions: 0,
-			NumServices:   3,
+			NumServices:   4,
 		},
 		GoTypes:           file_proto_gallery_proto_goTypes,
 		DependencyIndexes: file_proto_gallery_proto_depIdxs,

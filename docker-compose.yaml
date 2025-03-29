@@ -17,8 +17,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
-    environment:
-      AUTH_SERVICE: auth-service:50051
+    env_file:
+      - ./ApiGateway/.env
 
   auth-service:
     build:

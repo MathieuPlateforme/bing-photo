@@ -408,7 +408,7 @@ func (x *DeleteAlbumResponse) GetMessage() string {
 
 type GetPrivateAlbumRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        uint32                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	AlbumId       uint32                 `protobuf:"varint,1,opt,name=album_id,json=albumId,proto3" json:"album_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -443,9 +443,9 @@ func (*GetPrivateAlbumRequest) Descriptor() ([]byte, []int) {
 	return file_proto_gallery_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *GetPrivateAlbumRequest) GetUserId() uint32 {
+func (x *GetPrivateAlbumRequest) GetAlbumId() uint32 {
 	if x != nil {
-		return x.UserId
+		return x.AlbumId
 	}
 	return 0
 }
@@ -689,9 +689,8 @@ func (x *GetMediaByUserResponse) GetMediaList() []*Media {
 
 type MarkAsPrivateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        uint32                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	MediaId       uint32                 `protobuf:"varint,2,opt,name=media_id,json=mediaId,proto3" json:"media_id,omitempty"`
-	Pin           string                 `protobuf:"bytes,3,opt,name=pin,proto3" json:"pin,omitempty"`
+	MediaId       uint32                 `protobuf:"varint,1,opt,name=media_id,json=mediaId,proto3" json:"media_id,omitempty"`
+	Pin           string                 `protobuf:"bytes,2,opt,name=pin,proto3" json:"pin,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -724,13 +723,6 @@ func (x *MarkAsPrivateRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use MarkAsPrivateRequest.ProtoReflect.Descriptor instead.
 func (*MarkAsPrivateRequest) Descriptor() ([]byte, []int) {
 	return file_proto_gallery_proto_rawDescGZIP(), []int{14}
-}
-
-func (x *MarkAsPrivateRequest) GetUserId() uint32 {
-	if x != nil {
-		return x.UserId
-	}
-	return 0
 }
 
 func (x *MarkAsPrivateRequest) GetMediaId() uint32 {
@@ -794,7 +786,6 @@ func (x *MarkAsPrivateResponse) GetMessage() string {
 type GetPrivateMediaRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        uint32                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Pin           string                 `protobuf:"bytes,2,opt,name=pin,proto3" json:"pin,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -834,13 +825,6 @@ func (x *GetPrivateMediaRequest) GetUserId() uint32 {
 		return x.UserId
 	}
 	return 0
-}
-
-func (x *GetPrivateMediaRequest) GetPin() string {
-	if x != nil {
-		return x.Pin
-	}
-	return ""
 }
 
 type GetPrivateMediaResponse struct {
@@ -1065,8 +1049,7 @@ func (x *DeleteMediaResponse) GetMessage() string {
 
 type DetectSimilarMediaRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        uint32                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	AlbumId       uint32                 `protobuf:"varint,2,opt,name=album_id,json=albumId,proto3" json:"album_id,omitempty"`
+	MediaId       uint32                 `protobuf:"varint,1,opt,name=media_id,json=mediaId,proto3" json:"media_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1101,16 +1084,9 @@ func (*DetectSimilarMediaRequest) Descriptor() ([]byte, []int) {
 	return file_proto_gallery_proto_rawDescGZIP(), []int{22}
 }
 
-func (x *DetectSimilarMediaRequest) GetUserId() uint32 {
+func (x *DetectSimilarMediaRequest) GetMediaId() uint32 {
 	if x != nil {
-		return x.UserId
-	}
-	return 0
-}
-
-func (x *DetectSimilarMediaRequest) GetAlbumId() uint32 {
-	if x != nil {
-		return x.AlbumId
+		return x.MediaId
 	}
 	return 0
 }
@@ -1162,8 +1138,8 @@ func (x *DetectSimilarMediaResponse) GetMedia() []*Media {
 // User messages
 type CreateUserRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
-	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1198,16 +1174,16 @@ func (*CreateUserRequest) Descriptor() ([]byte, []int) {
 	return file_proto_gallery_proto_rawDescGZIP(), []int{24}
 }
 
-func (x *CreateUserRequest) GetEmail() string {
+func (x *CreateUserRequest) GetUsername() string {
 	if x != nil {
-		return x.Email
+		return x.Username
 	}
 	return ""
 }
 
-func (x *CreateUserRequest) GetUsername() string {
+func (x *CreateUserRequest) GetEmail() string {
 	if x != nil {
-		return x.Username
+		return x.Email
 	}
 	return ""
 }
@@ -1417,9 +1393,9 @@ const file_proto_gallery_proto_rawDesc = "" +
 	"\x12DeleteAlbumRequest\x12\x19\n" +
 	"\balbum_id\x18\x01 \x01(\rR\aalbumId\"/\n" +
 	"\x13DeleteAlbumResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"1\n" +
-	"\x16GetPrivateAlbumRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\rR\x06userId\"=\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"3\n" +
+	"\x16GetPrivateAlbumRequest\x12\x19\n" +
+	"\balbum_id\x18\x01 \x01(\rR\aalbumId\"=\n" +
 	"\x17GetPrivateAlbumResponse\x12\"\n" +
 	"\x05album\x18\x01 \x01(\v2\f.proto.AlbumR\x05album\"]\n" +
 	"\x0fAddMediaRequest\x12\x12\n" +
@@ -1432,16 +1408,14 @@ const file_proto_gallery_proto_rawDesc = "" +
 	"\auser_id\x18\x01 \x01(\rR\x06userId\"E\n" +
 	"\x16GetMediaByUserResponse\x12+\n" +
 	"\n" +
-	"media_list\x18\x01 \x03(\v2\f.proto.MediaR\tmediaList\"\\\n" +
-	"\x14MarkAsPrivateRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\rR\x06userId\x12\x19\n" +
-	"\bmedia_id\x18\x02 \x01(\rR\amediaId\x12\x10\n" +
-	"\x03pin\x18\x03 \x01(\tR\x03pin\"1\n" +
+	"media_list\x18\x01 \x03(\v2\f.proto.MediaR\tmediaList\"C\n" +
+	"\x14MarkAsPrivateRequest\x12\x19\n" +
+	"\bmedia_id\x18\x01 \x01(\rR\amediaId\x12\x10\n" +
+	"\x03pin\x18\x02 \x01(\tR\x03pin\"1\n" +
 	"\x15MarkAsPrivateResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"C\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"1\n" +
 	"\x16GetPrivateMediaRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\rR\x06userId\x12\x10\n" +
-	"\x03pin\x18\x02 \x01(\tR\x03pin\"=\n" +
+	"\auser_id\x18\x01 \x01(\rR\x06userId\"=\n" +
 	"\x17GetPrivateMediaResponse\x12\"\n" +
 	"\x05media\x18\x01 \x03(\v2\f.proto.MediaR\x05media\"1\n" +
 	"\x14DownloadMediaRequest\x12\x19\n" +
@@ -1451,15 +1425,14 @@ const file_proto_gallery_proto_rawDesc = "" +
 	"\x12DeleteMediaRequest\x12\x19\n" +
 	"\bmedia_id\x18\x01 \x01(\rR\amediaId\"/\n" +
 	"\x13DeleteMediaResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"O\n" +
-	"\x19DetectSimilarMediaRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\rR\x06userId\x12\x19\n" +
-	"\balbum_id\x18\x02 \x01(\rR\aalbumId\"@\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"6\n" +
+	"\x19DetectSimilarMediaRequest\x12\x19\n" +
+	"\bmedia_id\x18\x01 \x01(\rR\amediaId\"@\n" +
 	"\x1aDetectSimilarMediaResponse\x12\"\n" +
 	"\x05media\x18\x01 \x03(\v2\f.proto.MediaR\x05media\"E\n" +
-	"\x11CreateUserRequest\x12\x14\n" +
-	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
-	"\busername\x18\x02 \x01(\tR\busername\".\n" +
+	"\x11CreateUserRequest\x12\x1a\n" +
+	"\busername\x18\x01 \x01(\tR\busername\x12\x14\n" +
+	"\x05email\x18\x02 \x01(\tR\x05email\".\n" +
 	"\x12CreateUserResponse\x12\x18\n" +
 	"\amessage\x18\x01 \x01(\tR\amessage\"f\n" +
 	"\x05Album\x12\x0e\n" +

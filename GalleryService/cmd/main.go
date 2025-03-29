@@ -1,21 +1,236 @@
 package main
 
 import (
+	"bytes"
+	"context"
 	"log"
-	"net/http"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"GalleryService/internal/api"
 	"GalleryService/internal/db"
+	"GalleryService/internal/models"
+	proto "GalleryService/internal/proto"
 	"GalleryService/internal/services"
 
 	"github.com/joho/godotenv"
+	"google.golang.org/grpc"
 )
 
+type galleryServer struct {
+	proto.UnimplementedAlbumServiceServer
+	proto.UnimplementedMediaServiceServer
+	proto.UnimplementedUserServiceServer
+	albumService *services.AlbumService
+	mediaService *services.MediaService
+	userService  *services.UserService
+}
+
+// Album Service methods
+func (s *galleryServer) CreateAlbum(ctx context.Context, req *proto.CreateAlbumRequest) (*proto.CreateAlbumResponse, error) {
+	album := models.Album{
+		Name:        req.Name,
+		Description: req.Description,
+		UserID:      uint(req.UserId),
+	}
+
+	if err := s.albumService.CreateAlbum(album); err != nil {
+		log.Printf("Error creating album: %v", err)
+		return nil, err
+	}
+
+	return &proto.CreateAlbumResponse{
+		Message: "Album created successfully",
+	}, nil
+}
+
+func (s *galleryServer) GetAlbumsByUser(ctx context.Context, req *proto.GetAlbumsByUserRequest) (*proto.GetAlbumsByUserResponse, error) {
+	albums, err := s.albumService.GetAlbumsByUser(uint(req.UserId))
+	if err != nil {
+		log.Printf("Error getting albums by user: %v", err)
+		return nil, err
+	}
+
+	var protoAlbums []*proto.Album
+	for _, album := range albums {
+		protoAlbums = append(protoAlbums, &proto.Album{
+			Id:          uint32(album.ID),
+			Name:        album.Name,
+			Description: album.Description,
+			UserId:      uint32(album.UserID),
+		})
+	}
+
+	return &proto.GetAlbumsByUserResponse{
+		Albums: protoAlbums,
+	}, nil
+}
+
+func (s *galleryServer) UpdateAlbum(ctx context.Context, req *proto.UpdateAlbumRequest) (*proto.UpdateAlbumResponse, error) {
+	if err := s.albumService.UpdateAlbum(uint(req.AlbumId), req.Name, req.Description); err != nil {
+		log.Printf("Error updating album: %v", err)
+		return nil, err
+	}
+
+	return &proto.UpdateAlbumResponse{}, nil
+}
+
+func (s *galleryServer) DeleteAlbum(ctx context.Context, req *proto.DeleteAlbumRequest) (*proto.DeleteAlbumResponse, error) {
+	if err := s.albumService.DeleteAlbum(uint(req.AlbumId)); err != nil {
+		log.Printf("Error deleting album: %v", err)
+		return nil, err
+	}
+
+	return &proto.DeleteAlbumResponse{}, nil
+}
+
+func (s *galleryServer) GetPrivateAlbum(ctx context.Context, req *proto.GetPrivateAlbumRequest) (*proto.GetPrivateAlbumResponse, error) {
+	album, err := s.albumService.GetPrivateAlbum(uint(req.AlbumId))
+	if err != nil {
+		log.Printf("Error getting private album: %v", err)
+		return nil, err
+	}
+
+	return &proto.GetPrivateAlbumResponse{
+		Album: &proto.Album{
+			Id:          uint32(album.ID),
+			Name:        album.Name,
+			Description: album.Description,
+			UserId:      uint32(album.UserID),
+		},
+	}, nil
+}
+
+// Media Service methods
+func (s *galleryServer) AddMedia(ctx context.Context, req *proto.AddMediaRequest) (*proto.AddMediaResponse, error) {
+	media := &models.Media{
+		Name:    req.Name,
+		AlbumID: uint(req.AlbumId),
+	}
+
+	reader := bytes.NewReader(req.FileData)
+	if err := s.mediaService.AddMedia(media, reader, int64(len(req.FileData))); err != nil {
+		log.Printf("Error adding media: %v", err)
+		return nil, err
+	}
+
+	return &proto.AddMediaResponse{
+		Message: "Media added successfully",
+	}, nil
+}
+
+func (s *galleryServer) GetMediaByUser(ctx context.Context, req *proto.GetMediaByUserRequest) (*proto.GetMediaByUserResponse, error) {
+	media, err := s.mediaService.GetMediaByUser(uint(req.UserId))
+	if err != nil {
+		log.Printf("Error getting media by user: %v", err)
+		return nil, err
+	}
+
+	var protoMedia []*proto.Media
+	for _, m := range media {
+		protoMedia = append(protoMedia, &proto.Media{
+			Id:       uint32(m.ID),
+			Name:     m.Name,
+			AlbumId:  uint32(m.AlbumID),
+			FileSize: uint32(m.FileSize),
+		})
+	}
+
+	return &proto.GetMediaByUserResponse{
+		MediaList: protoMedia,
+	}, nil
+}
+
+func (s *galleryServer) MarkAsPrivate(ctx context.Context, req *proto.MarkAsPrivateRequest) (*proto.MarkAsPrivateResponse, error) {
+	// Note: The proto definition doesn't have user_id, so we'll need to get it from the media record
+	if err := s.mediaService.MarkAsPrivate(uint(req.MediaId), 0); err != nil {
+		log.Printf("Error marking media as private: %v", err)
+		return nil, err
+	}
+
+	return &proto.MarkAsPrivateResponse{}, nil
+}
+
+func (s *galleryServer) GetPrivateMedia(ctx context.Context, req *proto.GetPrivateMediaRequest) (*proto.GetPrivateMediaResponse, error) {
+	media, err := s.mediaService.GetPrivateMedia(uint(req.UserId))
+	if err != nil {
+		log.Printf("Error getting private media: %v", err)
+		return nil, err
+	}
+
+	var protoMedia []*proto.Media
+	for _, m := range media {
+		protoMedia = append(protoMedia, &proto.Media{
+			Id:       uint32(m.ID),
+			Name:     m.Name,
+			AlbumId:  uint32(m.AlbumID),
+			FileSize: uint32(m.FileSize),
+		})
+	}
+
+	return &proto.GetPrivateMediaResponse{
+		Media: protoMedia,
+	}, nil
+}
+
+func (s *galleryServer) DownloadMedia(ctx context.Context, req *proto.DownloadMediaRequest) (*proto.DownloadMediaResponse, error) {
+	var buf bytes.Buffer
+	if err := s.mediaService.DownloadMedia(uint(req.MediaId), &buf); err != nil {
+		log.Printf("Error downloading media: %v", err)
+		return nil, err
+	}
+
+	return &proto.DownloadMediaResponse{
+		FileData: buf.Bytes(),
+	}, nil
+}
+
+func (s *galleryServer) DeleteMedia(ctx context.Context, req *proto.DeleteMediaRequest) (*proto.DeleteMediaResponse, error) {
+	// Note: The proto definition doesn't have user_id, so we'll need to get it from the media record
+	if err := s.mediaService.DeleteMedia(uint(req.MediaId), 0); err != nil {
+		log.Printf("Error deleting media: %v", err)
+		return nil, err
+	}
+
+	return &proto.DeleteMediaResponse{}, nil
+}
+
+func (s *galleryServer) DetectSimilarMedia(ctx context.Context, req *proto.DetectSimilarMediaRequest) (*proto.DetectSimilarMediaResponse, error) {
+	// Note: The proto definition has media_id instead of user_id and album_id
+	media, err := s.mediaService.DetectSimilarMedia(0, 0) // We'll need to get these from the media record
+	if err != nil {
+		log.Printf("Error detecting similar media: %v", err)
+		return nil, err
+	}
+
+	var protoMedia []*proto.Media
+	for _, m := range media {
+		protoMedia = append(protoMedia, &proto.Media{
+			Id:       uint32(m.ID),
+			Name:     m.Name,
+			AlbumId:  uint32(m.AlbumID),
+			FileSize: uint32(m.FileSize),
+		})
+	}
+
+	return &proto.DetectSimilarMediaResponse{
+		Media: protoMedia,
+	}, nil
+}
+
+// User Service methods
+func (s *galleryServer) CreateUser(ctx context.Context, req *proto.CreateUserRequest) (*proto.CreateUserResponse, error) {
+	if err := s.userService.CreateUser(req.Username, req.Email); err != nil {
+		log.Printf("Error creating user: %v", err)
+		return nil, err
+	}
+
+	return &proto.CreateUserResponse{}, nil
+}
+
 func main() {
-	// Charger les variables d'environnement
+	// Load environment variables
 	if err := godotenv.Load(); err != nil {
 		log.Println("Avertissement : Impossible de charger le fichier .env, utilisation des variables système.")
 	}
@@ -38,17 +253,28 @@ func main() {
 	// Initialiser le S3Service
 	s3Service := services.NewS3Service("http://my-s3-clone:9090")
 
-	// Initialiser le client Auth
-	authClient := services.NewAuthServiceClient("http://gateway-service:8080")
+	// Initialize services
+	albumService := services.NewAlbumService(dbManager, s3Service)
+	mediaService := services.NewMediaService(dbManager, s3Service)
+	userService := services.NewUserService(dbManager, s3Service)
 
+	// Create gRPC server
+	grpcServer := grpc.NewServer()
+	galleryServer := &galleryServer{
+		albumService: albumService,
+		mediaService: mediaService,
+		userService:  userService,
+	}
 
-	// Initialiser le routeur HTTP
-	router := api.NewRouter(dbManager, s3Service, authClient)
+	// Enregistrer les services gRPC
+	proto.RegisterAlbumServiceServer(grpcServer, galleryServer)
+	proto.RegisterMediaServiceServer(grpcServer, galleryServer)
+	proto.RegisterUserServiceServer(grpcServer, galleryServer)
 
-	// Configurer le serveur HTTP
-	server := &http.Server{
-		Addr:    ":50052",
-		Handler: router,
+	// Démarrer le serveur gRPC
+	grpcListener, err := net.Listen("tcp", ":50052")
+	if err != nil {
+		log.Fatalf("Erreur lors de l'écoute du serveur gRPC : %v", err)
 	}
 
 	// Canal pour gérer les signaux système (interruption ou arrêt)
@@ -57,20 +283,17 @@ func main() {
 
 	// Démarrer le serveur HTTP dans une goroutine
 	go func() {
-		log.Println("GalleryService démarré sur le port 50052...")
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Erreur lors de l'exécution du serveur HTTP : %v", err)
+		log.Println("gRPC server started on port 50052...")
+		if err := grpcServer.Serve(grpcListener); err != nil {
+			log.Fatalf("Erreur lors de l'exécution du serveur gRPC : %v", err)
 		}
 	}()
 
 	// Attendre un signal d'arrêt
 	<-stop
-	log.Println("Signal reçu, arrêt du service GalleryService...")
+	log.Println("Signal reçu, arrêt des services...")
 
-	// Arrêter gracieusement le serveur HTTP
-	if err := server.Close(); err != nil {
-		log.Fatalf("Erreur lors de l'arrêt du serveur HTTP : %v", err)
-	}
-
-	log.Println("Service GalleryService arrêté avec succès.")
+	// Arrêter gracieusement les serveurs
+	grpcServer.GracefulStop()
+	log.Println("Server stopped successfully.")
 }

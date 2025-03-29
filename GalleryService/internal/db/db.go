@@ -12,7 +12,6 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-
 )
 
 type DBManagerService struct {
@@ -42,7 +41,7 @@ func NewDBManagerService() (*DBManagerService, error) {
 	db, err := gorm.Open(postgres.Open(connStr), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info), // Activer les logs de niveau Info
 	})
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("erreur lors de la connexion à la base de données : %v", err)
 	}

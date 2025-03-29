@@ -703,3 +703,257 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "proto/gallery.proto",
 }
+
+const (
+	S3Service_ListBuckets_FullMethodName      = "/protogallery.S3Service/ListBuckets"
+	S3Service_CreateBucket_FullMethodName     = "/protogallery.S3Service/CreateBucket"
+	S3Service_DeleteBucket_FullMethodName     = "/protogallery.S3Service/DeleteBucket"
+	S3Service_GetFilesInAlbum_FullMethodName  = "/protogallery.S3Service/GetFilesInAlbum"
+	S3Service_DownloadTempFile_FullMethodName = "/protogallery.S3Service/DownloadTempFile"
+)
+
+// S3ServiceClient is the client API for S3Service service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type S3ServiceClient interface {
+	ListBuckets(ctx context.Context, in *ListBucketsRequest, opts ...grpc.CallOption) (*ListBucketsResponse, error)
+	CreateBucket(ctx context.Context, in *CreateBucketRequest, opts ...grpc.CallOption) (*CreateBucketResponse, error)
+	DeleteBucket(ctx context.Context, in *DeleteBucketRequest, opts ...grpc.CallOption) (*DeleteBucketResponse, error)
+	GetFilesInAlbum(ctx context.Context, in *GetFilesInAlbumRequest, opts ...grpc.CallOption) (*GetFilesInAlbumResponse, error)
+	DownloadTempFile(ctx context.Context, in *DownloadTempFileRequest, opts ...grpc.CallOption) (*DownloadTempFileResponse, error)
+}
+
+type s3ServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewS3ServiceClient(cc grpc.ClientConnInterface) S3ServiceClient {
+	return &s3ServiceClient{cc}
+}
+
+func (c *s3ServiceClient) ListBuckets(ctx context.Context, in *ListBucketsRequest, opts ...grpc.CallOption) (*ListBucketsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListBucketsResponse)
+	err := c.cc.Invoke(ctx, S3Service_ListBuckets_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *s3ServiceClient) CreateBucket(ctx context.Context, in *CreateBucketRequest, opts ...grpc.CallOption) (*CreateBucketResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateBucketResponse)
+	err := c.cc.Invoke(ctx, S3Service_CreateBucket_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *s3ServiceClient) DeleteBucket(ctx context.Context, in *DeleteBucketRequest, opts ...grpc.CallOption) (*DeleteBucketResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteBucketResponse)
+	err := c.cc.Invoke(ctx, S3Service_DeleteBucket_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *s3ServiceClient) GetFilesInAlbum(ctx context.Context, in *GetFilesInAlbumRequest, opts ...grpc.CallOption) (*GetFilesInAlbumResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetFilesInAlbumResponse)
+	err := c.cc.Invoke(ctx, S3Service_GetFilesInAlbum_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *s3ServiceClient) DownloadTempFile(ctx context.Context, in *DownloadTempFileRequest, opts ...grpc.CallOption) (*DownloadTempFileResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DownloadTempFileResponse)
+	err := c.cc.Invoke(ctx, S3Service_DownloadTempFile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// S3ServiceServer is the server API for S3Service service.
+// All implementations must embed UnimplementedS3ServiceServer
+// for forward compatibility.
+type S3ServiceServer interface {
+	ListBuckets(context.Context, *ListBucketsRequest) (*ListBucketsResponse, error)
+	CreateBucket(context.Context, *CreateBucketRequest) (*CreateBucketResponse, error)
+	DeleteBucket(context.Context, *DeleteBucketRequest) (*DeleteBucketResponse, error)
+	GetFilesInAlbum(context.Context, *GetFilesInAlbumRequest) (*GetFilesInAlbumResponse, error)
+	DownloadTempFile(context.Context, *DownloadTempFileRequest) (*DownloadTempFileResponse, error)
+	mustEmbedUnimplementedS3ServiceServer()
+}
+
+// UnimplementedS3ServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedS3ServiceServer struct{}
+
+func (UnimplementedS3ServiceServer) ListBuckets(context.Context, *ListBucketsRequest) (*ListBucketsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListBuckets not implemented")
+}
+func (UnimplementedS3ServiceServer) CreateBucket(context.Context, *CreateBucketRequest) (*CreateBucketResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateBucket not implemented")
+}
+func (UnimplementedS3ServiceServer) DeleteBucket(context.Context, *DeleteBucketRequest) (*DeleteBucketResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteBucket not implemented")
+}
+func (UnimplementedS3ServiceServer) GetFilesInAlbum(context.Context, *GetFilesInAlbumRequest) (*GetFilesInAlbumResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFilesInAlbum not implemented")
+}
+func (UnimplementedS3ServiceServer) DownloadTempFile(context.Context, *DownloadTempFileRequest) (*DownloadTempFileResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DownloadTempFile not implemented")
+}
+func (UnimplementedS3ServiceServer) mustEmbedUnimplementedS3ServiceServer() {}
+func (UnimplementedS3ServiceServer) testEmbeddedByValue()                   {}
+
+// UnsafeS3ServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to S3ServiceServer will
+// result in compilation errors.
+type UnsafeS3ServiceServer interface {
+	mustEmbedUnimplementedS3ServiceServer()
+}
+
+func RegisterS3ServiceServer(s grpc.ServiceRegistrar, srv S3ServiceServer) {
+	// If the following call pancis, it indicates UnimplementedS3ServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&S3Service_ServiceDesc, srv)
+}
+
+func _S3Service_ListBuckets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListBucketsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(S3ServiceServer).ListBuckets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: S3Service_ListBuckets_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(S3ServiceServer).ListBuckets(ctx, req.(*ListBucketsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _S3Service_CreateBucket_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateBucketRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(S3ServiceServer).CreateBucket(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: S3Service_CreateBucket_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(S3ServiceServer).CreateBucket(ctx, req.(*CreateBucketRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _S3Service_DeleteBucket_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteBucketRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(S3ServiceServer).DeleteBucket(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: S3Service_DeleteBucket_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(S3ServiceServer).DeleteBucket(ctx, req.(*DeleteBucketRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _S3Service_GetFilesInAlbum_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFilesInAlbumRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(S3ServiceServer).GetFilesInAlbum(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: S3Service_GetFilesInAlbum_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(S3ServiceServer).GetFilesInAlbum(ctx, req.(*GetFilesInAlbumRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _S3Service_DownloadTempFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DownloadTempFileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(S3ServiceServer).DownloadTempFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: S3Service_DownloadTempFile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(S3ServiceServer).DownloadTempFile(ctx, req.(*DownloadTempFileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// S3Service_ServiceDesc is the grpc.ServiceDesc for S3Service service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var S3Service_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "protogallery.S3Service",
+	HandlerType: (*S3ServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ListBuckets",
+			Handler:    _S3Service_ListBuckets_Handler,
+		},
+		{
+			MethodName: "CreateBucket",
+			Handler:    _S3Service_CreateBucket_Handler,
+		},
+		{
+			MethodName: "DeleteBucket",
+			Handler:    _S3Service_DeleteBucket_Handler,
+		},
+		{
+			MethodName: "GetFilesInAlbum",
+			Handler:    _S3Service_GetFilesInAlbum_Handler,
+		},
+		{
+			MethodName: "DownloadTempFile",
+			Handler:    _S3Service_DownloadTempFile_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "proto/gallery.proto",
+}
