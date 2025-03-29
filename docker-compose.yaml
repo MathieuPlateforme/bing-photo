@@ -32,15 +32,15 @@ services:
     env_file:
       - ./AuthService/.env
 
-  test-service:
-    build:
-      context: ./AuthService
-      dockerfile: Dockerfile
-      target: builder
-    depends_on:
-      - db
-    env_file:
-      - ./AuthService/.env
+  # test-service:
+  #   build:
+  #     context: ./AuthService
+  #     dockerfile: Dockerfile
+  #     target: builder
+  #   depends_on:
+  #     - db
+  #   env_file:
+  #     - ./AuthService/.env
 
   gallery-service:
     build:

@@ -38,24 +38,70 @@ func enableCors(w *http.ResponseWriter) {
 
 func main() {
 	authServiceAddress := os.Getenv("AUTH_SERVICE")
+	galleryServiceAddress := os.Getenv("GALLERY_SERVICE")
 
+	// Connect to Auth Service
 	authConn, err := connectToService(authServiceAddress)
 	if err != nil {
 		log.Fatalf("Failed to connect to AuthService: %v", err)
 	}
 	defer authConn.Close()
 
+	// Connect to Gallery Service
+	galleryConn, err := connectToService(galleryServiceAddress)
+	if err != nil {
+		log.Fatalf("Failed to connect to GalleryService: %v", err)
+	}
+	defer galleryConn.Close()
+
+	// Initialize handlers
 	authClient := proto.NewAuthServiceClient(authConn)
 	authHandler := handlers.NewApiGateway(authClient)
 
+	// Initialize gallery service clients
+	albumClient := proto.NewAlbumServiceClient(galleryConn)
+	mediaClient := proto.NewMediaServiceClient(galleryConn)
+	userClient := proto.NewUserServiceClient(galleryConn)
+	galleryHandler := handlers.NewGalleryGateway(albumClient, mediaClient, userClient)
+
 	r := mux.NewRouter()
 
+	// CORS configuration
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"*"},
-		AllowedHeaders: []string{"Content-Type", "Authorization"},
-		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		Debug:          true,
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowCredentials: true,
 	})
+
+	// Auth routes
+	r.HandleFunc("/login", authHandler.LoginHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/register", authHandler.RegisterHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/google", authHandler.GoogleHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/oauth2/callback", authHandler.GoogleCallbackHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/forgot-password", authHandler.ForgotPasswordHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/reset-password", authHandler.ResetPasswordHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/logout", authHandler.LogoutHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/validateToken", authHandler.ValidateTokenHandler).Methods("POST")
+
+	// Album routes
+	r.HandleFunc("/albums", galleryHandler.CreateAlbumHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/albums/user", galleryHandler.GetAlbumsByUserHandler).Methods("GET", "OPTIONS")
+	r.HandleFunc("/albums/{id}", galleryHandler.UpdateAlbumHandler).Methods("PUT", "OPTIONS")
+	r.HandleFunc("/albums/{id}", galleryHandler.DeleteAlbumHandler).Methods("DELETE", "OPTIONS")
+	r.HandleFunc("/albums/private", galleryHandler.GetPrivateAlbumHandler).Methods("GET", "OPTIONS")
+
+	// Media routes
+	r.HandleFunc("/media", galleryHandler.AddMediaHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/media/user", galleryHandler.GetMediaByUserHandler).Methods("GET", "OPTIONS")
+	r.HandleFunc("/media/{id}/private", galleryHandler.MarkAsPrivateHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/media/private", galleryHandler.GetPrivateMediaHandler).Methods("GET", "OPTIONS")
+	r.HandleFunc("/media/{id}/download", galleryHandler.DownloadMediaHandler).Methods("GET", "OPTIONS")
+	r.HandleFunc("/media/{id}", galleryHandler.DeleteMediaHandler).Methods("DELETE", "OPTIONS")
+	r.HandleFunc("/media/similar", galleryHandler.DetectSimilarMediaHandler).Methods("POST", "OPTIONS")
+
+	// User routes
+	r.HandleFunc("/users", galleryHandler.CreateUserHandler).Methods("POST", "OPTIONS")
 
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -66,22 +112,13 @@ func main() {
 
 	r.Use(c.Handler)
 
-	r.HandleFunc("/login", authHandler.LoginHandler).Methods("POST", "OPTIONS")
-	r.HandleFunc("/register", authHandler.RegisterHandler).Methods("POST", "OPTIONS")
-	r.HandleFunc("/google", authHandler.GoogleHandler).Methods("POST", "OPTIONS")
-	r.HandleFunc("/oauth2/callback", authHandler.GoogleCallbackHandler).Methods("POST", "OPTIONS")
-	r.HandleFunc("/forgot-password", authHandler.ForgotPasswordHandler).Methods("POST", "OPTIONS")
-	r.HandleFunc("/reset-password", authHandler.ResetPasswordHandler).Methods("POST", "OPTIONS")
-	r.HandleFunc("/logout", authHandler.LogoutHandler).Methods("POST", "OPTIONS")
-  r.HandleFunc("/validateToken", authHandler.ValidateTokenHandler).Methods("POST")
-
-	server := &http.Server{
-		Handler:      r,
-		Addr:         ":8080",
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
 	}
 
-	log.Println("API Gateway is running on port 8080")
-	log.Fatal(server.ListenAndServe())
+	log.Printf("API Gateway starting on port %s...", port)
+	if err := http.ListenAndServe(":"+port, r); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 }

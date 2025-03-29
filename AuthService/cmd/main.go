@@ -3,19 +3,17 @@ package main
 import (
 	"AuthService/middleware"
 	"AuthService/pkg/jwt"
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
-	"encoding/json"
-	"bytes"
-	"fmt"
 
 	"AuthService/models"
 	proto "AuthService/proto"
 	"AuthService/services/auth"
-
-	"encoding/json"
 
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
@@ -26,7 +24,7 @@ import (
 type authServer struct {
 	proto.UnimplementedAuthServiceServer
 	authService *auth.AuthService
-	JWTService  *jwt.JWTService 
+	JWTService  *jwt.JWTService
 }
 
 func (s *authServer) Login(ctx context.Context, req *proto.LoginRequest) (*proto.LoginResponse, error) {
@@ -45,9 +43,9 @@ func (s *authServer) Login(ctx context.Context, req *proto.LoginRequest) (*proto
 // RegisterWithEmail handles user registration
 func (s *authServer) Register(ctx context.Context, req *proto.RegisterRequest) (*proto.RegisterResponse, error) {
 	success, err := s.authService.RegisterWithEmail(models.User{
-		Email:     req.Email,
-		Password:  req.Password,
-		Username:  req.Username,
+		Email:    req.Email,
+		Password: req.Password,
+		Username: req.Username,
 	})
 
 	if err != nil || !success {
@@ -64,40 +62,39 @@ func (s *authServer) Register(ctx context.Context, req *proto.RegisterRequest) (
 }
 
 func (s *authServer) syncWithGalleryService(ctx context.Context, email string, username string) error {
-    // Construire la requête pour GalleryService
-    url := "http://gallery-service:50052/users"
-    payload := map[string]string{
-        "email":    email,
-        "username": username,
-    }
-    body, err := json.Marshal(payload)
-    if err != nil {
-        return fmt.Errorf("erreur lors de la construction du payload : %v", err)
-    }
+	// Construire la requête pour GalleryService
+	url := "http://gallery-service:50052/users"
+	payload := map[string]string{
+		"email":    email,
+		"username": username,
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("erreur lors de la construction du payload : %v", err)
+	}
 
-    // Envoyer la requête HTTP POST
-    req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
-    if err != nil {
-        return fmt.Errorf("erreur lors de la création de la requête : %v", err)
-    }
-    req.Header.Set("Content-Type", "application/json")
+	// Envoyer la requête HTTP POST
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
+	if err != nil {
+		return fmt.Errorf("erreur lors de la création de la requête : %v", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
 
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    if err != nil {
-        return fmt.Errorf("erreur lors de l'envoi de la requête à GalleryService : %v", err)
-    }
-    defer resp.Body.Close()
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("erreur lors de l'envoi de la requête à GalleryService : %v", err)
+	}
+	defer resp.Body.Close()
 
-    // Vérifier la réponse
-    if resp.StatusCode != http.StatusCreated {
-        return fmt.Errorf("échec de la synchronisation avec GalleryService, statut : %d", resp.StatusCode)
-    }
+	// Vérifier la réponse
+	if resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("échec de la synchronisation avec GalleryService, statut : %d", resp.StatusCode)
+	}
 
-    log.Println("Utilisateur synchronisé avec succès dans GalleryService")
-    return nil
+	log.Println("Utilisateur synchronisé avec succès dans GalleryService")
+	return nil
 }
-
 
 func (s *authServer) ForgotPassword(ctx context.Context, req *proto.ForgotPasswordRequest) (*proto.ForgotPasswordResponse, error) {
 	err := s.authService.ForgotPassword(req.Email)
