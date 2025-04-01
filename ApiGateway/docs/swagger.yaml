@@ -76,6 +76,19 @@ definitions:
           $ref: '#/definitions/proto.Album'
         type: array
     type: object
+  proto.GetMeResponse:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      picture:
+        type: string
+      username:
+        type: string
+    type: object
   proto.GetMediaByUserResponse:
     properties:
       media_list:
@@ -375,6 +388,29 @@ paths:
           schema:
             type: string
       summary: Forgot Password
+      tags:
+      - Auth
+  /auth/get-me:
+    get:
+      description: Retourne les informations du profil de l'utilisateur authentifié
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/proto.GetMeResponse'
+        "401":
+          description: Token manquant ou invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur interne
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Obtenir les informations de l'utilisateur connecté
       tags:
       - Auth
   /auth/google:

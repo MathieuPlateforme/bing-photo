@@ -325,11 +325,39 @@ func (g *ApiGateway) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 
+// func (g *ApiGateway) GetMeHandler(w http.ResponseWriter, r *http.Request) {
+// 	res, err := g.AuthClient.GetMe(context.Background(), &proto.GetMeRequest{})
+// 	if err != nil {
+// 		http.Error(w, "Failed to get user: "+err.Error(), http.StatusInternalServerError)
+// 		log.Printf("Get user error: %v\n", err)
+// 		return
+// 	}
+
+// 	w.WriteHeader(http.StatusOK)
+// 	json.NewEncoder(w).Encode(res)
+// }
+// GetMeHandler godoc
+// @Summary Obtenir les informations de l'utilisateur connecté
+// @Description Retourne les informations du profil de l'utilisateur authentifié
+// @Tags Auth
+// @Produce json
+// @Success 200 {object} proto.GetMeResponse
+// @Failure 401 {string} string "Token manquant ou invalide"
+// @Failure 500 {string} string "Erreur interne"
+// @Security BearerAuth
+// @Router /auth/get-me [get]
 func (g *ApiGateway) GetMeHandler(w http.ResponseWriter, r *http.Request) {
-	res, err := g.AuthClient.GetMe(context.Background(), &proto.GetMeRequest{})
+	ctx, err := utils.AttachTokenToContext(r)
 	if err != nil {
-		http.Error(w, "Failed to get user: "+err.Error(), http.StatusInternalServerError)
-		log.Printf("Get user error: %v\n", err)
+		http.Error(w, "Token manquant ou invalide", http.StatusUnauthorized)
+		log.Printf("GetMeHandler: token invalide : %v", err)
+		return
+	}
+
+	res, err := g.AuthClient.GetMe(ctx, &proto.GetMeRequest{})
+	if err != nil {
+		http.Error(w, "Erreur lors de la récupération de l'utilisateur : "+err.Error(), http.StatusInternalServerError)
+		log.Printf("GetMeHandler: erreur gRPC : %v", err)
 		return
 	}
 

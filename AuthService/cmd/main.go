@@ -169,6 +169,7 @@ func main() {
 		"/proto.AuthService/Logout":       true,
 		"/proto.AuthService/ValidateToken": true,
 		"/proto.AuthService/UpdateUser":   true,
+		"/proto.AuthService/GetMe":   true,
 	}
 	
 	// Create gRPC server
@@ -254,15 +255,36 @@ func (s *authServer) UpdateUser(ctx context.Context, req *proto.UpdateUserReques
 	}, nil
 }
 
-func (s *authServer) GetMe(ctx context.Context, req *proto.GetMeRequest) (*proto.GetMeResponse, error) {
+// func (s *authServer) GetMe(ctx context.Context, req *proto.GetMeRequest) (*proto.GetMeResponse, error) {
 
-	// Réponse avec succès
+// 	// Réponse avec succès
+// 	return &proto.GetMeResponse{
+// 		Email:     "",
+// 		Username:  "",
+// 		FirstName: "",
+// 		LastName:  "",
+// 		Picture:   "",
+// 	}, nil
+// }
+
+func (s *authServer) GetMe(ctx context.Context, req *proto.GetMeRequest) (*proto.GetMeResponse, error) {
+	userID, err := utils.GetUserIDFromContext(ctx)
+	if err != nil {
+		log.Printf("GetMe: impossible d'extraire userID du contexte : %v", err)
+		return nil, status.Errorf(codes.Unauthenticated, "Token invalide")
+	}
+
+	var user models.User
+	if err := user.GetUserByID(s.authService.DBManager.DB, userID); err != nil {
+		log.Printf("GetMe: utilisateur introuvable : %v", err)
+		return nil, status.Errorf(codes.NotFound, "Utilisateur non trouvé")
+	}
+
 	return &proto.GetMeResponse{
-		Email:     "",
-		Username:  "",
-		FirstName: "",
-		LastName:  "",
-		Picture:   "",
+		Email:     user.Email,
+		Username:  user.Username,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Picture:   user.Picture,
 	}, nil
 }
-
