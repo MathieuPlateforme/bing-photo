@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -184,9 +185,11 @@ func (s *AuthService) ResetPassword(email, token, newPassword string) error {
 
 func (s *AuthService) Logout(token string) error {
 	// Vérifie si le token JWT est valide
+	log.Printf("token extraits de la methode : %+v\n", token)
 	claims, err := s.JWTService.VerifyToken(token)
+	log.Printf("Claims extraits du token : %+v\n", claims)
 	if err != nil {
-		return fmt.Errorf("token invalide ou expiré")
+		return fmt.Errorf("token invalide ou expiré 1")
 	}
 
 	// Extraire le nom d'utilisateur des claims
@@ -205,4 +208,11 @@ func (s *AuthService) Logout(token string) error {
 
 	return nil
 }
-
+func (s *AuthService) RevokeToken(token string, username string) error {
+	revoked := models.RevokedToken{
+		Token:    token,
+		Username: username,
+		RevokedAt: time.Now(),
+	}
+	return s.DBManager.DB.Create(&revoked).Error
+}

@@ -12,6 +12,7 @@ import (
 	"AuthService/models"
 	proto "AuthService/proto"
 	"AuthService/services/auth"
+	"AuthService/utils"
 
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
@@ -104,14 +105,30 @@ func (s *authServer) ResetPassword(ctx context.Context, req *proto.ResetPassword
 }
 
 func (s *authServer) Logout(ctx context.Context, req *proto.LogoutRequest) (*proto.LogoutResponse, error) {
-	err := s.authService.Logout(req.Token)
-
+	// ✅ Récupérer les claims à partir du contexte (via le middleware JWT)
+	claims, err := s.JWTService.VerifyTokenFromContext(ctx)
 	if err != nil {
-		return &proto.LogoutResponse{}, err
+		return nil, status.Errorf(codes.Unauthenticated, "Token invalide : %v", err)
 	}
 
-	return &proto.LogoutResponse{}, nil
+	username, ok := claims["username"].(string)
+	if !ok {
+		return nil, status.Errorf(codes.Internal, "username introuvable dans les claims")
+	}
+
+	token, err := s.JWTService.ExtractTokenFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Token introuvable dans le contexte : %v", err)
+	}
+
+	err = s.authService.RevokeToken(token, username)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Erreur de déconnexion : %v", err)
+	}
+
+	return &proto.LogoutResponse{Message: "Déconnexion réussie"}, nil
 }
+
 func (s *authServer) LoginWithGoogle(ctx context.Context, req *proto.GoogleAuthRequest) (*proto.GoogleAuthResponse, error) {
 	authUrl, err := s.authService.GoogleAuthService.AuthenticateWithGoogle()
 
@@ -148,8 +165,12 @@ func main() {
 	}
 
 	// Définir les méthodes nécessitant une vérification d'authentification
-	methodsToIntercept := map[string]bool{}
-
+	methodsToIntercept := map[string]bool{
+		"/proto.AuthService/Logout":       true,
+		"/proto.AuthService/ValidateToken": true,
+		"/proto.AuthService/UpdateUser":   true,
+	}
+	
 	// Create gRPC server
 	server := grpc.NewServer(grpc.UnaryInterceptor(middleware.AuthInterceptor(JWTService, methodsToIntercept)))
 	proto.RegisterAuthServiceServer(server, &authServer{
@@ -191,9 +212,42 @@ func (s *authServer) ValidateToken(ctx context.Context, req *proto.ValidateToken
 }
 
 func (s *authServer) UpdateUser(ctx context.Context, req *proto.UpdateUserRequest) (*proto.UpdateUserResponse, error) {
+	userID, err := utils.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, err.Error())
+	}
 
-	// Réponse avec succès
+	log.Printf("Mise à jour du profil utilisateur ID: %d", userID)
+
+	// Récupérer l'utilisateur existant
+	var user models.User
+	if err := s.authService.DBManager.DB.First(&user, userID).Error; err != nil {
+		return nil, status.Errorf(codes.NotFound, "Utilisateur introuvable : %v", err)
+	}
+
+	// Mise à jour conditionnelle des champs
+	if req.FirstName != "" {
+		user.FirstName = req.FirstName
+	}
+	if req.LastName != "" {
+		user.LastName = req.LastName
+	}
+	if req.Email != "" {
+		user.Email = req.Email
+	}
+	if req.Picture != "" {
+		user.Picture = req.Picture
+	}
+
+	// Sauvegarder les modifications
+	if err := s.authService.DBManager.DB.Save(&user).Error; err != nil {
+		return nil, status.Errorf(codes.Internal, "Échec de la mise à jour de l'utilisateur : %v", err)
+	}
+
+	log.Printf("Utilisateur %d mis à jour avec succès", userID)
+
 	return &proto.UpdateUserResponse{
-		Message: "Mis à jour de l'utilisateur avec succès",
+		Message: "Utilisateur mis à jour avec succès",
 	}, nil
 }
+

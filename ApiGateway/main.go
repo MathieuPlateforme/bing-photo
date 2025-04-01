@@ -26,6 +26,10 @@ import (
 // @contact.email   your@email.com
 // @host            localhost:8081
 // @BasePath        /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Format : Bearer <votre_token>
 
 type apiGateway struct {
 	authClient proto.AuthServiceClient

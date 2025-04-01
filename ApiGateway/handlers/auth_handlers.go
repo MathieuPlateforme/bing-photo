@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"ApiGateway/utils"
 
 	proto "ApiGateway/proto"
 )
@@ -170,35 +171,30 @@ func (g *ApiGateway) ResetPasswordHandler(w http.ResponseWriter, r *http.Request
 // @Tags Auth
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param request body proto.LogoutRequest true "Token to invalidate"
 // @Success 200 {object} map[string]string "Logout successful"
 // @Failure 400 {string} string "Invalid request payload"
 // @Failure 500 {string} string "Logout failed"
 // @Router /auth/logout [post]
 func (g *ApiGateway) LogoutHandler(w http.ResponseWriter, r *http.Request) {
-
-	req := &proto.LogoutRequest{}
-	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		log.Printf("Failed to parse request: %v\n", err)
+	ctx, err := utils.AttachTokenToContext(r)
+	if err != nil {
+		http.Error(w, "Token manquant ou invalide", http.StatusUnauthorized)
 		return
 	}
 
-	res, err := g.AuthClient.Logout(context.Background(), req)
+	_, err = g.AuthClient.Logout(ctx, &proto.LogoutRequest{}) // pas besoin de Token dans le body
 	if err != nil {
-		http.Error(w, "Logout failed", http.StatusInternalServerError)
-		log.Printf("Logout error: %v\n", err)
+		http.Error(w, "Erreur lors de la déconnexion : "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	response := map[string]string{"Message": res.Message}
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.Printf("Failed to encode response: %v\n", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
+	json.NewEncoder(w).Encode(map[string]string{"message": "Déconnexion réussie"})
 }
+
+
 
 // GoogleHandler godoc
 // @Summary Google OAuth
@@ -290,6 +286,18 @@ func (g *ApiGateway) ValidateTokenHandler(w http.ResponseWriter, r *http.Request
 	w.Write([]byte("Message: " + res.Message))
 }
 
+// UpdateUserHandler godoc
+// @Summary Mettre à jour un utilisateur
+// @Description Met à jour les informations d'un utilisateur (nom, prénom, email, photo)
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body proto.UpdateUserRequest true "Champs à mettre à jour"
+// @Success 200 {object} proto.UpdateUserResponse
+// @Failure 400 {string} string "Requête invalide"
+// @Failure 500 {string} string "Erreur interne du serveur"
+// @Router /update-user [put]
 func (g *ApiGateway) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	var req proto.UpdateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

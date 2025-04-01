@@ -1,16 +1,22 @@
 package jwt
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
 	"os"
+	"strings"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+
+	"google.golang.org/grpc/metadata"
 )
 
 type JWTService struct {
-	Token     string
+	Token      string
 	Expiration int64
-	IssuedAt  int64
+	IssuedAt   int64
 	SecretKey  []byte
 }
 
@@ -56,4 +62,44 @@ func (j *JWTService) GenerateToken(userID uint, username string) (string, error)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(j.SecretKey))
+}
+
+// VerifyTokenFromContext extrait le token du contexte et le vérifie
+func (j *JWTService) VerifyTokenFromContext(ctx context.Context) (map[string]interface{}, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("métadonnées manquantes dans le contexte")
+	}
+
+	authHeaders := md["authorization"]
+	if len(authHeaders) == 0 {
+		return nil, errors.New("en-tête Authorization manquant")
+	}
+
+	token := strings.TrimPrefix(authHeaders[0], "Bearer ")
+	if token == "" {
+		return nil, errors.New("token vide ou mal formaté")
+	}
+
+	// Appelle ta méthode de vérification déjà existante
+	return j.VerifyToken(token)
+}
+
+func (j *JWTService) ExtractTokenFromContext(ctx context.Context) (string, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return "", errors.New("aucune métadonnée dans le contexte")
+	}
+
+	authHeaders := md["authorization"]
+	if len(authHeaders) == 0 {
+		return "", errors.New("en-tête Authorization manquant")
+	}
+
+	token := strings.TrimSpace(strings.TrimPrefix(authHeaders[0], "Bearer "))
+	if token == "" {
+		return "", errors.New("token vide après extraction")
+	}
+
+	return token, nil
 }

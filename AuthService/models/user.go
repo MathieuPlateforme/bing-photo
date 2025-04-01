@@ -19,6 +19,7 @@ type User struct {
 	PhoneNumber string
 	BirthDate   time.Time
 	ResetToken  string
+	Picture		string `gorm:"column:picture"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
@@ -70,4 +71,9 @@ func (u *User) UpdateResetToken(db *gorm.DB, token string) error {
 	u.ResetToken = token
 	u.UpdatedAt = time.Now()
 	return db.Save(&u).Error
+}
+
+func (u *User) UpdateUser(db *gorm.DB, updates map[string]interface{}) error {
+	updates["updated_at"] = time.Now()
+	return db.Model(u).Updates(updates).Error
 }

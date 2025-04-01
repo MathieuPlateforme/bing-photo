@@ -91,11 +91,10 @@ message LogoutResponse {
 
 message UpdateUserRequest {
   string email = 1;
-  string token = 2;
-  string username = 3;
-  string firstName = 4;
-  string lastName = 5;
-  string picture = 6;
+  string username = 2;
+  string firstName = 3;
+  string lastName = 4;
+  string picture = 5;
 }
 
 message UpdateUserResponse {
