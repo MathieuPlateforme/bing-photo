@@ -25,7 +25,16 @@ func NewGalleryGateway(albumClient proto.AlbumServiceClient, mediaClient proto.M
 	}
 }
 
-// Album handlers
+// @Summary Créer un album
+// @Description Crée un nouvel album avec un titre et un identifiant utilisateur
+// @Tags Albums
+// @Accept json
+// @Produce json
+// @Param album body proto.CreateAlbumRequest true "Données de l'album"
+// @Success 201 {object} proto.CreateAlbumResponse
+// @Failure 400 {string} string "Requête invalide"
+// @Failure 500 {string} string "Erreur serveur"
+// @Router /albums [post]
 func (g *GalleryGateway) CreateAlbumHandler(w http.ResponseWriter, r *http.Request) {
 	var req proto.CreateAlbumRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -45,6 +54,15 @@ func (g *GalleryGateway) CreateAlbumHandler(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(res)
 }
 
+// @Summary Obtenir les albums d'un utilisateur
+// @Description Récupère tous les albums appartenant à un utilisateur donné
+// @Tags Albums
+// @Produce json
+// @Param user_id query int true "ID utilisateur"
+// @Success 200 {object} proto.GetAlbumsByUserResponse
+// @Failure 400 {string} string "ID utilisateur invalide"
+// @Failure 500 {string} string "Erreur serveur"
+// @Router /albums/user [get]
 func (g *GalleryGateway) GetAlbumsByUserHandler(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.ParseUint(r.URL.Query().Get("user_id"), 10, 32)
 	if err != nil {
@@ -67,6 +85,17 @@ func (g *GalleryGateway) GetAlbumsByUserHandler(w http.ResponseWriter, r *http.R
 	json.NewEncoder(w).Encode(res)
 }
 
+// @Summary Mettre à jour un album
+// @Description Met à jour les informations d'un album
+// @Tags Albums
+// @Accept json
+// @Produce json
+// @Param id path int true "ID de l'album"
+// @Param album body proto.UpdateAlbumRequest true "Mise à jour de l'album"
+// @Success 200 {object} proto.UpdateAlbumResponse
+// @Failure 400 {string} string "Requête invalide"
+// @Failure 500 {string} string "Erreur serveur"
+// @Router /albums/{id} [put]
 func (g *GalleryGateway) UpdateAlbumHandler(w http.ResponseWriter, r *http.Request) {
 	var req proto.UpdateAlbumRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -86,6 +115,15 @@ func (g *GalleryGateway) UpdateAlbumHandler(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(res)
 }
 
+// @Summary Supprimer un album
+// @Description Supprime un album existant par son ID
+// @Tags Albums
+// @Produce json
+// @Param id path int true "ID de l'album"
+// @Success 200 {object} proto.DeleteAlbumResponse
+// @Failure 400 {string} string "ID invalide"
+// @Failure 500 {string} string "Erreur serveur"
+// @Router /albums/{id} [delete]
 func (g *GalleryGateway) DeleteAlbumHandler(w http.ResponseWriter, r *http.Request) {
 	albumID, err := strconv.ParseUint(r.URL.Query().Get("album_id"), 10, 32)
 	if err != nil {
@@ -108,6 +146,15 @@ func (g *GalleryGateway) DeleteAlbumHandler(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(res)
 }
 
+// @Summary Obtenir un album privé
+// @Description Récupère un album privé à partir de son ID
+// @Tags Albums
+// @Produce json
+// @Param album_id query int true "ID de l'album"
+// @Success 200 {object} proto.GetPrivateAlbumResponse
+// @Failure 400 {string} string "ID invalide"
+// @Failure 500 {string} string "Erreur serveur"
+// @Router /albums/private [get]
 func (g *GalleryGateway) GetPrivateAlbumHandler(w http.ResponseWriter, r *http.Request) {
 	albumID, err := strconv.ParseUint(r.URL.Query().Get("album_id"), 10, 32)
 	if err != nil {
@@ -130,7 +177,17 @@ func (g *GalleryGateway) GetPrivateAlbumHandler(w http.ResponseWriter, r *http.R
 	json.NewEncoder(w).Encode(res)
 }
 
-// Media handlers
+// @Summary Ajouter un média
+// @Description Ajoute un fichier média à un album
+// @Tags Media
+// @Accept multipart/form-data
+// @Produce json
+// @Param album_id formData int true "ID de l'album"
+// @Param file formData file true "Fichier à uploader"
+// @Success 201 {object} proto.AddMediaResponse
+// @Failure 400 {string} string "Erreur de parsing du formulaire"
+// @Failure 500 {string} string "Erreur serveur"
+// @Router /media [post]
 func (g *GalleryGateway) AddMediaHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(10 << 20) // 10 MB max
 	if err != nil {
@@ -174,6 +231,15 @@ func (g *GalleryGateway) AddMediaHandler(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(res)
 }
 
+// @Summary Médias d’un utilisateur
+// @Description Récupère tous les médias appartenant à un utilisateur
+// @Tags Media
+// @Produce json
+// @Param user_id query int true "ID utilisateur"
+// @Success 200 {object} proto.GetMediaByUserResponse
+// @Failure 400 {string} string "ID invalide"
+// @Failure 500 {string} string "Erreur serveur"
+// @Router /media/user [get]
 func (g *GalleryGateway) GetMediaByUserHandler(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.ParseUint(r.URL.Query().Get("user_id"), 10, 32)
 	if err != nil {
@@ -196,6 +262,16 @@ func (g *GalleryGateway) GetMediaByUserHandler(w http.ResponseWriter, r *http.Re
 	json.NewEncoder(w).Encode(res)
 }
 
+// @Summary Rendre un média privé
+// @Description Marque un média comme privé
+// @Tags Media
+// @Accept json
+// @Produce json
+// @Param request body proto.MarkAsPrivateRequest true "Données de la requête"
+// @Success 200 {object} proto.MarkAsPrivateResponse
+// @Failure 400 {string} string "Requête invalide"
+// @Failure 500 {string} string "Erreur serveur"
+// @Router /media/{id}/private [post]
 func (g *GalleryGateway) MarkAsPrivateHandler(w http.ResponseWriter, r *http.Request) {
 	var req proto.MarkAsPrivateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -215,6 +291,15 @@ func (g *GalleryGateway) MarkAsPrivateHandler(w http.ResponseWriter, r *http.Req
 	json.NewEncoder(w).Encode(res)
 }
 
+// @Summary Obtenir les médias privés
+// @Description Récupère les médias privés d’un utilisateur
+// @Tags Media
+// @Produce json
+// @Param user_id query int true "ID utilisateur"
+// @Success 200 {object} proto.GetPrivateMediaResponse
+// @Failure 400 {string} string "ID invalide"
+// @Failure 500 {string} string "Erreur serveur"
+// @Router /media/private [get]
 func (g *GalleryGateway) GetPrivateMediaHandler(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.ParseUint(r.URL.Query().Get("user_id"), 10, 32)
 	if err != nil {
@@ -237,6 +322,15 @@ func (g *GalleryGateway) GetPrivateMediaHandler(w http.ResponseWriter, r *http.R
 	json.NewEncoder(w).Encode(res)
 }
 
+// @Summary Télécharger un média
+// @Description Télécharge le contenu d’un fichier média
+// @Tags Media
+// @Produce application/octet-stream
+// @Param id path int true "ID du média"
+// @Success 200 {file} file "Fichier binaire"
+// @Failure 400 {string} string "ID invalide"
+// @Failure 500 {string} string "Erreur serveur"
+// @Router /media/{id}/download [get]
 func (g *GalleryGateway) DownloadMediaHandler(w http.ResponseWriter, r *http.Request) {
 	mediaID, err := strconv.ParseUint(r.URL.Query().Get("media_id"), 10, 32)
 	if err != nil {
@@ -261,6 +355,15 @@ func (g *GalleryGateway) DownloadMediaHandler(w http.ResponseWriter, r *http.Req
 	w.Write(res.FileData)
 }
 
+// @Summary Supprimer un média
+// @Description Supprime un média par son ID
+// @Tags Media
+// @Produce json
+// @Param id path int true "ID du média"
+// @Success 200 {object} proto.DeleteMediaResponse
+// @Failure 400 {string} string "ID invalide"
+// @Failure 500 {string} string "Erreur serveur"
+// @Router /media/{id} [delete]
 func (g *GalleryGateway) DeleteMediaHandler(w http.ResponseWriter, r *http.Request) {
 	mediaID, err := strconv.ParseUint(r.URL.Query().Get("media_id"), 10, 32)
 	if err != nil {
@@ -283,6 +386,16 @@ func (g *GalleryGateway) DeleteMediaHandler(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(res)
 }
 
+// @Summary Détecter les médias similaires
+// @Description Détecte les fichiers médias similaires à celui donné
+// @Tags Media
+// @Accept json
+// @Produce json
+// @Param request body proto.DetectSimilarMediaRequest true "Requête de détection"
+// @Success 200 {object} proto.DetectSimilarMediaResponse
+// @Failure 400 {string} string "Requête invalide"
+// @Failure 500 {string} string "Erreur serveur"
+// @Router /media/similar [post]
 func (g *GalleryGateway) DetectSimilarMediaHandler(w http.ResponseWriter, r *http.Request) {
 	mediaID, err := strconv.ParseUint(r.URL.Query().Get("media_id"), 10, 32)
 	if err != nil {
@@ -305,6 +418,16 @@ func (g *GalleryGateway) DetectSimilarMediaHandler(w http.ResponseWriter, r *htt
 	json.NewEncoder(w).Encode(res)
 }
 
+// @Summary Créer un utilisateur
+// @Description Crée un nouvel utilisateur avec les informations fournies
+// @Tags Utilisateurs
+// @Accept json
+// @Produce json
+// @Param user body proto.CreateUserRequest true "Données de l'utilisateur"
+// @Success 201 {object} proto.CreateUserResponse
+// @Failure 400 {string} string "Requête invalide"
+// @Failure 500 {string} string "Erreur serveur"
+// @Router /users [post]
 // User handlers
 func (g *GalleryGateway) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	var req proto.CreateUserRequest
@@ -324,3 +447,23 @@ func (g *GalleryGateway) CreateUserHandler(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(res)
 }
+
+func (g *GalleryGateway) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+	var req proto.UpdateUserRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		log.Printf("Failed to parse request: %v\n", err)
+		return
+	}
+
+	res, err := g.UserClient.UpdateUser(context.Background(), &req)
+	if err != nil {
+		http.Error(w, "Failed to update user: "+err.Error(), http.StatusInternalServerError)
+		log.Printf("Update user error: %v\n", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(res)
+}
+

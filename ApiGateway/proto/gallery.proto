@@ -24,6 +24,7 @@ service MediaService {
 
 service UserService {
   rpc CreateUser (CreateUserRequest) returns (CreateUserResponse);
+  rpc UpdateUser (UpdateUserRequest) returns (UpdateUserResponse);
 }
 
 // Album messages
@@ -138,6 +139,19 @@ message CreateUserRequest {
 }
 
 message CreateUserResponse {
+  string message = 1;
+}
+
+// User messages
+message UpdateUserRequest {
+  string email = 1;
+  string password = 2;
+  string username = 3;
+  string firstName = 4;
+  string lastName = 5;
+}
+
+message UpdateUserResponse {
   string message = 1;
 }
 
