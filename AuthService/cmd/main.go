@@ -148,8 +148,7 @@ func main() {
 	}
 
 	// Définir les méthodes nécessitant une vérification d'authentification
-	methodsToIntercept := map[string]bool{
-	}
+	methodsToIntercept := map[string]bool{}
 
 	// Create gRPC server
 	server := grpc.NewServer(grpc.UnaryInterceptor(middleware.AuthInterceptor(JWTService, methodsToIntercept)))
@@ -188,5 +187,13 @@ func (s *authServer) ValidateToken(ctx context.Context, req *proto.ValidateToken
 	// Réponse avec succès
 	return &proto.ValidateTokenResponse{
 		Message: "Token valide",
+	}, nil
+}
+
+func (s *authServer) UpdateUser(ctx context.Context, req *proto.UpdateUserRequest) (*proto.UpdateUserResponse, error) {
+
+	// Réponse avec succès
+	return &proto.UpdateUserResponse{
+		Message: "Mis à jour de l'utilisateur avec succès",
 	}, nil
 }
