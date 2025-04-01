@@ -149,7 +149,6 @@ func main() {
 
 	// Définir les méthodes nécessitant une vérification d'authentification
 	methodsToIntercept := map[string]bool{
-		"/proto.AuthService/Login": true,
 	}
 
 	// Create gRPC server

@@ -1,0 +1,290 @@
+basePath: /
+definitions:
+  proto.ForgotPasswordRequest:
+    properties:
+      email:
+        type: string
+    type: object
+  proto.GoogleAuthCallbackRequest:
+    properties:
+      code:
+        type: string
+    type: object
+  proto.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  proto.LogoutRequest:
+    properties:
+      token:
+        type: string
+    type: object
+  proto.RegisterRequest:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  proto.ResetPasswordRequest:
+    properties:
+      email:
+        type: string
+      new_password:
+        type: string
+      token:
+        type: string
+    type: object
+host: localhost:8081
+info:
+  contact:
+    email: your@email.com
+    name: Your Name
+  description: This is the API Gateway for Bing Photo project.
+  title: Bing Photo API Gateway
+  version: "1.0"
+paths:
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Sends a reset password email
+      parameters:
+      - description: Email for password reset
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/proto.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Email successfully sent
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            type: string
+        "500":
+          description: Forgot password failed
+          schema:
+            type: string
+      summary: Forgot Password
+      tags:
+      - Auth
+  /auth/google:
+    get:
+      description: Generates a Google login URL
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Google login URL
+          schema:
+            type: string
+        "500":
+          description: Failed to generate URL
+          schema:
+            type: string
+      summary: Google OAuth
+      tags:
+      - Auth
+  /auth/google/callback:
+    post:
+      consumes:
+      - application/json
+      description: Handles the OAuth callback after Google login
+      parameters:
+      - description: Authorization code
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/proto.GoogleAuthCallbackRequest'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Login success and user info
+          schema:
+            type: string
+        "400":
+          description: Invalid request payload
+          schema:
+            type: string
+        "500":
+          description: Google callback failed
+          schema:
+            type: string
+      summary: Google OAuth Callback
+      tags:
+      - Auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns a JWT token
+      parameters:
+      - description: User credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/proto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token returned
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            type: string
+        "500":
+          description: Login failed
+          schema:
+            type: string
+      summary: Login
+      tags:
+      - Auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logs the user out by invalidating the token
+      parameters:
+      - description: Token to invalidate
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/proto.LogoutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Logout successful
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            type: string
+        "500":
+          description: Logout failed
+          schema:
+            type: string
+      summary: Logout
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Registers a new user and syncs with the gallery service
+      parameters:
+      - description: User registration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/proto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            type: string
+        "500":
+          description: Registration failed
+          schema:
+            type: string
+      summary: Register
+      tags:
+      - Auth
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Resets the user's password using a token
+      parameters:
+      - description: Reset token and new password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/proto.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password reset success
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            type: string
+        "500":
+          description: Reset password failed
+          schema:
+            type: string
+      summary: Reset Password
+      tags:
+      - Auth
+  /auth/validate:
+    get:
+      description: Validates a JWT token
+      parameters:
+      - description: Bearer <token>
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Token valid
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Token validation failed
+          schema:
+            type: string
+      summary: Validate Token
+      tags:
+      - Auth
+swagger: "2.0"

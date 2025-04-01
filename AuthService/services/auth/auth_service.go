@@ -109,10 +109,10 @@ func (s *AuthService) RegisterWithEmail(u models.User) (bool, error) {
 
 	// 4. Envoyer un email de vérification
 	// err = s.EmailService.SendEmailVerification(u.Email)
-	err = s.EmailService.SendEmailVerification("alizeamasse@gmail.com")
-	if err != nil {
-		return false, fmt.Errorf("erreur lors de l'envoi de l'email de vérification : %v", err)
-	}
+	// err = s.EmailService.SendEmailVerification("alizeamasse@gmail.com")
+	// if err != nil {
+	// 	return false, fmt.Errorf("erreur lors de l'envoi de l'email de vérification : %v", err)
+	// }
 
 	return true, nil
 }
