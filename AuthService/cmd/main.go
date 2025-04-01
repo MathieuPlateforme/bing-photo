@@ -251,3 +251,15 @@ func (s *authServer) UpdateUser(ctx context.Context, req *proto.UpdateUserReques
 	}, nil
 }
 
+func (s *authServer) GetMe(ctx context.Context, req *proto.GetMeRequest) (*proto.GetMeResponse, error) {
+
+	// Réponse avec succès
+	return &proto.GetMeResponse{
+		Email:     "",
+		Username:  "",
+		FirstName: "",
+		LastName:  "",
+		Picture:   "",
+	}, nil
+}
+

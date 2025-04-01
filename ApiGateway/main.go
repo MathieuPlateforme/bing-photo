@@ -103,6 +103,7 @@ func main() {
 	auth.HandleFunc("/logout", authHandler.LogoutHandler).Methods("POST", "OPTIONS")
 	auth.HandleFunc("/validateToken", authHandler.ValidateTokenHandler).Methods("POST")
 	auth.HandleFunc("/update-user", authHandler.UpdateUserHandler).Methods("PUT", "OPTIONS")
+	auth.HandleFunc("/get-me", authHandler.GetMeHandler).Methods("GET", "OPTIONS")
 
 	// Album routes
 	r.HandleFunc("/albums", galleryHandler.CreateAlbumHandler).Methods("POST", "OPTIONS")

@@ -316,3 +316,15 @@ func (g *ApiGateway) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(res)
 }
+
+func (g *ApiGateway) GetMeHandler(w http.ResponseWriter, r *http.Request) {
+	res, err := g.AuthClient.GetMe(context.Background(), &proto.GetMeRequest{})
+	if err != nil {
+		http.Error(w, "Failed to get user: "+err.Error(), http.StatusInternalServerError)
+		log.Printf("Get user error: %v\n", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(res)
+}
