@@ -448,23 +448,3 @@ func (g *GalleryGateway) CreateUserHandler(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(res)
 }
-
-func (g *GalleryGateway) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
-	var req proto.UpdateUserRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		log.Printf("Failed to parse request: %v\n", err)
-		return
-	}
-
-	res, err := g.UserClient.UpdateUser(context.Background(), &req)
-	if err != nil {
-		http.Error(w, "Failed to update user: "+err.Error(), http.StatusInternalServerError)
-		log.Printf("Update user error: %v\n", err)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(res)
-}
-

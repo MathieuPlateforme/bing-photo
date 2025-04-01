@@ -13,6 +13,7 @@ service AuthService {
   rpc LoginWithGoogle (GoogleAuthRequest) returns (GoogleAuthResponse);
   rpc GoogleAuthCallback (GoogleAuthCallbackRequest) returns (GoogleAuthCallbackResponse);
   rpc Logout (LogoutRequest) returns (LogoutResponse);
+  rpc UpdateUser (UpdateUserRequest) returns (UpdateUserResponse);
 }
 
 // Request and response messages
@@ -85,5 +86,18 @@ message LogoutRequest {
 }
 
 message LogoutResponse {
+  string message = 1;
+}
+
+message UpdateUserRequest {
+  string email = 1;
+  string token = 2;
+  string username = 3;
+  string firstName = 4;
+  string lastName = 5;
+  string picture = 6;
+}
+
+message UpdateUserResponse {
   string message = 1;
 }

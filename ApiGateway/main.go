@@ -12,11 +12,11 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	_ "ApiGateway/docs"
 	"ApiGateway/handlers"
 	proto "ApiGateway/proto"
-	httpSwagger "github.com/swaggo/http-swagger"
-	_ "ApiGateway/docs"
 
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // @title           Bing Photo API Gateway
@@ -88,7 +88,6 @@ func main() {
 	// Swagger documentation route
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
-
 	// Auth routes
 	auth := r.PathPrefix("/auth").Subrouter()
 	auth.HandleFunc("/login", authHandler.LoginHandler).Methods("POST", "OPTIONS")
@@ -99,6 +98,7 @@ func main() {
 	auth.HandleFunc("/reset-password", authHandler.ResetPasswordHandler).Methods("POST", "OPTIONS")
 	auth.HandleFunc("/logout", authHandler.LogoutHandler).Methods("POST", "OPTIONS")
 	auth.HandleFunc("/validateToken", authHandler.ValidateTokenHandler).Methods("POST")
+	auth.HandleFunc("/update-user", authHandler.UpdateUserHandler).Methods("PUT", "OPTIONS")
 
 	// Album routes
 	r.HandleFunc("/albums", galleryHandler.CreateAlbumHandler).Methods("POST", "OPTIONS")

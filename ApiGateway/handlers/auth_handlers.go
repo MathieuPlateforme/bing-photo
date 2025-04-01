@@ -289,3 +289,22 @@ func (g *ApiGateway) ValidateTokenHandler(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Message: " + res.Message))
 }
+
+func (g *ApiGateway) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+	var req proto.UpdateUserRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		log.Printf("Failed to parse request: %v\n", err)
+		return
+	}
+
+	res, err := g.AuthClient.UpdateUser(context.Background(), &req)
+	if err != nil {
+		http.Error(w, "Failed to update user: "+err.Error(), http.StatusInternalServerError)
+		log.Printf("Update user error: %v\n", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(res)
+}
