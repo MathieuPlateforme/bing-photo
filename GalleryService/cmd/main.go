@@ -153,6 +153,13 @@ func (s *galleryServer) MarkAsPrivate(ctx context.Context, req *proto.MarkAsPriv
 }
 
 func (s *galleryServer) GetPrivateMedia(ctx context.Context, req *proto.GetPrivateMediaRequest) (*proto.GetPrivateMediaResponse, error) {
+
+	err := s.userService.VerifyPrivateAlbumPin(uint(req.UserId), req.Pin)
+	if err != nil {
+		log.Printf("Error verifying private album pin: %v", err)
+		return nil, err
+	}
+
 	media, err := s.mediaService.GetPrivateMedia(uint(req.UserId))
 	if err != nil {
 		log.Printf("Error getting private media: %v", err)
