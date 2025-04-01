@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -50,7 +49,7 @@ func AuthInterceptor(jwtService JWTService, methodsToIntercept map[string]bool) 
 		if !ok {
 			return nil, fmt.Errorf("userID introuvable dans le token")
 		}
-		ctx = context.WithValue(ctx, "userID", uint(userID))
+		ctx = context.WithValue(ctx, UserIDKey, uint(userID))
 		log.Printf("userID ajouté au contexte : %d", uint(userID))
 
 		// Continuer avec le handler

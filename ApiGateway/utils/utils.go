@@ -2,20 +2,18 @@ package utils
 
 import (
 	"context"
+	"errors"
+	"log"
 	"net/http"
-	"strings"
 	"google.golang.org/grpc/metadata"
-
 )
-// AttachTokenToContext extrait le token JWT de l'en-tête Authorization
-// et le transmet dans les métadonnées du contexte pour un appel gRPC
+var ErrMissingToken = errors.New("token manquant ou invalide")
+
 func AttachTokenToContext(r *http.Request) (context.Context, error) {
 	authHeader := r.Header.Get("Authorization")
-	if !strings.HasPrefix(authHeader, "Bearer ") {
-		return nil, ErrMissingToken
-	}
-	token := strings.TrimPrefix(authHeader, "Bearer ")
+	log.Printf("Tentative d'extraction du token depuis l'en-tête Authorization : %s\n", authHeader)
+
+
+	token := authHeader
 	return metadata.AppendToOutgoingContext(r.Context(), "authorization", "Bearer "+token), nil
 }
-
-var ErrMissingToken = http.ErrNoCookie

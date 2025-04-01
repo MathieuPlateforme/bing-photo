@@ -560,6 +560,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/update-user": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Met à jour les informations d'un utilisateur (nom, prénom, email, photo)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Mettre à jour un utilisateur",
+                "parameters": [
+                    {
+                        "description": "Champs à mettre à jour",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/proto.UpdateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/proto.UpdateUserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Requête invalide",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/validateToken": {
             "post": {
                 "description": "Validates a JWT token",
@@ -901,57 +952,6 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Erreur serveur",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/update-user": {
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Met à jour les informations d'un utilisateur (nom, prénom, email, photo)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Mettre à jour un utilisateur",
-                "parameters": [
-                    {
-                        "description": "Champs à mettre à jour",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/proto.UpdateUserRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/proto.UpdateUserResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Requête invalide",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Erreur interne du serveur",
                         "schema": {
                             "type": "string"
                         }

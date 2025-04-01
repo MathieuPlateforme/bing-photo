@@ -235,6 +235,9 @@ func (s *authServer) UpdateUser(ctx context.Context, req *proto.UpdateUserReques
 	if req.Email != "" {
 		user.Email = req.Email
 	}
+	if req.Username != "" {
+		user.Username = req.Username
+	}
 	if req.Picture != "" {
 		user.Picture = req.Picture
 	}

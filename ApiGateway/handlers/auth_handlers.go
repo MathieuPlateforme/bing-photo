@@ -297,7 +297,7 @@ func (g *ApiGateway) ValidateTokenHandler(w http.ResponseWriter, r *http.Request
 // @Success 200 {object} proto.UpdateUserResponse
 // @Failure 400 {string} string "Requête invalide"
 // @Failure 500 {string} string "Erreur interne du serveur"
-// @Router /update-user [put]
+// @Router /auth/update-user [put]
 func (g *ApiGateway) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	var req proto.UpdateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -306,7 +306,14 @@ func (g *ApiGateway) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := g.AuthClient.UpdateUser(context.Background(), &req)
+	ctx, err := utils.AttachTokenToContext(r)
+	if err != nil {
+		http.Error(w, "Token manquant ou invalide", http.StatusUnauthorized)
+		log.Printf("Token manquant ou invalide : %v\n", err)
+		return
+	}
+
+	res, err := g.AuthClient.UpdateUser(ctx, &req)
 	if err != nil {
 		http.Error(w, "Failed to update user: "+err.Error(), http.StatusInternalServerError)
 		log.Printf("Update user error: %v\n", err)
@@ -316,6 +323,7 @@ func (g *ApiGateway) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(res)
 }
+
 
 func (g *ApiGateway) GetMeHandler(w http.ResponseWriter, r *http.Request) {
 	res, err := g.AuthClient.GetMe(context.Background(), &proto.GetMeRequest{})

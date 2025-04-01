@@ -554,6 +554,39 @@ paths:
       summary: Reset Password
       tags:
       - Auth
+  /auth/update-user:
+    put:
+      consumes:
+      - application/json
+      description: Met à jour les informations d'un utilisateur (nom, prénom, email,
+        photo)
+      parameters:
+      - description: Champs à mettre à jour
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/proto.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/proto.UpdateUserResponse'
+        "400":
+          description: Requête invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Mettre à jour un utilisateur
+      tags:
+      - Auth
   /auth/validateToken:
     post:
       description: Validates a JWT token
@@ -783,39 +816,6 @@ paths:
       summary: Médias d’un utilisateur
       tags:
       - Media
-  /update-user:
-    put:
-      consumes:
-      - application/json
-      description: Met à jour les informations d'un utilisateur (nom, prénom, email,
-        photo)
-      parameters:
-      - description: Champs à mettre à jour
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/proto.UpdateUserRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/proto.UpdateUserResponse'
-        "400":
-          description: Requête invalide
-          schema:
-            type: string
-        "500":
-          description: Erreur interne du serveur
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Mettre à jour un utilisateur
-      tags:
-      - Auth
   /users:
     post:
       consumes:
