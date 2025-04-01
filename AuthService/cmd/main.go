@@ -3,13 +3,11 @@ package main
 import (
 	"AuthService/middleware"
 	"AuthService/pkg/jwt"
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net"
-	"net/http"
 
 	"AuthService/models"
 	proto "AuthService/proto"
@@ -62,37 +60,26 @@ func (s *authServer) Register(ctx context.Context, req *proto.RegisterRequest) (
 }
 
 func (s *authServer) syncWithGalleryService(ctx context.Context, email string, username string) error {
-	// Construire la requête pour GalleryService
-	url := "http://gallery-service:50052/users"
-	payload := map[string]string{
-		"email":    email,
-		"username": username,
-	}
-	body, err := json.Marshal(payload)
+	// Connect to GalleryService via gRPC
+	conn, err := grpc.Dial("gallery-service:50052", grpc.WithInsecure()) // Replace with TLS in production
 	if err != nil {
-		return fmt.Errorf("erreur lors de la construction du payload : %v", err)
+		return fmt.Errorf("failed to connect to GalleryService: %v", err)
 	}
+	defer conn.Close()
 
-	// Envoyer la requête HTTP POST
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
+	// Create a gRPC client
+	client := proto.NewUserServiceClient(conn)
+
+	// Call the CreateUser gRPC method
+	_, err = client.CreateUser(ctx, &proto.CreateUserRequest{
+		Email:    email,
+		Username: username,
+	})
 	if err != nil {
-		return fmt.Errorf("erreur lors de la création de la requête : %v", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("erreur lors de l'envoi de la requête à GalleryService : %v", err)
-	}
-	defer resp.Body.Close()
-
-	// Vérifier la réponse
-	if resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("échec de la synchronisation avec GalleryService, statut : %d", resp.StatusCode)
+		return fmt.Errorf("failed to sync with GalleryService: %v", err)
 	}
 
-	log.Println("Utilisateur synchronisé avec succès dans GalleryService")
+	log.Println("User successfully synced with GalleryService via gRPC")
 	return nil
 }
 
