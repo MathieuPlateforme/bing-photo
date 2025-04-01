@@ -197,3 +197,15 @@ func (s *authServer) UpdateUser(ctx context.Context, req *proto.UpdateUserReques
 		Message: "Mis à jour de l'utilisateur avec succès",
 	}, nil
 }
+
+func (s *authServer) GetMe(ctx context.Context, req *proto.GetMeRequest) (*proto.GetMeResponse, error) {
+
+	// Réponse avec succès
+	return &proto.GetMeResponse{
+		Email:     "",
+		Username:  "",
+		FirstName: "",
+		LastName:  "",
+		Picture:   "",
+	}, nil
+}
