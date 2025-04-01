@@ -14,7 +14,18 @@ import (
 
 	"ApiGateway/handlers"
 	proto "ApiGateway/proto"
+	httpSwagger "github.com/swaggo/http-swagger"
+	_ "ApiGateway/docs"
+
 )
+
+// @title           Bing Photo API Gateway
+// @version         1.0
+// @description     This is the API Gateway for Bing Photo project.
+// @contact.name    Your Name
+// @contact.email   your@email.com
+// @host            localhost:8081
+// @BasePath        /
 
 type apiGateway struct {
 	authClient proto.AuthServiceClient
@@ -74,15 +85,20 @@ func main() {
 		AllowCredentials: true,
 	})
 
+	// Swagger documentation route
+	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+
+
 	// Auth routes
-	r.HandleFunc("/login", authHandler.LoginHandler).Methods("POST", "OPTIONS")
-	r.HandleFunc("/register", authHandler.RegisterHandler).Methods("POST", "OPTIONS")
-	r.HandleFunc("/google", authHandler.GoogleHandler).Methods("POST", "OPTIONS")
-	r.HandleFunc("/oauth2/callback", authHandler.GoogleCallbackHandler).Methods("POST", "OPTIONS")
-	r.HandleFunc("/forgot-password", authHandler.ForgotPasswordHandler).Methods("POST", "OPTIONS")
-	r.HandleFunc("/reset-password", authHandler.ResetPasswordHandler).Methods("POST", "OPTIONS")
-	r.HandleFunc("/logout", authHandler.LogoutHandler).Methods("POST", "OPTIONS")
-	r.HandleFunc("/validateToken", authHandler.ValidateTokenHandler).Methods("POST")
+	auth := r.PathPrefix("/auth").Subrouter()
+	auth.HandleFunc("/login", authHandler.LoginHandler).Methods("POST", "OPTIONS")
+	auth.HandleFunc("/register", authHandler.RegisterHandler).Methods("POST", "OPTIONS")
+	auth.HandleFunc("/google", authHandler.GoogleHandler).Methods("POST", "OPTIONS")
+	auth.HandleFunc("/oauth2/callback", authHandler.GoogleCallbackHandler).Methods("POST", "OPTIONS")
+	auth.HandleFunc("/forgot-password", authHandler.ForgotPasswordHandler).Methods("POST", "OPTIONS")
+	auth.HandleFunc("/reset-password", authHandler.ResetPasswordHandler).Methods("POST", "OPTIONS")
+	auth.HandleFunc("/logout", authHandler.LogoutHandler).Methods("POST", "OPTIONS")
+	auth.HandleFunc("/validateToken", authHandler.ValidateTokenHandler).Methods("POST")
 
 	// Album routes
 	r.HandleFunc("/albums", galleryHandler.CreateAlbumHandler).Methods("POST", "OPTIONS")

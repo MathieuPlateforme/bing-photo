@@ -16,7 +16,7 @@ func NewEmailService() (*EmailService, error) {
 	return &EmailService{}, nil
 }
 
-func (s *EmailService) SendEmailVerification(email string) error {
+func (s *EmailService) SendEmailVerification(email string, token string) error {
 	// Logique pour envoyer un email de vérification
 	from := "alizeamasse@gmail.com"
 	password := os.Getenv("APP_MAIL_PASSWORD")
@@ -33,7 +33,7 @@ func (s *EmailService) SendEmailVerification(email string) error {
 	// Corps du mail
 
 	subject := "Sujet : Vérification de l'adresse email\n"
-	body := "Veuillez cliquer sur ce lien pour verifier votre mail : http://localhost:5050/verify?email=" + email
+	body := "Veuillez cliquer sur ce lien pour verifier votre mail : http://localhost:3000/verify?token=" + token
 	message := []byte(subject + "\n" + body)
 
 	// Authentification avec le serveur SMTP

@@ -18,6 +18,17 @@ func NewApiGateway(authClient proto.AuthServiceClient) *ApiGateway {
 	return &ApiGateway{AuthClient: authClient}
 }
 
+// LoginHandler godoc
+// @Summary Login
+// @Description Authenticates a user and returns a JWT token
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body proto.LoginRequest true "User credentials"
+// @Success 200 {object} map[string]string "Token returned"
+// @Failure 400 {string} string "Invalid request payload"
+// @Failure 500 {string} string "Login failed"
+// @Router /auth/login [post]
 func (g *ApiGateway) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	req := &proto.LoginRequest{}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
@@ -43,6 +54,17 @@ func (g *ApiGateway) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// RegisterHandler godoc
+// @Summary Register
+// @Description Registers a new user and syncs with the gallery service
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body proto.RegisterRequest true "User registration data"
+// @Success 200 {object} map[string]string "Success message"
+// @Failure 400 {string} string "Invalid request payload"
+// @Failure 500 {string} string "Registration failed"
+// @Router /auth/register [post]
 func (g *ApiGateway) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	req := &proto.RegisterRequest{}
@@ -69,6 +91,17 @@ func (g *ApiGateway) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ForgotPasswordHandler godoc
+// @Summary Forgot Password
+// @Description Sends a reset password email
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body proto.ForgotPasswordRequest true "Email for password reset"
+// @Success 200 {object} map[string]string "Email successfully sent"
+// @Failure 400 {string} string "Invalid request payload"
+// @Failure 500 {string} string "Forgot password failed"
+// @Router /auth/forgot-password [post]
 func (g *ApiGateway) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 	req := &proto.ForgotPasswordRequest{}
@@ -94,6 +127,17 @@ func (g *ApiGateway) ForgotPasswordHandler(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+// ResetPasswordHandler godoc
+// @Summary Reset Password
+// @Description Resets the user's password using a token
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body proto.ResetPasswordRequest true "Reset token and new password"
+// @Success 200 {object} map[string]string "Password reset success"
+// @Failure 400 {string} string "Invalid request payload"
+// @Failure 500 {string} string "Reset password failed"
+// @Router /auth/reset-password [post]
 func (g *ApiGateway) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 	req := &proto.ResetPasswordRequest{}
@@ -120,6 +164,17 @@ func (g *ApiGateway) ResetPasswordHandler(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// LogoutHandler godoc
+// @Summary Logout
+// @Description Logs the user out by invalidating the token
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body proto.LogoutRequest true "Token to invalidate"
+// @Success 200 {object} map[string]string "Logout successful"
+// @Failure 400 {string} string "Invalid request payload"
+// @Failure 500 {string} string "Logout failed"
+// @Router /auth/logout [post]
 func (g *ApiGateway) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 	req := &proto.LogoutRequest{}
@@ -144,6 +199,15 @@ func (g *ApiGateway) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+// GoogleHandler godoc
+// @Summary Google OAuth
+// @Description Generates a Google login URL
+// @Tags Auth
+// @Produce plain
+// @Success 200 {string} string "Google login URL"
+// @Failure 500 {string} string "Failed to generate URL"
+// @Router /auth/google [get]
 func (g *ApiGateway) GoogleHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := g.AuthClient.LoginWithGoogle(context.Background(), &proto.GoogleAuthRequest{})
@@ -156,6 +220,18 @@ func (g *ApiGateway) GoogleHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Message: " + res.AuthUrl))
 }
+
+// GoogleCallbackHandler godoc
+// @Summary Google OAuth Callback
+// @Description Handles the OAuth callback after Google login
+// @Tags Auth
+// @Accept json
+// @Produce plain
+// @Param request body proto.GoogleAuthCallbackRequest true "Authorization code"
+// @Success 200 {string} string "Login success and user info"
+// @Failure 400 {string} string "Invalid request payload"
+// @Failure 500 {string} string "Google callback failed"
+// @Router /auth/google/callback [post]
 func (g *ApiGateway) GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	req := &proto.GoogleAuthCallbackRequest{}
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
@@ -175,6 +251,16 @@ func (g *ApiGateway) GoogleCallbackHandler(w http.ResponseWriter, r *http.Reques
 	w.Write([]byte("Token: " + res.Message + "user: " + res.UserInfo))
 }
 
+// ValidateTokenHandler godoc
+// @Summary Validate Token
+// @Description Validates a JWT token
+// @Tags Auth
+// @Produce plain
+// @Param Authorization header string true "Bearer <token>"
+// @Success 200 {string} string "Token valid"
+// @Failure 401 {string} string "Unauthorized"
+// @Failure 500 {string} string "Token validation failed"
+// @Router /auth/validateToken [post]
 func (g *ApiGateway) ValidateTokenHandler(w http.ResponseWriter, r *http.Request) {
 	// Extraire le token de l'en-tête Authorization
 	authHeader := r.Header.Get("Authorization")
