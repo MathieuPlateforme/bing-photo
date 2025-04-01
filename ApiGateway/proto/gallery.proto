@@ -101,6 +101,7 @@ message MarkAsPrivateResponse {
 
 message GetPrivateMediaRequest {
   uint32 user_id = 1;
+  string pin = 2;
 }
 
 message GetPrivateMediaResponse {

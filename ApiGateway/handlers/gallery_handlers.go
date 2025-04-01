@@ -224,6 +224,7 @@ func (g *GalleryGateway) GetPrivateMediaHandler(w http.ResponseWriter, r *http.R
 
 	req := &proto.GetPrivateMediaRequest{
 		UserId: uint32(userID),
+		Pin:    r.URL.Query().Get("pin"),
 	}
 
 	res, err := g.MediaClient.GetPrivateMedia(context.Background(), req)
