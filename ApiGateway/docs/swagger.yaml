@@ -235,7 +235,7 @@ paths:
       - Albums
   /albums/{id}:
     delete:
-      description: Supprime un album existant par son ID
+      description: Supprime un album par son ID
       parameters:
       - description: ID de l'album
         in: path
@@ -250,11 +250,15 @@ paths:
           schema:
             $ref: '#/definitions/proto.DeleteAlbumResponse'
         "400":
-          description: ID invalide
+          description: Invalid album ID
+          schema:
+            type: string
+        "401":
+          description: Authorization header missing
           schema:
             type: string
         "500":
-          description: Erreur serveur
+          description: Failed to delete album
           schema:
             type: string
       security:
@@ -287,6 +291,10 @@ paths:
             $ref: '#/definitions/proto.UpdateAlbumResponse'
         "400":
           description: Requête invalide
+          schema:
+            type: string
+        "401":
+          description: Non autorisé
           schema:
             type: string
         "500":
@@ -695,9 +703,9 @@ paths:
       - Media
   /media/{id}:
     delete:
-      description: Supprime un média par son ID
+      description: Supprime un média si l'utilisateur est propriétaire
       parameters:
-      - description: ID du média
+      - description: ID du média à supprimer
         in: path
         name: id
         required: true
@@ -710,11 +718,15 @@ paths:
           schema:
             $ref: '#/definitions/proto.DeleteMediaResponse'
         "400":
-          description: ID invalide
+          description: Invalid media ID
+          schema:
+            type: string
+        "401":
+          description: Authorization header missing
           schema:
             type: string
         "500":
-          description: Erreur serveur
+          description: Failed to delete media
           schema:
             type: string
       security:

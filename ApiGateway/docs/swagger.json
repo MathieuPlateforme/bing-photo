@@ -217,6 +217,12 @@
                             "type": "string"
                         }
                     },
+                    "401": {
+                        "description": "Non autorisé",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     "500": {
                         "description": "Erreur serveur",
                         "schema": {
@@ -231,7 +237,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Supprime un album existant par son ID",
+                "description": "Supprime un album par son ID",
                 "produces": [
                     "application/json"
                 ],
@@ -256,13 +262,19 @@
                         }
                     },
                     "400": {
-                        "description": "ID invalide",
+                        "description": "Invalid album ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization header missing",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "500": {
-                        "description": "Erreur serveur",
+                        "description": "Failed to delete album",
                         "schema": {
                             "type": "string"
                         }
@@ -927,7 +939,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Supprime un média par son ID",
+                "description": "Supprime un média si l'utilisateur est propriétaire",
                 "produces": [
                     "application/json"
                 ],
@@ -938,7 +950,7 @@
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID du média",
+                        "description": "ID du média à supprimer",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -952,13 +964,19 @@
                         }
                     },
                     "400": {
-                        "description": "ID invalide",
+                        "description": "Invalid media ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization header missing",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "500": {
-                        "description": "Erreur serveur",
+                        "description": "Failed to delete media",
                         "schema": {
                             "type": "string"
                         }

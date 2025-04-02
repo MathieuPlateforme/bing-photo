@@ -113,10 +113,20 @@ func (g *GalleryGateway) GetAlbumsByUserHandler(w http.ResponseWriter, r *http.R
 // @Param album body proto.UpdateAlbumRequest true "Mise à jour de l'album"
 // @Success 200 {object} proto.UpdateAlbumResponse
 // @Failure 400 {string} string "Requête invalide"
+// @Failure 401 {string} string "Non autorisé"
 // @Failure 500 {string} string "Erreur serveur"
 // @Router /albums/{id} [put]
 // @Security BearerAuth
 func (g *GalleryGateway) UpdateAlbumHandler(w http.ResponseWriter, r *http.Request) {
+	// Vérifier la présence de l'en-tête Authorization
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization header missing", http.StatusUnauthorized)
+		log.Println("Authorization header missing")
+		return
+	}
+
+	// Décoder le corps de la requête
 	var req proto.UpdateAlbumRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
@@ -124,7 +134,12 @@ func (g *GalleryGateway) UpdateAlbumHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	res, err := g.GalleryClient.UpdateAlbum(context.Background(), &req)
+	// Injecter l'en-tête dans le contexte gRPC
+	md := metadata.New(map[string]string{"authorization": authHeader})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+	// Appel gRPC
+	res, err := g.GalleryClient.UpdateAlbum(ctx, &req)
 	if err != nil {
 		http.Error(w, "Failed to update album: "+err.Error(), http.StatusInternalServerError)
 		log.Printf("Update album error: %v\n", err)
@@ -136,19 +151,31 @@ func (g *GalleryGateway) UpdateAlbumHandler(w http.ResponseWriter, r *http.Reque
 }
 
 // @Summary Supprimer un album
-// @Description Supprime un album existant par son ID
+// @Description Supprime un album par son ID
 // @Tags Albums
 // @Produce json
 // @Param id path int true "ID de l'album"
 // @Success 200 {object} proto.DeleteAlbumResponse
-// @Failure 400 {string} string "ID invalide"
-// @Failure 500 {string} string "Erreur serveur"
+// @Failure 400 {string} string "Invalid album ID"
+// @Failure 401 {string} string "Authorization header missing"
+// @Failure 500 {string} string "Failed to delete album"
 // @Router /albums/{id} [delete]
 // @Security BearerAuth
 func (g *GalleryGateway) DeleteAlbumHandler(w http.ResponseWriter, r *http.Request) {
-	albumID, err := strconv.ParseUint(r.URL.Query().Get("album_id"), 10, 32)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization header missing", http.StatusUnauthorized)
+		log.Println("Authorization header missing")
+		return
+	}
+
+	vars := mux.Vars(r)
+	albumIDStr := vars["id"]
+
+	albumID, err := strconv.ParseUint(albumIDStr, 10, 32)
 	if err != nil {
 		http.Error(w, "Invalid album ID", http.StatusBadRequest)
+		log.Printf("Invalid album ID: %v\n", err)
 		return
 	}
 
@@ -156,7 +183,10 @@ func (g *GalleryGateway) DeleteAlbumHandler(w http.ResponseWriter, r *http.Reque
 		AlbumId: uint32(albumID),
 	}
 
-	res, err := g.GalleryClient.DeleteAlbum(context.Background(), req)
+	md := metadata.New(map[string]string{"authorization": authHeader})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+	res, err := g.GalleryClient.DeleteAlbum(ctx, req)
 	if err != nil {
 		http.Error(w, "Failed to delete album: "+err.Error(), http.StatusInternalServerError)
 		log.Printf("Delete album error: %v\n", err)

@@ -223,6 +223,12 @@ const docTemplate = `{
                             "type": "string"
                         }
                     },
+                    "401": {
+                        "description": "Non autorisé",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     "500": {
                         "description": "Erreur serveur",
                         "schema": {
@@ -237,7 +243,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Supprime un album existant par son ID",
+                "description": "Supprime un album par son ID",
                 "produces": [
                     "application/json"
                 ],
@@ -262,13 +268,19 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "ID invalide",
+                        "description": "Invalid album ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization header missing",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "500": {
-                        "description": "Erreur serveur",
+                        "description": "Failed to delete album",
                         "schema": {
                             "type": "string"
                         }
@@ -933,7 +945,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Supprime un média par son ID",
+                "description": "Supprime un média si l'utilisateur est propriétaire",
                 "produces": [
                     "application/json"
                 ],
@@ -944,7 +956,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID du média",
+                        "description": "ID du média à supprimer",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -958,13 +970,19 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "ID invalide",
+                        "description": "Invalid media ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization header missing",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "500": {
-                        "description": "Erreur serveur",
+                        "description": "Failed to delete media",
                         "schema": {
                             "type": "string"
                         }
