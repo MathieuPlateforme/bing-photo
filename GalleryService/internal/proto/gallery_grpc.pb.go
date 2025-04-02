@@ -280,6 +280,7 @@ const (
 	MediaService_DownloadMedia_FullMethodName      = "/proto.MediaService/DownloadMedia"
 	MediaService_DeleteMedia_FullMethodName        = "/proto.MediaService/DeleteMedia"
 	MediaService_DetectSimilarMedia_FullMethodName = "/proto.MediaService/DetectSimilarMedia"
+	MediaService_AddMediaToFavorite_FullMethodName = "/proto.MediaService/AddMediaToFavorite"
 )
 
 // MediaServiceClient is the client API for MediaService service.
@@ -293,6 +294,7 @@ type MediaServiceClient interface {
 	DownloadMedia(ctx context.Context, in *DownloadMediaRequest, opts ...grpc.CallOption) (*DownloadMediaResponse, error)
 	DeleteMedia(ctx context.Context, in *DeleteMediaRequest, opts ...grpc.CallOption) (*DeleteMediaResponse, error)
 	DetectSimilarMedia(ctx context.Context, in *DetectSimilarMediaRequest, opts ...grpc.CallOption) (*DetectSimilarMediaResponse, error)
+	AddMediaToFavorite(ctx context.Context, in *AddMediaToFavoriteRequest, opts ...grpc.CallOption) (*AddMediaToFavoriteResponse, error)
 }
 
 type mediaServiceClient struct {
@@ -373,6 +375,16 @@ func (c *mediaServiceClient) DetectSimilarMedia(ctx context.Context, in *DetectS
 	return out, nil
 }
 
+func (c *mediaServiceClient) AddMediaToFavorite(ctx context.Context, in *AddMediaToFavoriteRequest, opts ...grpc.CallOption) (*AddMediaToFavoriteResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AddMediaToFavoriteResponse)
+	err := c.cc.Invoke(ctx, MediaService_AddMediaToFavorite_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MediaServiceServer is the server API for MediaService service.
 // All implementations must embed UnimplementedMediaServiceServer
 // for forward compatibility.
@@ -384,6 +396,7 @@ type MediaServiceServer interface {
 	DownloadMedia(context.Context, *DownloadMediaRequest) (*DownloadMediaResponse, error)
 	DeleteMedia(context.Context, *DeleteMediaRequest) (*DeleteMediaResponse, error)
 	DetectSimilarMedia(context.Context, *DetectSimilarMediaRequest) (*DetectSimilarMediaResponse, error)
+	AddMediaToFavorite(context.Context, *AddMediaToFavoriteRequest) (*AddMediaToFavoriteResponse, error)
 	mustEmbedUnimplementedMediaServiceServer()
 }
 
@@ -414,6 +427,9 @@ func (UnimplementedMediaServiceServer) DeleteMedia(context.Context, *DeleteMedia
 }
 func (UnimplementedMediaServiceServer) DetectSimilarMedia(context.Context, *DetectSimilarMediaRequest) (*DetectSimilarMediaResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DetectSimilarMedia not implemented")
+}
+func (UnimplementedMediaServiceServer) AddMediaToFavorite(context.Context, *AddMediaToFavoriteRequest) (*AddMediaToFavoriteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddMediaToFavorite not implemented")
 }
 func (UnimplementedMediaServiceServer) mustEmbedUnimplementedMediaServiceServer() {}
 func (UnimplementedMediaServiceServer) testEmbeddedByValue()                      {}
@@ -562,6 +578,24 @@ func _MediaService_DetectSimilarMedia_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MediaService_AddMediaToFavorite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddMediaToFavoriteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MediaServiceServer).AddMediaToFavorite(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MediaService_AddMediaToFavorite_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MediaServiceServer).AddMediaToFavorite(ctx, req.(*AddMediaToFavoriteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MediaService_ServiceDesc is the grpc.ServiceDesc for MediaService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -596,6 +630,10 @@ var MediaService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DetectSimilarMedia",
 			Handler:    _MediaService_DetectSimilarMedia_Handler,
+		},
+		{
+			MethodName: "AddMediaToFavorite",
+			Handler:    _MediaService_AddMediaToFavorite_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

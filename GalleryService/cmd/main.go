@@ -10,11 +10,12 @@ import (
 	"syscall"
 
 	"GalleryService/internal/db"
+	"GalleryService/internal/jwt"
+	"GalleryService/internal/middleware"
 	"GalleryService/internal/models"
 	proto "GalleryService/internal/proto"
 	"GalleryService/internal/services"
-	"GalleryService/internal/middleware"
-	"GalleryService/internal/jwt"
+
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 )
@@ -237,6 +238,15 @@ func (s *galleryServer) CreateUser(ctx context.Context, req *proto.CreateUserReq
 	return &proto.CreateUserResponse{}, nil
 }
 
+func (s *galleryServer) AddMediaToFavorite(ctx context.Context, req *proto.AddMediaToFavoriteRequest) (*proto.AddMediaToFavoriteResponse, error) {
+	if err := s.mediaService.AddMediaToFavorite(uint(req.MediaId)); err != nil {
+		log.Printf("Error adding media to favorite: %v", err)
+		return nil, err
+	}
+
+	return &proto.AddMediaToFavoriteResponse{}, nil
+}
+
 func main() {
 	// Load environment variables
 	if err := godotenv.Load(); err != nil {
@@ -274,15 +284,15 @@ func main() {
 
 	// Définir les méthodes protégées (authentification requise)
 	methodsToIntercept := map[string]bool{
-		"/proto.AlbumService/CreateAlbum":      true,
-		"/proto.AlbumService/UpdateAlbum":      true,
-		"/proto.AlbumService/DeleteAlbum":      true,
-		"/proto.AlbumService/GetPrivateAlbum":  true,
-		"/proto.MediaService/AddMedia":         true,
-		"/proto.MediaService/MarkAsPrivate":    true,
-		"/proto.MediaService/GetPrivateMedia":  true,
-		"/proto.MediaService/DownloadMedia":    true,
-		"/proto.MediaService/DeleteMedia":      true,
+		"/proto.AlbumService/CreateAlbum":     true,
+		"/proto.AlbumService/UpdateAlbum":     true,
+		"/proto.AlbumService/DeleteAlbum":     true,
+		"/proto.AlbumService/GetPrivateAlbum": true,
+		"/proto.MediaService/AddMedia":        true,
+		"/proto.MediaService/MarkAsPrivate":   true,
+		"/proto.MediaService/GetPrivateMedia": true,
+		"/proto.MediaService/DownloadMedia":   true,
+		"/proto.MediaService/DeleteMedia":     true,
 	}
 
 	// Créer le serveur gRPC avec intercepteur JWT

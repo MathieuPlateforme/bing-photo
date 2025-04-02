@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	proto "ApiGateway/proto"
+
 	"google.golang.org/grpc/metadata"
 )
 
@@ -461,7 +462,6 @@ func (g *GalleryGateway) DetectSimilarMediaHandler(w http.ResponseWriter, r *htt
 	json.NewEncoder(w).Encode(res)
 }
 
-
 func (g *GalleryGateway) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	var req proto.CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -478,5 +478,24 @@ func (g *GalleryGateway) CreateUserHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(res)
+}
+
+func (g *GalleryGateway) AddMediaToFavoriteHandler(w http.ResponseWriter, r *http.Request) {
+	var req proto.AddMediaToFavoriteRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		log.Printf("Failed to parse request: %v\n", err)
+		return
+	}
+
+	res, err := g.MediaClient.AddMediaToFavorite(context.Background(), &req)
+	if err != nil {
+		http.Error(w, "Failed to add media to favorite: "+err.Error(), http.StatusInternalServerError)
+		log.Printf("Add media to favorite error: %v\n", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(res)
 }
