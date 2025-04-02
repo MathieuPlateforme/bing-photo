@@ -520,8 +520,8 @@ func (g *GalleryGateway) DeleteMediaHandler(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-// @Summary Détecter les médias similaires
-// @Description Détecte les fichiers médias similaires à celui donné
+// @Summary Détecter les médias similaires dans un album
+// @Description Détecte les fichiers médias similaires dans un album donné
 // @Tags Media
 // @Accept json
 // @Produce json
@@ -532,17 +532,30 @@ func (g *GalleryGateway) DeleteMediaHandler(w http.ResponseWriter, r *http.Reque
 // @Router /media/similar [post]
 // @Security BearerAuth
 func (g *GalleryGateway) DetectSimilarMediaHandler(w http.ResponseWriter, r *http.Request) {
-	mediaID, err := strconv.ParseUint(r.URL.Query().Get("media_id"), 10, 32)
-	if err != nil {
-		http.Error(w, "Invalid media ID", http.StatusBadRequest)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization header missing", http.StatusUnauthorized)
+		log.Println("Authorization header missing")
 		return
 	}
 
-	req := &proto.DetectSimilarMediaRequest{
-		MediaId: uint32(mediaID),
+	var req proto.DetectSimilarMediaRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		log.Printf("Failed to decode request: %v\n", err)
+		return
 	}
 
-	res, err := g.MediaClient.DetectSimilarMedia(context.Background(), req)
+	if req.AlbumId == 0 {
+		http.Error(w, "Missing album_id", http.StatusBadRequest)
+		log.Println("album_id manquant")
+		return
+	}
+
+	md := metadata.New(map[string]string{"authorization": authHeader})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+	res, err := g.MediaClient.DetectSimilarMedia(ctx, &req)
 	if err != nil {
 		http.Error(w, "Failed to detect similar media: "+err.Error(), http.StatusInternalServerError)
 		log.Printf("Detect similar media error: %v\n", err)
@@ -550,8 +563,13 @@ func (g *GalleryGateway) DetectSimilarMediaHandler(w http.ResponseWriter, r *htt
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(res)
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		log.Printf("Failed to encode response: %v\n", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
 }
+
+
 
 func (g *GalleryGateway) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	var req proto.CreateUserRequest

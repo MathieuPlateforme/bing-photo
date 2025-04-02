@@ -888,7 +888,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Détecte les fichiers médias similaires à celui donné",
+                "description": "Détecte les fichiers médias similaires dans un album donné",
                 "consumes": [
                     "application/json"
                 ],
@@ -898,7 +898,7 @@
                 "tags": [
                     "Media"
                 ],
-                "summary": "Détecter les médias similaires",
+                "summary": "Détecter les médias similaires dans un album",
                 "parameters": [
                     {
                         "description": "Requête de détection",
@@ -1195,7 +1195,7 @@
         "proto.DetectSimilarMediaRequest": {
             "type": "object",
             "properties": {
-                "media_id": {
+                "album_id": {
                     "type": "integer"
                 }
             }

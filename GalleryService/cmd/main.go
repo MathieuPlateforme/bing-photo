@@ -225,15 +225,22 @@ func (s *galleryServer) DeleteMedia(ctx context.Context, req *proto.DeleteMediaR
 }
 
 func (s *galleryServer) DetectSimilarMedia(ctx context.Context, req *proto.DetectSimilarMediaRequest) (*proto.DetectSimilarMediaResponse, error) {
-	// Note: The proto definition has media_id instead of user_id and album_id
-	media, err := s.mediaService.DetectSimilarMedia(0, 0) // We'll need to get these from the media record
+	userID, err := jwt.ExtractUserIDFromContext(ctx)
 	if err != nil {
-		log.Printf("Error detecting similar media: %v", err)
-		return nil, err
+		log.Printf("Token invalide : %v", err)
+		return nil, status.Errorf(codes.Unauthenticated, "token invalide : %v", err)
+	}
+
+	log.Printf("🔍 Détection de similarité sur albumID=%d pour userID=%d", req.AlbumId, userID)
+
+	similarMedia, err := s.mediaService.DetectSimilarMedia(userID, uint(req.AlbumId))
+	if err != nil {
+		log.Printf("Erreur détection similarité : %v", err)
+		return nil, status.Errorf(codes.Unknown, err.Error())
 	}
 
 	var protoMedia []*proto.Media
-	for _, m := range media {
+	for _, m := range similarMedia {
 		protoMedia = append(protoMedia, &proto.Media{
 			Id:       uint32(m.ID),
 			Name:     m.Name,

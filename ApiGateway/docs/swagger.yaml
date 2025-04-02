@@ -42,7 +42,7 @@ definitions:
     type: object
   proto.DetectSimilarMediaRequest:
     properties:
-      media_id:
+      album_id:
         type: integer
     type: object
   proto.DetectSimilarMediaResponse:
@@ -870,7 +870,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Détecte les fichiers médias similaires à celui donné
+      description: Détecte les fichiers médias similaires dans un album donné
       parameters:
       - description: Requête de détection
         in: body
@@ -895,7 +895,7 @@ paths:
             type: string
       security:
       - BearerAuth: []
-      summary: Détecter les médias similaires
+      summary: Détecter les médias similaires dans un album
       tags:
       - Media
   /media/user:

@@ -894,7 +894,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Détecte les fichiers médias similaires à celui donné",
+                "description": "Détecte les fichiers médias similaires dans un album donné",
                 "consumes": [
                     "application/json"
                 ],
@@ -904,7 +904,7 @@ const docTemplate = `{
                 "tags": [
                     "Media"
                 ],
-                "summary": "Détecter les médias similaires",
+                "summary": "Détecter les médias similaires dans un album",
                 "parameters": [
                     {
                         "description": "Requête de détection",
@@ -1201,7 +1201,7 @@ const docTemplate = `{
         "proto.DetectSimilarMediaRequest": {
             "type": "object",
             "properties": {
-                "media_id": {
+                "album_id": {
                     "type": "integer"
                 }
             }

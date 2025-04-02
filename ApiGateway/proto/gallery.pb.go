@@ -1065,7 +1065,7 @@ func (x *DeleteMediaResponse) GetMessage() string {
 
 type DetectSimilarMediaRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	MediaId       uint32                 `protobuf:"varint,1,opt,name=media_id,json=mediaId,proto3" json:"media_id,omitempty"`
+	AlbumId       uint32                 `protobuf:"varint,1,opt,name=album_id,json=albumId,proto3" json:"album_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1100,9 +1100,9 @@ func (*DetectSimilarMediaRequest) Descriptor() ([]byte, []int) {
 	return file_proto_gallery_proto_rawDescGZIP(), []int{22}
 }
 
-func (x *DetectSimilarMediaRequest) GetMediaId() uint32 {
+func (x *DetectSimilarMediaRequest) GetAlbumId() uint32 {
 	if x != nil {
-		return x.MediaId
+		return x.AlbumId
 	}
 	return 0
 }
@@ -1647,7 +1647,7 @@ const file_proto_gallery_proto_rawDesc = "" +
 	"\x13DeleteMediaResponse\x12\x18\n" +
 	"\amessage\x18\x01 \x01(\tR\amessage\"6\n" +
 	"\x19DetectSimilarMediaRequest\x12\x19\n" +
-	"\bmedia_id\x18\x01 \x01(\rR\amediaId\"@\n" +
+	"\balbum_id\x18\x01 \x01(\rR\aalbumId\"@\n" +
 	"\x1aDetectSimilarMediaResponse\x12\"\n" +
 	"\x05media\x18\x01 \x03(\v2\f.proto.MediaR\x05media\"E\n" +
 	"\x11CreateUserRequest\x12\x1a\n" +
