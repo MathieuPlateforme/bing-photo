@@ -238,14 +238,14 @@ func (s *galleryServer) CreateUser(ctx context.Context, req *proto.CreateUserReq
 	return &proto.CreateUserResponse{}, nil
 }
 
-func (s *galleryServer) AddMediaToFavorite(ctx context.Context, req *proto.AddMediaToFavoriteRequest) (*proto.AddMediaToFavoriteResponse, error) {
-	if err := s.mediaService.AddMediaToFavorite(uint(req.MediaId)); err != nil {
-		log.Printf("Error adding media to favorite: %v", err)
-		return nil, err
-	}
+// func (s *galleryServer) AddMediaToFavorite(ctx context.Context, req *proto.AddMediaToFavoriteRequest) (*proto.AddMediaToFavoriteResponse, error) {
+// 	if err := s.mediaService.AddMediaToFavorite(uint(req.MediaId)); err != nil {
+// 		log.Printf("Error adding media to favorite: %v", err)
+// 		return nil, err
+// 	}
 
-	return &proto.AddMediaToFavoriteResponse{}, nil
-}
+// 	return &proto.AddMediaToFavoriteResponse{}, nil
+// }
 
 func main() {
 	// Load environment variables

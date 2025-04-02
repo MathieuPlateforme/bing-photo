@@ -69,26 +69,33 @@ const docTemplate = `{
                 }
             }
         },
-        "/albums/private": {
+        "/albums/type": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Récupère un album privé à partir de son ID",
+                "description": "Récupère un album privé ou principal selon le type",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Albums"
                 ],
-                "summary": "Obtenir un album privé",
+                "summary": "Obtenir un album par type",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID de l'album",
-                        "name": "album_id",
+                        "description": "ID de l'utilisateur",
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Type d'album : 'private' ou 'main'",
+                        "name": "type",
                         "in": "query",
                         "required": true
                     }
@@ -101,7 +108,13 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "ID invalide",
+                        "description": "ID ou type invalide",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Authorization manquante",
                         "schema": {
                             "type": "string"
                         }

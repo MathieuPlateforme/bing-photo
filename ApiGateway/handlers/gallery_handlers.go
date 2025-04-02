@@ -166,20 +166,28 @@ func (g *GalleryGateway) DeleteAlbumHandler(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(res)
 }
 
-// @Summary Obtenir un album privé
-// @Description Récupère un album privé à partir de son ID
+// @Summary Obtenir un album par type
+// @Description Récupère un album privé ou principal selon le type
 // @Tags Albums
 // @Produce json
-// @Param album_id query int true "ID de l'album"
+// @Param user_id query int true "ID de l'utilisateur"
+// @Param type query string true "Type d'album : 'private' ou 'main'"
 // @Success 200 {object} proto.GetPrivateAlbumResponse
-// @Failure 400 {string} string "ID invalide"
+// @Failure 400 {string} string "ID ou type invalide"
+// @Failure 401 {string} string "Authorization manquante"
 // @Failure 500 {string} string "Erreur serveur"
-// @Router /albums/private [get]
+// @Router /albums/type [get]
 // @Security BearerAuth
 func (g *GalleryGateway) GetPrivateAlbumHandler(w http.ResponseWriter, r *http.Request) {
 	userId, err := strconv.ParseUint(r.URL.Query().Get("user_id"), 10, 32)
 	if err != nil {
-		http.Error(w, "Invalid album ID", http.StatusBadRequest)
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	albumType := r.URL.Query().Get("type")
+	if albumType != "private" && albumType != "main" {
+		http.Error(w, "Invalid type, must be 'private' or 'main'", http.StatusBadRequest)
 		return
 	}
 
@@ -193,17 +201,16 @@ func (g *GalleryGateway) GetPrivateAlbumHandler(w http.ResponseWriter, r *http.R
 	md := metadata.New(map[string]string{"authorization": authHeader})
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
-	// Construire la requête
+	// Utilise toujours GetPrivateAlbum côté proto, mais passe le type dynamiquement
 	req := &proto.GetPrivateAlbumRequest{
 		UserId: uint32(userId),
-		Type:   r.URL.Query().Get("type"),
+		Type:   albumType,
 	}
 
-	// Appeler le service
 	res, err := g.GalleryClient.GetPrivateAlbum(ctx, req)
 	if err != nil {
-		http.Error(w, "Failed to get private album: "+err.Error(), http.StatusInternalServerError)
-		log.Printf("Get private album error: %v\n", err)
+		http.Error(w, "Failed to get album: "+err.Error(), http.StatusInternalServerError)
+		log.Printf("Get album error: %v\n", err)
 		return
 	}
 
@@ -227,6 +234,15 @@ func (g *GalleryGateway) GetPrivateAlbumHandler(w http.ResponseWriter, r *http.R
 // @Router /media [post]
 // @Security BearerAuth
 func (g *GalleryGateway) AddMediaHandler(w http.ResponseWriter, r *http.Request) {
+	// Vérifie l'en-tête Authorization
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization header missing", http.StatusUnauthorized)
+		log.Println("Authorization header missing")
+		return
+	}
+
+	// Parse le formulaire (fichier + album_id)
 	err := r.ParseMultipartForm(10 << 20) // 10 MB max
 	if err != nil {
 		http.Error(w, "Failed to parse form", http.StatusBadRequest)
@@ -258,7 +274,12 @@ func (g *GalleryGateway) AddMediaHandler(w http.ResponseWriter, r *http.Request)
 		FileData: fileData,
 	}
 
-	res, err := g.MediaClient.AddMedia(context.Background(), req)
+	// Injecter l'en-tête Authorization dans le contexte
+	md := metadata.New(map[string]string{"authorization": authHeader})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+	// Appel gRPC
+	res, err := g.MediaClient.AddMedia(ctx, req)
 	if err != nil {
 		http.Error(w, "Failed to add media: "+err.Error(), http.StatusInternalServerError)
 		log.Printf("Add media error: %v\n", err)
@@ -268,6 +289,7 @@ func (g *GalleryGateway) AddMediaHandler(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(res)
 }
+
 
 // @Summary Médias d’un utilisateur
 // @Description Récupère tous les médias appartenant à un utilisateur

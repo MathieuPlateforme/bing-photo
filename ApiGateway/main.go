@@ -110,7 +110,7 @@ func main() {
 	r.HandleFunc("/albums/user", galleryHandler.GetAlbumsByUserHandler).Methods("GET", "OPTIONS")
 	r.HandleFunc("/albums/{id}", galleryHandler.UpdateAlbumHandler).Methods("PUT", "OPTIONS")
 	r.HandleFunc("/albums/{id}", galleryHandler.DeleteAlbumHandler).Methods("DELETE", "OPTIONS")
-	r.HandleFunc("/albums/private", galleryHandler.GetPrivateAlbumHandler).Methods("GET", "OPTIONS")
+	r.HandleFunc("/albums/type", galleryHandler.GetPrivateAlbumHandler).Methods("GET", "OPTIONS")
 
 	// Media routes
 	r.HandleFunc("/media", galleryHandler.AddMediaHandler).Methods("POST", "OPTIONS")

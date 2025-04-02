@@ -298,15 +298,20 @@ paths:
       summary: Mettre à jour un album
       tags:
       - Albums
-  /albums/private:
+  /albums/type:
     get:
-      description: Récupère un album privé à partir de son ID
+      description: Récupère un album privé ou principal selon le type
       parameters:
-      - description: ID de l'album
+      - description: ID de l'utilisateur
         in: query
-        name: album_id
+        name: user_id
         required: true
         type: integer
+      - description: 'Type d''album : ''private'' ou ''main'''
+        in: query
+        name: type
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -315,7 +320,11 @@ paths:
           schema:
             $ref: '#/definitions/proto.GetPrivateAlbumResponse'
         "400":
-          description: ID invalide
+          description: ID ou type invalide
+          schema:
+            type: string
+        "401":
+          description: Authorization manquante
           schema:
             type: string
         "500":
@@ -324,7 +333,7 @@ paths:
             type: string
       security:
       - BearerAuth: []
-      summary: Obtenir un album privé
+      summary: Obtenir un album par type
       tags:
       - Albums
   /albums/user:
