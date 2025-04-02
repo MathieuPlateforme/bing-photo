@@ -8,6 +8,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"google.golang.org/grpc/status"
+	"google.golang.org/grpc/codes"
+
 
 	"GalleryService/internal/db"
 	"GalleryService/internal/jwt"
@@ -196,13 +199,21 @@ func (s *galleryServer) DownloadMedia(ctx context.Context, req *proto.DownloadMe
 }
 
 func (s *galleryServer) DeleteMedia(ctx context.Context, req *proto.DeleteMediaRequest) (*proto.DeleteMediaResponse, error) {
-	// Note: The proto definition doesn't have user_id, so we'll need to get it from the media record
-	if err := s.mediaService.DeleteMedia(uint(req.MediaId), 0); err != nil {
-		log.Printf("Error deleting media: %v", err)
-		return nil, err
+
+	userID, err := jwt.ExtractUserIDFromContext(ctx)
+	if err != nil {
+		log.Printf("Erreur d'extraction du userID : %v", err)
+		return nil, status.Errorf(codes.Unauthenticated, "token invalide : %v", err)
 	}
 
-	return &proto.DeleteMediaResponse{}, nil
+	if err := s.mediaService.DeleteMedia(uint(req.MediaId), userID); err != nil {
+		log.Printf("Erreur lors de la suppression du média : %v", err)
+		return nil, status.Errorf(codes.Internal, "Erreur lors de la suppression du média : %v", err)
+	}
+
+	return &proto.DeleteMediaResponse{
+		Message: "Média supprimé avec succès",
+	}, nil
 }
 
 func (s *galleryServer) DetectSimilarMedia(ctx context.Context, req *proto.DetectSimilarMediaRequest) (*proto.DetectSimilarMediaResponse, error) {

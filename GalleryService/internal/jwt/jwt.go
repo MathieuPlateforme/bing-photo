@@ -103,3 +103,61 @@ func (j *JWTService) ExtractTokenFromContext(ctx context.Context) (string, error
 
 	return token, nil
 }
+
+func ParseToken(tokenStr string) (jwt.MapClaims, error) {
+	secret := os.Getenv("JWT_SECRET_KEY")
+	if secret == "" {
+		return nil, errors.New("la variable d'environnement JWT_SECRET est manquante")
+	}
+
+	// Parse et vérifie le token
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		// Vérifie que l'algorithme est HMAC (HS256)
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("méthode de signature inattendue : %v", token.Header["alg"])
+		}
+		return []byte(secret), nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("échec du parsing du token : %v", err)
+	}
+
+	// Extraire les claims (payload)
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		// Vérifie expiration (optionnel si tu veux plus de contrôle)
+		if exp, ok := claims["exp"].(float64); ok {
+			if int64(exp) < time.Now().Unix() {
+				return nil, errors.New("le token est expiré")
+			}
+		}
+		return claims, nil
+	}
+
+	return nil, errors.New("token invalide ou claims manquants")
+}
+
+func ExtractUserIDFromContext(ctx context.Context) (uint, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return 0, fmt.Errorf("aucune metadata dans le contexte")
+	}
+
+	authHeaders := md["authorization"]
+	if len(authHeaders) == 0 {
+		return 0, fmt.Errorf("authorization header manquant")
+	}
+
+	tokenStr := strings.TrimSpace(authHeaders[0])
+	claims, err := ParseToken(tokenStr)
+	if err != nil {
+		return 0, fmt.Errorf("token invalide : %v", err)
+	}
+
+	userIDFloat, ok := claims["userID"].(float64)
+	if !ok {
+		return 0, fmt.Errorf("userID non présent ou invalide dans le token")
+	}
+
+	return uint(userIDFloat), nil
+}

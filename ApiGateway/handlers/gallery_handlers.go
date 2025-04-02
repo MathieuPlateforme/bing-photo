@@ -11,6 +11,7 @@ import (
 	proto "ApiGateway/proto"
 
 	"google.golang.org/grpc/metadata"
+	"github.com/gorilla/mux"
 )
 
 type GalleryGateway struct {
@@ -420,28 +421,48 @@ func (g *GalleryGateway) DownloadMediaHandler(w http.ResponseWriter, r *http.Req
 	w.Write(res.FileData)
 }
 
+// DeleteMediaHandler supprime un média spécifique
 // @Summary Supprimer un média
-// @Description Supprime un média par son ID
+// @Description Supprime un média si l'utilisateur est propriétaire
 // @Tags Media
 // @Produce json
-// @Param id path int true "ID du média"
+// @Param id path int true "ID du média à supprimer"
 // @Success 200 {object} proto.DeleteMediaResponse
-// @Failure 400 {string} string "ID invalide"
-// @Failure 500 {string} string "Erreur serveur"
-// @Router /media/{id} [delete]
+// @Failure 400 {string} string "Invalid media ID"
+// @Failure 401 {string} string "Authorization header missing"
+// @Failure 500 {string} string "Failed to delete media"
 // @Security BearerAuth
+// @Router /media/{id} [delete]
 func (g *GalleryGateway) DeleteMediaHandler(w http.ResponseWriter, r *http.Request) {
-	mediaID, err := strconv.ParseUint(r.URL.Query().Get("media_id"), 10, 32)
+	// Récupération du media ID depuis l'URL
+	vars := mux.Vars(r)
+	mediaIDStr := vars["id"]
+
+	mediaID, err := strconv.ParseUint(mediaIDStr, 10, 32)
 	if err != nil {
 		http.Error(w, "Invalid media ID", http.StatusBadRequest)
 		return
 	}
 
+	// Récupération du token JWT
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization header missing", http.StatusUnauthorized)
+		log.Println("Authorization header missing")
+		return
+	}
+	log.Printf("Authorization header: %s", authHeader)
+
+	// Ajout du header au contexte gRPC
+	md := metadata.New(map[string]string{"authorization": authHeader})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+	// Création de la requête gRPC
 	req := &proto.DeleteMediaRequest{
 		MediaId: uint32(mediaID),
 	}
 
-	res, err := g.MediaClient.DeleteMedia(context.Background(), req)
+	res, err := g.MediaClient.DeleteMedia(ctx, req)
 	if err != nil {
 		http.Error(w, "Failed to delete media: "+err.Error(), http.StatusInternalServerError)
 		log.Printf("Delete media error: %v\n", err)
@@ -449,7 +470,10 @@ func (g *GalleryGateway) DeleteMediaHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(res)
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		log.Printf("Failed to encode response: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
 }
 
 // @Summary Détecter les médias similaires
