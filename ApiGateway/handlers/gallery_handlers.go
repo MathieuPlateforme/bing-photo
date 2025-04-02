@@ -182,11 +182,23 @@ func (g *GalleryGateway) GetPrivateAlbumHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization header missing", http.StatusUnauthorized)
+		log.Println("Authorization header missing")
+		return
+	}
+
+	md := metadata.New(map[string]string{"authorization": authHeader})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+	// Construire la requête
 	req := &proto.GetPrivateAlbumRequest{
 		AlbumId: uint32(albumID),
 	}
 
-	res, err := g.GalleryClient.GetPrivateAlbum(context.Background(), req)
+	// Appeler le service
+	res, err := g.GalleryClient.GetPrivateAlbum(ctx, req)
 	if err != nil {
 		http.Error(w, "Failed to get private album: "+err.Error(), http.StatusInternalServerError)
 		log.Printf("Get private album error: %v\n", err)
@@ -194,7 +206,10 @@ func (g *GalleryGateway) GetPrivateAlbumHandler(w http.ResponseWriter, r *http.R
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(res)
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		log.Printf("Failed to encode response: %v\n", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
 }
 
 // @Summary Ajouter un média

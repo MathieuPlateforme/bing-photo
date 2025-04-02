@@ -23,7 +23,6 @@ func NewUserService(dbManager *db.DBManagerService, S3Service *S3Service) *UserS
 }
 
 func (s *UserService) CreateUser(email string, username string) error {
-	// Commencer une transaction
 	tx := s.DBManager.DB.Begin()
 
 	defer func() {
@@ -33,7 +32,7 @@ func (s *UserService) CreateUser(email string, username string) error {
 		}
 	}()
 
-	// Étape 1 : Créer un utilisateur sans album privé pour récupérer son ID
+	// Étape 1 : Créer un utilisateur
 	user := models.User{
 		Email:    email,
 		Username: username,
@@ -43,46 +42,63 @@ func (s *UserService) CreateUser(email string, username string) error {
 		return fmt.Errorf("échec de la création de l'utilisateur : %v", err)
 	}
 
-	// Étape 2 : Générer le nom du bucket
-	bucketName := fmt.Sprintf("private-album-%d", user.ID)
-
-	// Étape 3 : Créer un album privé avec l'ID utilisateur et le nom du bucket
+	// === Album Privé ===
+	privateBucket := fmt.Sprintf("private-album-%d", user.ID)
 	privateAlbum := models.Album{
 		Name:       fmt.Sprintf("Private Album - %d", user.ID),
 		UserID:     user.ID,
-		BucketName: bucketName,
+		BucketName: privateBucket,
 		IsPrivate:  true,
-		ExistsInS3: false, // Par défaut à false, sera mis à jour après la création du bucket S3
+		ExistsInS3: false,
 	}
 	if err := tx.Create(&privateAlbum).Error; err != nil {
 		tx.Rollback()
 		return fmt.Errorf("échec de la création de l'album privé : %v", err)
 	}
-
-	// Étape 4 : Créer le bucket dans S3
-	err := s.S3Service.CreateBucket(bucketName)
-	if err != nil {
+	if err := s.S3Service.CreateBucket(privateBucket); err != nil {
 		tx.Rollback()
-		return fmt.Errorf("échec de la création du bucket S3 : %v", err)
+		return fmt.Errorf("échec de la création du bucket privé : %v", err)
 	}
-
-	// Étape 5 : Mettre à jour l'album pour indiquer qu'il existe dans S3
 	privateAlbum.ExistsInS3 = true
 	if err := tx.Save(&privateAlbum).Error; err != nil {
 		tx.Rollback()
 		return fmt.Errorf("échec de la mise à jour de l'album privé : %v", err)
 	}
 
-	// Étape 6 : Associer l'album privé à l'utilisateur
-	user.PrivateAlbumID = privateAlbum.ID
-	if err := tx.Save(&user).Error; err != nil {
+	// === Album Principal ===
+	mainBucket := fmt.Sprintf("main-album-%d", user.ID)
+	mainAlbum := models.Album{
+		Name:       fmt.Sprintf("Main Album - %d", user.ID),
+		UserID:     user.ID,
+		BucketName: mainBucket,
+		IsMain:  true,
+		ExistsInS3: false,
+	}
+	if err := tx.Create(&mainAlbum).Error; err != nil {
 		tx.Rollback()
-		return fmt.Errorf("échec de la mise à jour de l'utilisateur avec l'album privé : %v", err)
+		return fmt.Errorf("échec de la création de l'album principal : %v", err)
+	}
+	if err := s.S3Service.CreateBucket(mainBucket); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("échec de la création du bucket principal : %v", err)
+	}
+	mainAlbum.ExistsInS3 = true
+	if err := tx.Save(&mainAlbum).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf("échec de la mise à jour de l'album principal : %v", err)
 	}
 
-	// Commit de la transaction
+	// Étape finale : Associer les albums à l'utilisateur
+	user.PrivateAlbumID = privateAlbum.ID
+	user.MainAlbumID = mainAlbum.ID 
+	if err := tx.Save(&user).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf("échec de la mise à jour de l'utilisateur : %v", err)
+	}
+
 	return tx.Commit().Error
 }
+
 
 
 func (s *UserService) VerifyPrivateAlbumPin(userID uint, pin string) error {

@@ -122,5 +122,15 @@ func (s *AlbumService) GetPrivateAlbum(userID uint) (*models.Album, error) {
     return &album, nil
 }
 
+func (s *AlbumService) GetMainAlbum(userID uint) (*models.Album, error) {
+    var album models.Album
+    err := s.DBManager.DB.Where("user_id = ? AND is_main = ?", userID, true).First(&album).Error
+    if err != nil {
+        return nil, fmt.Errorf("échec de la récupération de l'album privé : %v", err)
+    }
+    return &album, nil
+}
+
+
 
 
