@@ -45,21 +45,31 @@ func (s *AlbumService) CreateAlbum(album models.Album) error {
 }
 
 func (s *AlbumService) GetAlbumsByUser(userID uint) ([]models.Album, error) {
-	// Étape 1 : Récupérer les albums depuis la base de données
-	var albums []models.Album
-	err := s.DBManager.DB.Where("user_id = ?", userID).Find(&albums).Error
-	if err != nil {
-		log.Printf("Erreur lors de la récupération des albums depuis la base de données : %v", err)
-		return nil, fmt.Errorf("failed to fetch albums from database: %v", err)
+	// Récupérer l'utilisateur pour accéder à ses albums spéciaux
+	var user models.User
+	if err := s.DBManager.DB.First(&user, userID).Error; err != nil {
+		log.Printf("Utilisateur introuvable pour userID %d : %v", userID, err)
+		return nil, fmt.Errorf("utilisateur non trouvé")
 	}
 
-	// Obtenir la liste des buckets S3 existants
+	// Récupérer tous les albums sauf le main et le privé
+	var albums []models.Album
+	err := s.DBManager.DB.
+		Where("user_id = ? AND id NOT IN (?, ?)", userID, user.PrivateAlbumID, user.MainAlbumID).
+		Find(&albums).Error
+
+	if err != nil {
+		log.Printf("Erreur lors de la récupération des albums : %v", err)
+		return nil, fmt.Errorf("échec de la récupération des albums")
+	}
+
+	// Vérifier l'existence des buckets S3
 	s3Buckets, err := s.S3Service.ListBuckets()
 	if err != nil {
-		log.Printf("Erreur lors de la récupération des buckets depuis l'API S3 : %v", err)
+		log.Printf("Erreur lors de la récupération des buckets S3 : %v", err)
 	}
 
-	// ajouter une indication si le bucket existe
+	// Marquer les albums selon l'existence dans S3
 	bucketExists := make(map[string]bool)
 	for _, bucket := range s3Buckets {
 		bucketExists[strings.TrimSpace(bucket.Name)] = true
