@@ -88,7 +88,7 @@ func (s *galleryServer) DeleteAlbum(ctx context.Context, req *proto.DeleteAlbumR
 }
 
 func (s *galleryServer) GetPrivateAlbum(ctx context.Context, req *proto.GetPrivateAlbumRequest) (*proto.GetPrivateAlbumResponse, error) {
-	album, err := s.albumService.GetPrivateAlbum(uint(req.AlbumId))
+	album, err := s.albumService.GetPrivateAlbum(uint(req.UserId), req.Type)
 	if err != nil {
 		log.Printf("Error getting private album: %v", err)
 		return nil, err

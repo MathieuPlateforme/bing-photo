@@ -177,14 +177,15 @@ func (g *GalleryGateway) DeleteAlbumHandler(w http.ResponseWriter, r *http.Reque
 // @Router /albums/private [get]
 // @Security BearerAuth
 func (g *GalleryGateway) GetPrivateAlbumHandler(w http.ResponseWriter, r *http.Request) {
-	albumID, err := strconv.ParseUint(r.URL.Query().Get("album_id"), 10, 32)
+	userId, err := strconv.ParseUint(r.URL.Query().Get("user_id"), 10, 32)
 	if err != nil {
 		http.Error(w, "Invalid album ID", http.StatusBadRequest)
 		return
 	}
 
 	req := &proto.GetPrivateAlbumRequest{
-		AlbumId: uint32(albumID),
+		UserId: uint32(userId),
+		Type:   r.URL.Query().Get("type"),
 	}
 
 	res, err := g.GalleryClient.GetPrivateAlbum(context.Background(), req)
