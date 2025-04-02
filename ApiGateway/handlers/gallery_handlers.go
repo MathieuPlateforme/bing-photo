@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-
+	"fmt"
 	proto "ApiGateway/proto"
 
 	"google.golang.org/grpc/metadata"
@@ -398,9 +398,20 @@ func (g *GalleryGateway) GetPrivateMediaHandler(w http.ResponseWriter, r *http.R
 // @Router /media/{id}/download [get]
 // @Security BearerAuth
 func (g *GalleryGateway) DownloadMediaHandler(w http.ResponseWriter, r *http.Request) {
-	mediaID, err := strconv.ParseUint(r.URL.Query().Get("media_id"), 10, 32)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization header missing", http.StatusUnauthorized)
+		log.Println("Authorization header missing")
+		return
+	}
+
+	vars := mux.Vars(r)
+	mediaIDStr := vars["id"]
+
+	mediaID, err := strconv.ParseUint(mediaIDStr, 10, 32)
 	if err != nil {
 		http.Error(w, "Invalid media ID", http.StatusBadRequest)
+		log.Printf("Invalid media ID: %v\n", err)
 		return
 	}
 
@@ -408,7 +419,10 @@ func (g *GalleryGateway) DownloadMediaHandler(w http.ResponseWriter, r *http.Req
 		MediaId: uint32(mediaID),
 	}
 
-	res, err := g.MediaClient.DownloadMedia(context.Background(), req)
+	md := metadata.New(map[string]string{"authorization": authHeader})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+	res, err := g.MediaClient.DownloadMedia(ctx, req)
 	if err != nil {
 		http.Error(w, "Failed to download media: "+err.Error(), http.StatusInternalServerError)
 		log.Printf("Download media error: %v\n", err)
@@ -416,7 +430,7 @@ func (g *GalleryGateway) DownloadMediaHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	w.Header().Set("Content-Type", "application/octet-stream")
-	w.Header().Set("Content-Disposition", "attachment; filename=media")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=media_%d", mediaID))
 	w.WriteHeader(http.StatusOK)
 	w.Write(res.FileData)
 }

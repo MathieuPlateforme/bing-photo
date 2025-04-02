@@ -187,10 +187,18 @@ func (s *galleryServer) GetPrivateMedia(ctx context.Context, req *proto.GetPriva
 }
 
 func (s *galleryServer) DownloadMedia(ctx context.Context, req *proto.DownloadMediaRequest) (*proto.DownloadMediaResponse, error) {
+	userID, err := jwt.ExtractUserIDFromContext(ctx)
+	if err != nil {
+		log.Printf("Erreur d'extraction du userID : %v", err)
+		return nil, status.Errorf(codes.Unauthenticated, "token invalide : %v", err)
+	}
+
+	log.Printf("Téléchargement demandé pour mediaID=%d par userID=%d", req.MediaId, userID)
+
 	var buf bytes.Buffer
-	if err := s.mediaService.DownloadMedia(uint(req.MediaId), &buf); err != nil {
-		log.Printf("Error downloading media: %v", err)
-		return nil, err
+	if err := s.mediaService.DownloadMedia(uint(req.MediaId), userID, &buf); err != nil {
+		log.Printf("Erreur lors du téléchargement du média : %v", err)
+		return nil, status.Errorf(codes.Internal, "échec du téléchargement du média : %v", err)
 	}
 
 	return &proto.DownloadMediaResponse{
