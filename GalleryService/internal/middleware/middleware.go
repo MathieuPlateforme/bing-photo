@@ -2,35 +2,31 @@ package middleware
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v4"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
+
+// --- INTERFACES ---
+
+type JWTService interface {
+	VerifyToken(token string) (map[string]interface{}, error)
+}
 
 type AuthServiceClient interface {
 	ValidateToken(ctx context.Context, token string) (bool, error)
 }
 
-// AuthMiddleware protège les routes avec un token JWT
+// --- HTTP MIDDLEWARE ---
+
+// AuthMiddleware protège les routes HTTP avec un token JWT
 func AuthMiddleware(authClient AuthServiceClient, jwtSecret string) func(http.Handler) http.Handler {
-	// Déclaration de la fonction ParseToken
-	parseToken := func(token string) (map[string]interface{}, error) {
-		parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
-			return []byte(jwtSecret), nil
-		})
-		if err != nil || !parsedToken.Valid {
-			return nil, err
-		}
-
-		claims, ok := parsedToken.Claims.(jwt.MapClaims)
-		if !ok {
-			return nil, err
-		}
-		return claims, nil
-	}
-
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -59,8 +55,8 @@ func AuthMiddleware(authClient AuthServiceClient, jwtSecret string) func(http.Ha
 				return
 			}
 
-			// Utiliser ParseToken pour extraire les claims
-			claims, err := parseToken(token)
+			// Parser localement pour récupérer les claims
+			claims, err := parseToken(token, jwtSecret)
 			if err != nil {
 				log.Printf("Erreur lors de l'analyse du token : %v", err)
 				http.Error(w, "Token invalide", http.StatusUnauthorized)
@@ -79,5 +75,70 @@ func AuthMiddleware(authClient AuthServiceClient, jwtSecret string) func(http.Ha
 			ctx := context.WithValue(r.Context(), UserIDKey, uint(userID))
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
+	}
+}
+
+// parseToken extrait les claims d’un token JWT
+func parseToken(token string, secret string) (map[string]interface{}, error) {
+	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	if err != nil || !parsedToken.Valid {
+		return nil, err
+	}
+
+	claims, ok := parsedToken.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, errors.New("invalid claims")
+	}
+
+	return claims, nil
+}
+
+// --- gRPC INTERCEPTOR ---
+
+// AuthInterceptor protège les méthodes gRPC listées dans methodsToIntercept
+func AuthInterceptor(jwtService JWTService, methodsToIntercept map[string]bool) grpc.UnaryServerInterceptor {
+	return func(
+		ctx context.Context,
+		req interface{},
+		info *grpc.UnaryServerInfo,
+		handler grpc.UnaryHandler,
+	) (interface{}, error) {
+
+		if !methodsToIntercept[info.FullMethod] {
+			log.Printf("AuthInterceptor ignoré pour la méthode : %s", info.FullMethod)
+			return handler(ctx, req)
+		}
+
+		md, ok := metadata.FromIncomingContext(ctx)
+		if !ok {
+			return nil, fmt.Errorf("aucune métadonnée trouvée dans le contexte")
+		}
+
+		authHeader := md["authorization"]
+		if len(authHeader) == 0 {
+			return nil, fmt.Errorf("en-tête Authorization manquant")
+		}
+
+		token := strings.TrimPrefix(authHeader[0], "Bearer ")
+		log.Printf("Token extrait : %s", token)
+
+		// Vérifier le token
+		claims, err := jwtService.VerifyToken(token)
+		if err != nil {
+			return nil, fmt.Errorf("token invalide : %v", err)
+		}
+
+		// Extraire et injecter le userID
+		userID, ok := claims["userID"].(float64)
+		if !ok {
+			return nil, fmt.Errorf("userID introuvable dans le token")
+		}
+
+		ctx = context.WithValue(ctx, UserIDKey, uint(userID))
+		log.Printf("userID ajouté au contexte : %d", uint(userID))
+
+		return handler(ctx, req)
 	}
 }

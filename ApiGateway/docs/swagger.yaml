@@ -30,18 +30,6 @@ definitions:
       message:
         type: string
     type: object
-  proto.CreateUserRequest:
-    properties:
-      email:
-        type: string
-      username:
-        type: string
-    type: object
-  proto.CreateUserResponse:
-    properties:
-      message:
-        type: string
-    type: object
   proto.DeleteAlbumResponse:
     properties:
       message:
@@ -240,6 +228,8 @@ paths:
           description: Erreur serveur
           schema:
             type: string
+      security:
+      - BearerAuth: []
       summary: Créer un album
       tags:
       - Albums
@@ -267,6 +257,8 @@ paths:
           description: Erreur serveur
           schema:
             type: string
+      security:
+      - BearerAuth: []
       summary: Supprimer un album
       tags:
       - Albums
@@ -301,6 +293,8 @@ paths:
           description: Erreur serveur
           schema:
             type: string
+      security:
+      - BearerAuth: []
       summary: Mettre à jour un album
       tags:
       - Albums
@@ -328,6 +322,8 @@ paths:
           description: Erreur serveur
           schema:
             type: string
+      security:
+      - BearerAuth: []
       summary: Obtenir un album privé
       tags:
       - Albums
@@ -355,6 +351,8 @@ paths:
           description: Erreur serveur
           schema:
             type: string
+      security:
+      - BearerAuth: []
       summary: Obtenir les albums d'un utilisateur
       tags:
       - Albums
@@ -681,6 +679,8 @@ paths:
           description: Erreur serveur
           schema:
             type: string
+      security:
+      - BearerAuth: []
       summary: Ajouter un média
       tags:
       - Media
@@ -708,6 +708,8 @@ paths:
           description: Erreur serveur
           schema:
             type: string
+      security:
+      - BearerAuth: []
       summary: Supprimer un média
       tags:
       - Media
@@ -735,6 +737,8 @@ paths:
           description: Erreur serveur
           schema:
             type: string
+      security:
+      - BearerAuth: []
       summary: Télécharger un média
       tags:
       - Media
@@ -765,6 +769,8 @@ paths:
           description: Erreur serveur
           schema:
             type: string
+      security:
+      - BearerAuth: []
       summary: Rendre un média privé
       tags:
       - Media
@@ -792,6 +798,8 @@ paths:
           description: Erreur serveur
           schema:
             type: string
+      security:
+      - BearerAuth: []
       summary: Obtenir les médias privés
       tags:
       - Media
@@ -822,6 +830,8 @@ paths:
           description: Erreur serveur
           schema:
             type: string
+      security:
+      - BearerAuth: []
       summary: Détecter les médias similaires
       tags:
       - Media
@@ -849,39 +859,11 @@ paths:
           description: Erreur serveur
           schema:
             type: string
+      security:
+      - BearerAuth: []
       summary: Médias d’un utilisateur
       tags:
       - Media
-  /users:
-    post:
-      consumes:
-      - application/json
-      description: Crée un nouvel utilisateur avec les informations fournies
-      parameters:
-      - description: Données de l'utilisateur
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/proto.CreateUserRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/proto.CreateUserResponse'
-        "400":
-          description: Requête invalide
-          schema:
-            type: string
-        "500":
-          description: Erreur serveur
-          schema:
-            type: string
-      summary: Créer un utilisateur
-      tags:
-      - Utilisateurs
 securityDefinitions:
   BearerAuth:
     description: 'Format : Bearer <votre_token>'

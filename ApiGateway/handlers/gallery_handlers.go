@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	proto "ApiGateway/proto"
+	"google.golang.org/grpc/metadata"
 )
 
 type GalleryGateway struct {
@@ -35,6 +36,7 @@ func NewGalleryGateway(albumClient proto.AlbumServiceClient, mediaClient proto.M
 // @Failure 400 {string} string "Requête invalide"
 // @Failure 500 {string} string "Erreur serveur"
 // @Router /albums [post]
+// @Security BearerAuth
 func (g *GalleryGateway) CreateAlbumHandler(w http.ResponseWriter, r *http.Request) {
 	var req proto.CreateAlbumRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -43,7 +45,18 @@ func (g *GalleryGateway) CreateAlbumHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	res, err := g.GalleryClient.CreateAlbum(context.Background(), &req)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization header missing", http.StatusUnauthorized)
+		log.Println("Authorization header missing")
+		return
+	}
+
+	md := metadata.New(map[string]string{"authorization": authHeader})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+	// Appel gRPC avec le contexte enrichi
+	res, err := g.GalleryClient.CreateAlbum(ctx, &req)
 	if err != nil {
 		http.Error(w, "Failed to create album: "+err.Error(), http.StatusInternalServerError)
 		log.Printf("Create album error: %v\n", err)
@@ -51,7 +64,10 @@ func (g *GalleryGateway) CreateAlbumHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(res)
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		log.Printf("Failed to encode response: %v\n", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
 }
 
 // @Summary Obtenir les albums d'un utilisateur
@@ -63,6 +79,7 @@ func (g *GalleryGateway) CreateAlbumHandler(w http.ResponseWriter, r *http.Reque
 // @Failure 400 {string} string "ID utilisateur invalide"
 // @Failure 500 {string} string "Erreur serveur"
 // @Router /albums/user [get]
+// @Security BearerAuth
 func (g *GalleryGateway) GetAlbumsByUserHandler(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.ParseUint(r.URL.Query().Get("user_id"), 10, 32)
 	if err != nil {
@@ -96,6 +113,7 @@ func (g *GalleryGateway) GetAlbumsByUserHandler(w http.ResponseWriter, r *http.R
 // @Failure 400 {string} string "Requête invalide"
 // @Failure 500 {string} string "Erreur serveur"
 // @Router /albums/{id} [put]
+// @Security BearerAuth
 func (g *GalleryGateway) UpdateAlbumHandler(w http.ResponseWriter, r *http.Request) {
 	var req proto.UpdateAlbumRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -124,6 +142,7 @@ func (g *GalleryGateway) UpdateAlbumHandler(w http.ResponseWriter, r *http.Reque
 // @Failure 400 {string} string "ID invalide"
 // @Failure 500 {string} string "Erreur serveur"
 // @Router /albums/{id} [delete]
+// @Security BearerAuth
 func (g *GalleryGateway) DeleteAlbumHandler(w http.ResponseWriter, r *http.Request) {
 	albumID, err := strconv.ParseUint(r.URL.Query().Get("album_id"), 10, 32)
 	if err != nil {
@@ -155,6 +174,7 @@ func (g *GalleryGateway) DeleteAlbumHandler(w http.ResponseWriter, r *http.Reque
 // @Failure 400 {string} string "ID invalide"
 // @Failure 500 {string} string "Erreur serveur"
 // @Router /albums/private [get]
+// @Security BearerAuth
 func (g *GalleryGateway) GetPrivateAlbumHandler(w http.ResponseWriter, r *http.Request) {
 	albumID, err := strconv.ParseUint(r.URL.Query().Get("album_id"), 10, 32)
 	if err != nil {
@@ -188,6 +208,7 @@ func (g *GalleryGateway) GetPrivateAlbumHandler(w http.ResponseWriter, r *http.R
 // @Failure 400 {string} string "Erreur de parsing du formulaire"
 // @Failure 500 {string} string "Erreur serveur"
 // @Router /media [post]
+// @Security BearerAuth
 func (g *GalleryGateway) AddMediaHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(10 << 20) // 10 MB max
 	if err != nil {
@@ -240,6 +261,7 @@ func (g *GalleryGateway) AddMediaHandler(w http.ResponseWriter, r *http.Request)
 // @Failure 400 {string} string "ID invalide"
 // @Failure 500 {string} string "Erreur serveur"
 // @Router /media/user [get]
+// @Security BearerAuth
 func (g *GalleryGateway) GetMediaByUserHandler(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.ParseUint(r.URL.Query().Get("user_id"), 10, 32)
 	if err != nil {
@@ -272,6 +294,7 @@ func (g *GalleryGateway) GetMediaByUserHandler(w http.ResponseWriter, r *http.Re
 // @Failure 400 {string} string "Requête invalide"
 // @Failure 500 {string} string "Erreur serveur"
 // @Router /media/{id}/private [post]
+// @Security BearerAuth
 func (g *GalleryGateway) MarkAsPrivateHandler(w http.ResponseWriter, r *http.Request) {
 	var req proto.MarkAsPrivateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -300,6 +323,7 @@ func (g *GalleryGateway) MarkAsPrivateHandler(w http.ResponseWriter, r *http.Req
 // @Failure 400 {string} string "ID invalide"
 // @Failure 500 {string} string "Erreur serveur"
 // @Router /media/private [get]
+// @Security BearerAuth
 func (g *GalleryGateway) GetPrivateMediaHandler(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.ParseUint(r.URL.Query().Get("user_id"), 10, 32)
 	if err != nil {
@@ -332,6 +356,7 @@ func (g *GalleryGateway) GetPrivateMediaHandler(w http.ResponseWriter, r *http.R
 // @Failure 400 {string} string "ID invalide"
 // @Failure 500 {string} string "Erreur serveur"
 // @Router /media/{id}/download [get]
+// @Security BearerAuth
 func (g *GalleryGateway) DownloadMediaHandler(w http.ResponseWriter, r *http.Request) {
 	mediaID, err := strconv.ParseUint(r.URL.Query().Get("media_id"), 10, 32)
 	if err != nil {
@@ -365,6 +390,7 @@ func (g *GalleryGateway) DownloadMediaHandler(w http.ResponseWriter, r *http.Req
 // @Failure 400 {string} string "ID invalide"
 // @Failure 500 {string} string "Erreur serveur"
 // @Router /media/{id} [delete]
+// @Security BearerAuth
 func (g *GalleryGateway) DeleteMediaHandler(w http.ResponseWriter, r *http.Request) {
 	mediaID, err := strconv.ParseUint(r.URL.Query().Get("media_id"), 10, 32)
 	if err != nil {
@@ -397,6 +423,7 @@ func (g *GalleryGateway) DeleteMediaHandler(w http.ResponseWriter, r *http.Reque
 // @Failure 400 {string} string "Requête invalide"
 // @Failure 500 {string} string "Erreur serveur"
 // @Router /media/similar [post]
+// @Security BearerAuth
 func (g *GalleryGateway) DetectSimilarMediaHandler(w http.ResponseWriter, r *http.Request) {
 	mediaID, err := strconv.ParseUint(r.URL.Query().Get("media_id"), 10, 32)
 	if err != nil {
@@ -419,17 +446,7 @@ func (g *GalleryGateway) DetectSimilarMediaHandler(w http.ResponseWriter, r *htt
 	json.NewEncoder(w).Encode(res)
 }
 
-// @Summary Créer un utilisateur
-// @Description Crée un nouvel utilisateur avec les informations fournies
-// @Tags Utilisateurs
-// @Accept json
-// @Produce json
-// @Param user body proto.CreateUserRequest true "Données de l'utilisateur"
-// @Success 201 {object} proto.CreateUserResponse
-// @Failure 400 {string} string "Requête invalide"
-// @Failure 500 {string} string "Erreur serveur"
-// @Router /users [post]
-// User handlers
+
 func (g *GalleryGateway) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	var req proto.CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

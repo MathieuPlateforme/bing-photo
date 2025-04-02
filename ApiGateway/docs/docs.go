@@ -20,6 +20,11 @@ const docTemplate = `{
     "paths": {
         "/albums": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Crée un nouvel album avec un titre et un identifiant utilisateur",
                 "consumes": [
                     "application/json"
@@ -66,6 +71,11 @@ const docTemplate = `{
         },
         "/albums/private": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Récupère un album privé à partir de son ID",
                 "produces": [
                     "application/json"
@@ -107,6 +117,11 @@ const docTemplate = `{
         },
         "/albums/user": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Récupère tous les albums appartenant à un utilisateur donné",
                 "produces": [
                     "application/json"
@@ -148,6 +163,11 @@ const docTemplate = `{
         },
         "/albums/{id}": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Met à jour les informations d'un album",
                 "consumes": [
                     "application/json"
@@ -199,6 +219,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Supprime un album existant par son ID",
                 "produces": [
                     "application/json"
@@ -691,6 +716,11 @@ const docTemplate = `{
         },
         "/media": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Ajoute un fichier média à un album",
                 "consumes": [
                     "multipart/form-data"
@@ -742,6 +772,11 @@ const docTemplate = `{
         },
         "/media/private": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Récupère les médias privés d’un utilisateur",
                 "produces": [
                     "application/json"
@@ -783,6 +818,11 @@ const docTemplate = `{
         },
         "/media/similar": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Détecte les fichiers médias similaires à celui donné",
                 "consumes": [
                     "application/json"
@@ -829,6 +869,11 @@ const docTemplate = `{
         },
         "/media/user": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Récupère tous les médias appartenant à un utilisateur",
                 "produces": [
                     "application/json"
@@ -870,6 +915,11 @@ const docTemplate = `{
         },
         "/media/{id}": {
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Supprime un média par son ID",
                 "produces": [
                     "application/json"
@@ -911,6 +961,11 @@ const docTemplate = `{
         },
         "/media/{id}/download": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Télécharge le contenu d’un fichier média",
                 "produces": [
                     "application/octet-stream"
@@ -952,6 +1007,11 @@ const docTemplate = `{
         },
         "/media/{id}/private": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Marque un média comme privé",
                 "consumes": [
                     "application/json"
@@ -979,52 +1039,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/proto.MarkAsPrivateResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Requête invalide",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Erreur serveur",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/users": {
-            "post": {
-                "description": "Crée un nouvel utilisateur avec les informations fournies",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Utilisateurs"
-                ],
-                "summary": "Créer un utilisateur",
-                "parameters": [
-                    {
-                        "description": "Données de l'utilisateur",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/proto.CreateUserRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/proto.CreateUserResponse"
                         }
                     },
                     "400": {
@@ -1084,25 +1098,6 @@ const docTemplate = `{
             }
         },
         "proto.CreateAlbumResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "proto.CreateUserRequest": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "proto.CreateUserResponse": {
             "type": "object",
             "properties": {
                 "message": {

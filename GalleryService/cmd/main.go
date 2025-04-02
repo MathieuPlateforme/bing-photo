@@ -13,7 +13,8 @@ import (
 	"GalleryService/internal/models"
 	proto "GalleryService/internal/proto"
 	"GalleryService/internal/services"
-
+	"GalleryService/internal/middleware"
+	"GalleryService/internal/jwt"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 )
@@ -265,8 +266,30 @@ func main() {
 	mediaService := services.NewMediaService(dbManager, s3Service)
 	userService := services.NewUserService(dbManager, s3Service)
 
-	// Create gRPC server
-	grpcServer := grpc.NewServer()
+	// Initialiser le service JWT
+	jwtService, err := jwt.NewJWTService()
+	if err != nil {
+		log.Fatalf("Erreur lors de l'initialisation de JWTService : %v", err)
+	}
+
+	// Définir les méthodes protégées (authentification requise)
+	methodsToIntercept := map[string]bool{
+		"/proto.AlbumService/CreateAlbum":      true,
+		"/proto.AlbumService/UpdateAlbum":      true,
+		"/proto.AlbumService/DeleteAlbum":      true,
+		"/proto.AlbumService/GetPrivateAlbum":  true,
+		"/proto.MediaService/AddMedia":         true,
+		"/proto.MediaService/MarkAsPrivate":    true,
+		"/proto.MediaService/GetPrivateMedia":  true,
+		"/proto.MediaService/DownloadMedia":    true,
+		"/proto.MediaService/DeleteMedia":      true,
+	}
+
+	// Créer le serveur gRPC avec intercepteur JWT
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(middleware.AuthInterceptor(jwtService, methodsToIntercept)),
+	)
+
 	galleryServer := &galleryServer{
 		albumService: albumService,
 		mediaService: mediaService,
@@ -288,7 +311,7 @@ func main() {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
-	// Démarrer le serveur HTTP dans une goroutine
+	// Démarrer le serveur gRPC dans une goroutine
 	go func() {
 		log.Println("gRPC server started on port 50052...")
 		if err := grpcServer.Serve(grpcListener); err != nil {
