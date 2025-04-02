@@ -120,6 +120,8 @@ func main() {
 	r.HandleFunc("/media/{id}/download", galleryHandler.DownloadMediaHandler).Methods("GET", "OPTIONS")
 	r.HandleFunc("/media/{id}", galleryHandler.DeleteMediaHandler).Methods("DELETE", "OPTIONS")
 	r.HandleFunc("/media/similar", galleryHandler.DetectSimilarMediaHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/media/album/{id}", galleryHandler.GetMediaByAlbumHandler).Methods("GET", "OPTIONS")
+
 
 	// User routes
 	r.HandleFunc("/users", galleryHandler.CreateUserHandler).Methods("POST", "OPTIONS")

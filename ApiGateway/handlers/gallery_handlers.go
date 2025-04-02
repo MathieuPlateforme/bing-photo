@@ -590,3 +590,49 @@ func (g *GalleryGateway) AddMediaToFavoriteHandler(w http.ResponseWriter, r *htt
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(res)
 }
+
+// GetMediaByAlbumHandler godoc
+// @Summary Récupérer les médias d’un album
+// @Description Renvoie tous les médias appartenant à un album donné
+// @Tags Médias
+// @Produce json
+// @Param id path int true "ID de l’album"
+// @Success 200 {object} proto.GetMediaByAlbumResponse
+// @Failure 400 {string} string "Requête invalide"
+// @Failure 500 {string} string "Erreur serveur"
+// @Router /media/album/{id} [get]
+// @Security BearerAuth
+func (g *GalleryGateway) GetMediaByAlbumHandler(w http.ResponseWriter, r *http.Request) {
+	// Extraire l'Authorization
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization header missing", http.StatusUnauthorized)
+		log.Println("Authorization header missing")
+		return
+	}
+
+	// Extraire l'ID depuis l'URL
+	vars := mux.Vars(r)
+	albumIDStr := vars["id"]
+	albumID, err := strconv.ParseUint(albumIDStr, 10, 32)
+	if err != nil {
+		http.Error(w, "Invalid album ID", http.StatusBadRequest)
+		return
+	}
+
+	// Contexte avec JWT
+	md := metadata.New(map[string]string{"authorization": authHeader})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+	// Requête gRPC
+	req := &proto.GetMediaByAlbumRequest{AlbumId: uint32(albumID)}
+	res, err := g.MediaClient.GetMediaByAlbum(ctx, req)
+	if err != nil {
+		http.Error(w, "Failed to fetch media: "+err.Error(), http.StatusInternalServerError)
+		log.Printf("Get media by album error: %v\n", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(res)
+}

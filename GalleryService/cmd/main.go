@@ -266,6 +266,27 @@ func (s *galleryServer) CreateUser(ctx context.Context, req *proto.CreateUserReq
 // 	return &proto.AddMediaToFavoriteResponse{}, nil
 // }
 
+func (s *galleryServer) GetMediaByAlbum(ctx context.Context, req *proto.GetMediaByAlbumRequest) (*proto.GetMediaByAlbumResponse, error) {
+    medias, err := s.mediaService.GetMediaByAlbum(uint(req.AlbumId))
+    if err != nil {
+        return nil, status.Errorf(codes.Internal, "failed to retrieve media: %v", err)
+    }
+
+    var protoMedias []*proto.Media
+    for _, m := range medias {
+        protoMedias = append(protoMedias, &proto.Media{
+            Id:        uint32(m.ID),
+            Name:      m.Name,
+            Path:      m.Path,
+            AlbumId:   uint32(m.AlbumID),
+			IsFavorite: m.IsFavorite,
+        })
+    }
+
+    return &proto.GetMediaByAlbumResponse{Media: protoMedias}, nil
+}
+
+
 func main() {
 	// Load environment variables
 	if err := godotenv.Load(); err != nil {
@@ -312,6 +333,7 @@ func main() {
 		"/proto.MediaService/GetPrivateMedia": true,
 		"/proto.MediaService/DownloadMedia":   true,
 		"/proto.MediaService/DeleteMedia":     true,
+		"/proto.MediaService/GetMediaByAlbum": true,
 	}
 
 	// Créer le serveur gRPC avec intercepteur JWT

@@ -795,6 +795,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/media/album/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Renvoie tous les médias appartenant à un album donné",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Médias"
+                ],
+                "summary": "Récupérer les médias d’un album",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de l’album",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/proto.GetMediaByAlbumResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Requête invalide",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur serveur",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/media/private": {
             "get": {
                 "security": [
@@ -1210,6 +1256,17 @@ const docTemplate = `{
                 }
             }
         },
+        "proto.GetMediaByAlbumResponse": {
+            "type": "object",
+            "properties": {
+                "media": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/proto.Media"
+                    }
+                }
+            }
+        },
         "proto.GetMediaByUserResponse": {
             "type": "object",
             "properties": {
@@ -1298,7 +1355,16 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "is_favorite": {
+                    "type": "boolean"
+                },
+                "is_private": {
+                    "type": "boolean"
+                },
                 "name": {
+                    "type": "string"
+                },
+                "path": {
                     "type": "string"
                 }
             }

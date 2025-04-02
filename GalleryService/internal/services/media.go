@@ -339,3 +339,15 @@ func (s *MediaService) DetectSimilarMedia(userID uint, albumID uint) ([]models.M
     return similarMedia, nil
 }
 
+func (s *MediaService) GetMediaByAlbum(albumID uint) ([]models.Media, error) {
+	var medias []models.Media
+
+	// Récupérer tous les médias associés à l'album donné
+	if err := s.DBManager.DB.Where("album_id = ?", albumID).Find(&medias).Error; err != nil {
+		log.Printf("Erreur lors de la récupération des médias pour l'album %d : %v", albumID, err)
+		return nil, fmt.Errorf("échec de la récupération des médias pour l'album %d", albumID)
+	}
+
+	return medias, nil
+}
+

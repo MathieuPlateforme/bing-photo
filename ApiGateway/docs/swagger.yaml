@@ -77,6 +77,13 @@ definitions:
       username:
         type: string
     type: object
+  proto.GetMediaByAlbumResponse:
+    properties:
+      media:
+        items:
+          $ref: '#/definitions/proto.Media'
+        type: array
+    type: object
   proto.GetMediaByUserResponse:
     properties:
       media_list:
@@ -133,7 +140,13 @@ definitions:
         type: integer
       id:
         type: integer
+      is_favorite:
+        type: boolean
+      is_private:
+        type: boolean
       name:
+        type: string
+      path:
         type: string
     type: object
   proto.RegisterRequest:
@@ -795,6 +808,35 @@ paths:
       summary: Rendre un média privé
       tags:
       - Media
+  /media/album/{id}:
+    get:
+      description: Renvoie tous les médias appartenant à un album donné
+      parameters:
+      - description: ID de l’album
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/proto.GetMediaByAlbumResponse'
+        "400":
+          description: Requête invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Récupérer les médias d’un album
+      tags:
+      - Médias
   /media/private:
     get:
       description: Récupère les médias privés d’un utilisateur
