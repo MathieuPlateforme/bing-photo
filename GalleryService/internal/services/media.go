@@ -159,7 +159,6 @@ func (s *MediaService) MarkAsPrivate(mediaID uint, userID uint) error {
 
     // Mettre à jour le média pour qu'il soit associé à l'album privé
     media.AlbumID = privateAlbum.ID
-    media.IsPrivate = true
     media.Path = fmt.Sprintf("%s/%s", targetBucket, sourceKey)
 
     // Sauvegarder les modifications

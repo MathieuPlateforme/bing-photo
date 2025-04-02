@@ -11,6 +11,8 @@ type User struct {
 	PrivateAlbumPin  string    `gorm:"default:null"` 
 	PrivateAlbumID   uint      `gorm:"default:null"`
 	PrivateAlbum     *Album     `gorm:"foreignKey:PrivateAlbumID"`
+	MainAlbumID   	 uint      `gorm:"default:null"`
+	MainAlbum        *Album     `gorm:"foreignKey:PrivateAlbumID"`
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 }
@@ -21,6 +23,7 @@ type Album struct {
 	UserID      uint      `gorm:"not null"`
 	BucketName  string    `gorm:"not null"`
 	IsPrivate   bool      `gorm:"default:false"` 
+	IsMain   	bool      `gorm:"default:false"` 
 	Description string    
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
@@ -37,7 +40,6 @@ type Media struct {
 	Name       string `gorm:"not null"`
 	Type       string
 	IsFavorite bool   `gorm:"default:false"`
-	IsPrivate  bool   `gorm:"default:false"`
 	Hash       string `gorm:"not null"`
 	FileSize   uint   `gorm:"not null"`
 	CreatedAt  time.Time
