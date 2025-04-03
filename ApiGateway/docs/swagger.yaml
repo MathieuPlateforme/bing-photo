@@ -11,6 +11,10 @@ definitions:
         type: string
       id:
         type: integer
+      media:
+        items:
+          $ref: '#/definitions/proto.Media'
+        type: array
       name:
         type: string
       user_id:
@@ -651,33 +655,6 @@ paths:
       summary: Mettre à jour un utilisateur
       tags:
       - Auth
-  /auth/validateToken:
-    post:
-      description: Validates a JWT token
-      parameters:
-      - description: Bearer <token>
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      produces:
-      - text/plain
-      responses:
-        "200":
-          description: Token valid
-          schema:
-            type: string
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "500":
-          description: Token validation failed
-          schema:
-            type: string
-      summary: Validate Token
-      tags:
-      - Auth
   /media:
     post:
       consumes:
@@ -836,7 +813,7 @@ paths:
       - BearerAuth: []
       summary: Récupérer les médias d’un album
       tags:
-      - Médias
+      - Medias
   /media/private:
     get:
       description: Récupère les médias privés d’un utilisateur

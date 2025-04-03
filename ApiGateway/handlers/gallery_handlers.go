@@ -612,7 +612,7 @@ func (g *GalleryGateway) AddMediaToFavoriteHandler(w http.ResponseWriter, r *htt
 // GetMediaByAlbumHandler godoc
 // @Summary Récupérer les médias d’un album
 // @Description Renvoie tous les médias appartenant à un album donné
-// @Tags Médias
+// @Tags Medias
 // @Produce json
 // @Param id path int true "ID de l’album"
 // @Success 200 {object} proto.GetMediaByAlbumResponse

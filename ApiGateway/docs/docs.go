@@ -698,47 +698,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/validateToken": {
-            "post": {
-                "description": "Validates a JWT token",
-                "produces": [
-                    "text/plain"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Validate Token",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Bearer \u003ctoken\u003e",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Token valid",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Token validation failed",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
         "/media": {
             "post": {
                 "security": [
@@ -807,7 +766,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Médias"
+                    "Medias"
                 ],
                 "summary": "Récupérer les médias d’un album",
                 "parameters": [
@@ -1151,6 +1110,12 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "integer"
+                },
+                "media": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/proto.Media"
+                    }
                 },
                 "name": {
                     "type": "string"

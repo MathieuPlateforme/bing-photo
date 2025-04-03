@@ -247,16 +247,7 @@ func (g *ApiGateway) GoogleCallbackHandler(w http.ResponseWriter, r *http.Reques
 	w.Write([]byte("Token: " + res.Message + "user: " + res.UserInfo))
 }
 
-// ValidateTokenHandler godoc
-// @Summary Validate Token
-// @Description Validates a JWT token
-// @Tags Auth
-// @Produce plain
-// @Param Authorization header string true "Bearer <token>"
-// @Success 200 {string} string "Token valid"
-// @Failure 401 {string} string "Unauthorized"
-// @Failure 500 {string} string "Token validation failed"
-// @Router /auth/validateToken [post]
+
 func (g *ApiGateway) ValidateTokenHandler(w http.ResponseWriter, r *http.Request) {
 	// Extraire le token de l'en-tête Authorization
 	authHeader := r.Header.Get("Authorization")
