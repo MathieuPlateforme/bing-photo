@@ -459,8 +459,8 @@ func (g *GalleryGateway) DownloadMediaHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/octet-stream")
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=media_%d", mediaID))
+	w.Header().Set("Content-Type", http.DetectContentType(res.FileData))
+	w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=media_%d", mediaID))
 	w.WriteHeader(http.StatusOK)
 	w.Write(res.FileData)
 }

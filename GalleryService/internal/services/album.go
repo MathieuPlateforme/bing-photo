@@ -144,7 +144,7 @@ func (s *AlbumService) getPrivateAlbum(userID uint) (*models.Album, error) {
 // Méthode interne pour récupérer l'album principal
 func (s *AlbumService) getMainAlbum(userID uint) (*models.Album, error) {
 	var album models.Album
-	if err := s.DBManager.DB.Where("user_id = ? AND is_private = false", userID).First(&album).Error; err != nil {
+	if err := s.DBManager.DB.Where("user_id = ? AND is_main = true", userID).First(&album).Error; err != nil {
 		return nil, fmt.Errorf("album principal non trouvé : %v", err)
 	}
 	return &album, nil
