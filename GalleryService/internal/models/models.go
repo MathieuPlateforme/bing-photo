@@ -25,6 +25,7 @@ type Album struct {
 	IsPrivate   bool      `gorm:"default:false"` 
 	IsMain   	bool      `gorm:"default:false"` 
 	Description string    
+	Media       []Media     `gorm:"foreignKey:AlbumID"` 
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 

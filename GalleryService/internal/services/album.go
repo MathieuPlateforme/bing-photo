@@ -52,9 +52,10 @@ func (s *AlbumService) GetAlbumsByUser(userID uint) ([]models.Album, error) {
 		return nil, fmt.Errorf("utilisateur non trouvé")
 	}
 
-	// Récupérer tous les albums sauf le main et le privé
+	// Récupérer tous les albums sauf le main et le privé, et précharger les médias associés
 	var albums []models.Album
 	err := s.DBManager.DB.
+		Preload("Media"). // <- préchargement des médias liés
 		Where("user_id = ? AND id NOT IN (?, ?)", userID, user.PrivateAlbumID, user.MainAlbumID).
 		Find(&albums).Error
 
@@ -69,7 +70,6 @@ func (s *AlbumService) GetAlbumsByUser(userID uint) ([]models.Album, error) {
 		log.Printf("Erreur lors de la récupération des buckets S3 : %v", err)
 	}
 
-	// Marquer les albums selon l'existence dans S3
 	bucketExists := make(map[string]bool)
 	for _, bucket := range s3Buckets {
 		bucketExists[strings.TrimSpace(bucket.Name)] = true
@@ -80,6 +80,7 @@ func (s *AlbumService) GetAlbumsByUser(userID uint) ([]models.Album, error) {
 
 	return albums, nil
 }
+
 
 func (s *AlbumService) UpdateAlbum(id uint, name string, description string) error {
 	// Récupérer l'album

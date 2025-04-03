@@ -57,13 +57,25 @@ func (s *galleryServer) GetAlbumsByUser(ctx context.Context, req *proto.GetAlbum
 		return nil, err
 	}
 
-	var protoAlbums []*proto.Album
+	var protoAlbums []*proto.AlbumWithMedia
 	for _, album := range albums {
-		protoAlbums = append(protoAlbums, &proto.Album{
+		var protoMedia []*proto.Media
+		for _, media := range album.Media {
+			protoMedia = append(protoMedia, &proto.Media{
+				Id:       uint32(media.ID),
+				Name:     media.Name,
+				Path:     media.Path,
+				FileSize: uint32(media.FileSize),
+				AlbumId:  uint32(media.AlbumID),
+			})
+		}
+
+		protoAlbums = append(protoAlbums, &proto.AlbumWithMedia{
 			Id:          uint32(album.ID),
 			Name:        album.Name,
 			Description: album.Description,
 			UserId:      uint32(album.UserID),
+			Media:       protoMedia,
 		})
 	}
 
@@ -71,6 +83,8 @@ func (s *galleryServer) GetAlbumsByUser(ctx context.Context, req *proto.GetAlbum
 		Albums: protoAlbums,
 	}, nil
 }
+
+
 
 func (s *galleryServer) UpdateAlbum(ctx context.Context, req *proto.UpdateAlbumRequest) (*proto.UpdateAlbumResponse, error) {
 	if err := s.albumService.UpdateAlbum(uint(req.AlbumId), req.Name, req.Description); err != nil {

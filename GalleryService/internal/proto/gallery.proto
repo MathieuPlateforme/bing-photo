@@ -43,8 +43,16 @@ message GetAlbumsByUserRequest {
   uint32 user_id = 1;
 }
 
+message AlbumWithMedia {
+  uint32 id = 1;
+  string name = 2;
+  string description = 3;
+  uint32 user_id = 4;
+  repeated Media media = 5;
+}
+
 message GetAlbumsByUserResponse {
-  repeated Album albums = 1;
+  repeated AlbumWithMedia albums = 1;
 }
 
 message UpdateAlbumRequest {
@@ -161,6 +169,7 @@ message Album {
   string name = 2;
   string description = 3;
   uint32 user_id = 4;
+  repeated Media media = 5;
 }
 
 message Media {

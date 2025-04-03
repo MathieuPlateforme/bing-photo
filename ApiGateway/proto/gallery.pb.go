@@ -1345,6 +1345,7 @@ type Album struct {
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	UserId        uint32                 `protobuf:"varint,4,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Media         []*Media               `protobuf:"bytes,5,rep,name=media,proto3" json:"media,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1405,6 +1406,13 @@ func (x *Album) GetUserId() uint32 {
 		return x.UserId
 	}
 	return 0
+}
+
+func (x *Album) GetMedia() []*Media {
+	if x != nil {
+		return x.Media
+	}
+	return nil
 }
 
 type Media struct {
@@ -1658,12 +1666,13 @@ const file_proto_gallery_proto_rawDesc = "" +
 	"\x16GetMediaByAlbumRequest\x12\x19\n" +
 	"\balbum_id\x18\x01 \x01(\rR\aalbumId\"=\n" +
 	"\x17GetMediaByAlbumResponse\x12\"\n" +
-	"\x05media\x18\x01 \x03(\v2\f.proto.MediaR\x05media\"f\n" +
+	"\x05media\x18\x01 \x03(\v2\f.proto.MediaR\x05media\"\x8a\x01\n" +
 	"\x05Album\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\rR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x17\n" +
-	"\auser_id\x18\x04 \x01(\rR\x06userId\"\xb7\x01\n" +
+	"\auser_id\x18\x04 \x01(\rR\x06userId\x12\"\n" +
+	"\x05media\x18\x05 \x03(\v2\f.proto.MediaR\x05media\"\xb7\x01\n" +
 	"\x05Media\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\rR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x19\n" +
@@ -1752,41 +1761,42 @@ var file_proto_gallery_proto_depIdxs = []int32{
 	29, // 3: proto.GetPrivateMediaResponse.media:type_name -> proto.Media
 	29, // 4: proto.DetectSimilarMediaResponse.media:type_name -> proto.Media
 	29, // 5: proto.GetMediaByAlbumResponse.media:type_name -> proto.Media
-	0,  // 6: proto.AlbumService.CreateAlbum:input_type -> proto.CreateAlbumRequest
-	2,  // 7: proto.AlbumService.GetAlbumsByUser:input_type -> proto.GetAlbumsByUserRequest
-	4,  // 8: proto.AlbumService.UpdateAlbum:input_type -> proto.UpdateAlbumRequest
-	6,  // 9: proto.AlbumService.DeleteAlbum:input_type -> proto.DeleteAlbumRequest
-	8,  // 10: proto.AlbumService.GetPrivateAlbum:input_type -> proto.GetPrivateAlbumRequest
-	10, // 11: proto.MediaService.AddMedia:input_type -> proto.AddMediaRequest
-	12, // 12: proto.MediaService.GetMediaByUser:input_type -> proto.GetMediaByUserRequest
-	14, // 13: proto.MediaService.MarkAsPrivate:input_type -> proto.MarkAsPrivateRequest
-	16, // 14: proto.MediaService.GetPrivateMedia:input_type -> proto.GetPrivateMediaRequest
-	18, // 15: proto.MediaService.DownloadMedia:input_type -> proto.DownloadMediaRequest
-	20, // 16: proto.MediaService.DeleteMedia:input_type -> proto.DeleteMediaRequest
-	22, // 17: proto.MediaService.DetectSimilarMedia:input_type -> proto.DetectSimilarMediaRequest
-	30, // 18: proto.MediaService.AddMediaToFavorite:input_type -> proto.AddMediaToFavoriteRequest
-	26, // 19: proto.MediaService.GetMediaByAlbum:input_type -> proto.GetMediaByAlbumRequest
-	24, // 20: proto.UserService.CreateUser:input_type -> proto.CreateUserRequest
-	1,  // 21: proto.AlbumService.CreateAlbum:output_type -> proto.CreateAlbumResponse
-	3,  // 22: proto.AlbumService.GetAlbumsByUser:output_type -> proto.GetAlbumsByUserResponse
-	5,  // 23: proto.AlbumService.UpdateAlbum:output_type -> proto.UpdateAlbumResponse
-	7,  // 24: proto.AlbumService.DeleteAlbum:output_type -> proto.DeleteAlbumResponse
-	9,  // 25: proto.AlbumService.GetPrivateAlbum:output_type -> proto.GetPrivateAlbumResponse
-	11, // 26: proto.MediaService.AddMedia:output_type -> proto.AddMediaResponse
-	13, // 27: proto.MediaService.GetMediaByUser:output_type -> proto.GetMediaByUserResponse
-	15, // 28: proto.MediaService.MarkAsPrivate:output_type -> proto.MarkAsPrivateResponse
-	17, // 29: proto.MediaService.GetPrivateMedia:output_type -> proto.GetPrivateMediaResponse
-	19, // 30: proto.MediaService.DownloadMedia:output_type -> proto.DownloadMediaResponse
-	21, // 31: proto.MediaService.DeleteMedia:output_type -> proto.DeleteMediaResponse
-	23, // 32: proto.MediaService.DetectSimilarMedia:output_type -> proto.DetectSimilarMediaResponse
-	31, // 33: proto.MediaService.AddMediaToFavorite:output_type -> proto.AddMediaToFavoriteResponse
-	27, // 34: proto.MediaService.GetMediaByAlbum:output_type -> proto.GetMediaByAlbumResponse
-	25, // 35: proto.UserService.CreateUser:output_type -> proto.CreateUserResponse
-	21, // [21:36] is the sub-list for method output_type
-	6,  // [6:21] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	29, // 6: proto.Album.media:type_name -> proto.Media
+	0,  // 7: proto.AlbumService.CreateAlbum:input_type -> proto.CreateAlbumRequest
+	2,  // 8: proto.AlbumService.GetAlbumsByUser:input_type -> proto.GetAlbumsByUserRequest
+	4,  // 9: proto.AlbumService.UpdateAlbum:input_type -> proto.UpdateAlbumRequest
+	6,  // 10: proto.AlbumService.DeleteAlbum:input_type -> proto.DeleteAlbumRequest
+	8,  // 11: proto.AlbumService.GetPrivateAlbum:input_type -> proto.GetPrivateAlbumRequest
+	10, // 12: proto.MediaService.AddMedia:input_type -> proto.AddMediaRequest
+	12, // 13: proto.MediaService.GetMediaByUser:input_type -> proto.GetMediaByUserRequest
+	14, // 14: proto.MediaService.MarkAsPrivate:input_type -> proto.MarkAsPrivateRequest
+	16, // 15: proto.MediaService.GetPrivateMedia:input_type -> proto.GetPrivateMediaRequest
+	18, // 16: proto.MediaService.DownloadMedia:input_type -> proto.DownloadMediaRequest
+	20, // 17: proto.MediaService.DeleteMedia:input_type -> proto.DeleteMediaRequest
+	22, // 18: proto.MediaService.DetectSimilarMedia:input_type -> proto.DetectSimilarMediaRequest
+	30, // 19: proto.MediaService.AddMediaToFavorite:input_type -> proto.AddMediaToFavoriteRequest
+	26, // 20: proto.MediaService.GetMediaByAlbum:input_type -> proto.GetMediaByAlbumRequest
+	24, // 21: proto.UserService.CreateUser:input_type -> proto.CreateUserRequest
+	1,  // 22: proto.AlbumService.CreateAlbum:output_type -> proto.CreateAlbumResponse
+	3,  // 23: proto.AlbumService.GetAlbumsByUser:output_type -> proto.GetAlbumsByUserResponse
+	5,  // 24: proto.AlbumService.UpdateAlbum:output_type -> proto.UpdateAlbumResponse
+	7,  // 25: proto.AlbumService.DeleteAlbum:output_type -> proto.DeleteAlbumResponse
+	9,  // 26: proto.AlbumService.GetPrivateAlbum:output_type -> proto.GetPrivateAlbumResponse
+	11, // 27: proto.MediaService.AddMedia:output_type -> proto.AddMediaResponse
+	13, // 28: proto.MediaService.GetMediaByUser:output_type -> proto.GetMediaByUserResponse
+	15, // 29: proto.MediaService.MarkAsPrivate:output_type -> proto.MarkAsPrivateResponse
+	17, // 30: proto.MediaService.GetPrivateMedia:output_type -> proto.GetPrivateMediaResponse
+	19, // 31: proto.MediaService.DownloadMedia:output_type -> proto.DownloadMediaResponse
+	21, // 32: proto.MediaService.DeleteMedia:output_type -> proto.DeleteMediaResponse
+	23, // 33: proto.MediaService.DetectSimilarMedia:output_type -> proto.DetectSimilarMediaResponse
+	31, // 34: proto.MediaService.AddMediaToFavorite:output_type -> proto.AddMediaToFavoriteResponse
+	27, // 35: proto.MediaService.GetMediaByAlbum:output_type -> proto.GetMediaByAlbumResponse
+	25, // 36: proto.UserService.CreateUser:output_type -> proto.CreateUserResponse
+	22, // [22:37] is the sub-list for method output_type
+	7,  // [7:22] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_proto_gallery_proto_init() }
