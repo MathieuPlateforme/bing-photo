@@ -766,7 +766,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Medias"
+                    "Media"
                 ],
                 "summary": "Récupérer les médias d’un album",
                 "parameters": [
