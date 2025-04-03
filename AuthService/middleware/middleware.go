@@ -26,16 +26,25 @@ func AuthInterceptor(jwtService JWTService, methodsToIntercept map[string]bool) 
 			return handler(ctx, req)
 		}
 
-		// Extraire les métadonnées pour obtenir le token
+		// Extraire les métadonnées
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
 			return nil, fmt.Errorf("aucune métadonnée trouvée dans le contexte")
 		}
-		authHeader := md["authorization"]
-		if len(authHeader) == 0 {
+
+		// Chercher l'en-tête Authorization (minuscule ou majuscule)
+		var rawToken string
+		if vals := md.Get("authorization"); len(vals) > 0 {
+			rawToken = vals[0]
+		} else if vals := md.Get("Authorization"); len(vals) > 0 {
+			rawToken = vals[0]
+		} else {
 			return nil, fmt.Errorf("en-tête Authorization manquant")
 		}
-		token := strings.TrimPrefix(authHeader[0], "Bearer ")
+
+		token := strings.TrimPrefix(rawToken, "Bearer ")
+		token = strings.TrimSpace(token)
+
 		log.Printf("Token extrait : %s", token)
 
 		// Valider le token via JWTService
@@ -44,7 +53,7 @@ func AuthInterceptor(jwtService JWTService, methodsToIntercept map[string]bool) 
 			return nil, fmt.Errorf("token invalide : %v", err)
 		}
 
-		// Extraire et ajouter userID au contexte
+		// Extraire et injecter userID
 		userID, ok := claims["userID"].(float64)
 		if !ok {
 			return nil, fmt.Errorf("userID introuvable dans le token")
@@ -52,7 +61,6 @@ func AuthInterceptor(jwtService JWTService, methodsToIntercept map[string]bool) 
 		ctx = context.WithValue(ctx, UserIDKey, uint(userID))
 		log.Printf("userID ajouté au contexte : %d", uint(userID))
 
-		// Continuer avec le handler
 		return handler(ctx, req)
 	}
 }

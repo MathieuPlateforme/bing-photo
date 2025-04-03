@@ -35,18 +35,39 @@ func NewJWTService() (*JWTService, error) {
 }
 
 func (j *JWTService) VerifyToken(tokenString string) (map[string]interface{}, error) {
-	// Parse et valide le token
-	parsedToken, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return []byte(j.SecretKey), nil
-	})
-	if err != nil || !parsedToken.Valid {
-		return nil, fmt.Errorf("token invalide ou expiré")
+	fmt.Println("Vérification du token brut :", tokenString)
+
+	// Nettoyer "Bearer " si jamais il est encore présent (par précaution)
+	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+	tokenString = strings.TrimSpace(tokenString)
+
+	if tokenString == "" {
+		return nil, errors.New("token vide ou mal formaté")
 	}
 
-	// Extraire les claims
-	claims, ok := parsedToken.Claims.(jwt.MapClaims)
+	// Parse le token et vérifie la signature
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// S'assurer que l'algo est bien HMAC (HS256)
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("méthode de signature inattendue : %v", token.Header["alg"])
+		}
+		return []byte(j.SecretKey), nil
+	})
+	if err != nil || !token.Valid {
+		return nil, fmt.Errorf("token invalide ou signature incorrecte")
+	}
+
+	// Récupérer les claims
+	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return nil, fmt.Errorf("claims introuvables")
+		return nil, errors.New("claims introuvables ou invalides")
+	}
+
+	// Vérification manuelle de l'expiration
+	if exp, ok := claims["exp"].(float64); ok {
+		if int64(exp) < time.Now().Unix() {
+			return nil, errors.New("le token est expiré")
+		}
 	}
 
 	return claims, nil

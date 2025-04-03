@@ -40,7 +40,7 @@ func (j *JWTService) VerifyToken(tokenString string) (map[string]interface{}, er
 		return []byte(j.SecretKey), nil
 	})
 	if err != nil || !parsedToken.Valid {
-		return nil, fmt.Errorf("token invalide ou expiré")
+		return nil, fmt.Errorf("token invalide ou expiré 5")
 	}
 
 	// Extraire les claims
@@ -110,9 +110,7 @@ func ParseToken(tokenStr string) (jwt.MapClaims, error) {
 		return nil, errors.New("la variable d'environnement JWT_SECRET est manquante")
 	}
 
-	// Parse et vérifie le token
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		// Vérifie que l'algorithme est HMAC (HS256)
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("méthode de signature inattendue : %v", token.Header["alg"])
 		}
@@ -123,19 +121,19 @@ func ParseToken(tokenStr string) (jwt.MapClaims, error) {
 		return nil, fmt.Errorf("échec du parsing du token : %v", err)
 	}
 
-	// Extraire les claims (payload)
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		// Vérifie expiration (optionnel si tu veux plus de contrôle)
-		if exp, ok := claims["exp"].(float64); ok {
-			if int64(exp) < time.Now().Unix() {
-				return nil, errors.New("le token est expiré")
-			}
-		}
-		return claims, nil
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return nil, errors.New("token invalide ou claims manquants")
 	}
 
-	return nil, errors.New("token invalide ou claims manquants")
+	if exp, ok := claims["exp"].(float64); ok {
+		if int64(exp) < time.Now().Unix() {
+			return nil, errors.New("le token est expiré")
+		}
+	}
+	return claims, nil
 }
+
 
 func ExtractUserIDFromContext(ctx context.Context) (uint, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
@@ -143,12 +141,21 @@ func ExtractUserIDFromContext(ctx context.Context) (uint, error) {
 		return 0, fmt.Errorf("aucune metadata dans le contexte")
 	}
 
-	authHeaders := md["authorization"]
-	if len(authHeaders) == 0 {
+	// Supporte les deux formes : "authorization" ou "Authorization"
+	var tokenStr string
+	if authHeaders := md.Get("authorization"); len(authHeaders) > 0 {
+		tokenStr = strings.TrimSpace(authHeaders[0])
+	} else if authHeaders := md.Get("Authorization"); len(authHeaders) > 0 {
+		tokenStr = strings.TrimSpace(authHeaders[0])
+	} else {
 		return 0, fmt.Errorf("authorization header manquant")
 	}
 
-	tokenStr := strings.TrimSpace(authHeaders[0])
+	// Supprime "Bearer " s'il est présent
+	tokenStr = strings.TrimPrefix(tokenStr, "Bearer ")
+	tokenStr = strings.TrimSpace(tokenStr)
+
+	// Parse le token
 	claims, err := ParseToken(tokenStr)
 	if err != nil {
 		return 0, fmt.Errorf("token invalide : %v", err)
