@@ -1139,94 +1139,6 @@ func (x *DeleteMediaResponse) GetMessage() string {
 	return ""
 }
 
-type DetectSimilarMediaRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	AlbumId       uint32                 `protobuf:"varint,1,opt,name=album_id,json=albumId,proto3" json:"album_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *DetectSimilarMediaRequest) Reset() {
-	*x = DetectSimilarMediaRequest{}
-	mi := &file_proto_gallery_proto_msgTypes[23]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DetectSimilarMediaRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DetectSimilarMediaRequest) ProtoMessage() {}
-
-func (x *DetectSimilarMediaRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gallery_proto_msgTypes[23]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DetectSimilarMediaRequest.ProtoReflect.Descriptor instead.
-func (*DetectSimilarMediaRequest) Descriptor() ([]byte, []int) {
-	return file_proto_gallery_proto_rawDescGZIP(), []int{23}
-}
-
-func (x *DetectSimilarMediaRequest) GetAlbumId() uint32 {
-	if x != nil {
-		return x.AlbumId
-	}
-	return 0
-}
-
-type DetectSimilarMediaResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Media         []*Media               `protobuf:"bytes,1,rep,name=media,proto3" json:"media,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *DetectSimilarMediaResponse) Reset() {
-	*x = DetectSimilarMediaResponse{}
-	mi := &file_proto_gallery_proto_msgTypes[24]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DetectSimilarMediaResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DetectSimilarMediaResponse) ProtoMessage() {}
-
-func (x *DetectSimilarMediaResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gallery_proto_msgTypes[24]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DetectSimilarMediaResponse.ProtoReflect.Descriptor instead.
-func (*DetectSimilarMediaResponse) Descriptor() ([]byte, []int) {
-	return file_proto_gallery_proto_rawDescGZIP(), []int{24}
-}
-
-func (x *DetectSimilarMediaResponse) GetMedia() []*Media {
-	if x != nil {
-		return x.Media
-	}
-	return nil
-}
-
 // User messages
 type CreateUserRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1238,7 +1150,7 @@ type CreateUserRequest struct {
 
 func (x *CreateUserRequest) Reset() {
 	*x = CreateUserRequest{}
-	mi := &file_proto_gallery_proto_msgTypes[25]
+	mi := &file_proto_gallery_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1250,7 +1162,7 @@ func (x *CreateUserRequest) String() string {
 func (*CreateUserRequest) ProtoMessage() {}
 
 func (x *CreateUserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gallery_proto_msgTypes[25]
+	mi := &file_proto_gallery_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1263,7 +1175,7 @@ func (x *CreateUserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateUserRequest.ProtoReflect.Descriptor instead.
 func (*CreateUserRequest) Descriptor() ([]byte, []int) {
-	return file_proto_gallery_proto_rawDescGZIP(), []int{25}
+	return file_proto_gallery_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *CreateUserRequest) GetUsername() string {
@@ -1289,7 +1201,7 @@ type CreateUserResponse struct {
 
 func (x *CreateUserResponse) Reset() {
 	*x = CreateUserResponse{}
-	mi := &file_proto_gallery_proto_msgTypes[26]
+	mi := &file_proto_gallery_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1301,7 +1213,7 @@ func (x *CreateUserResponse) String() string {
 func (*CreateUserResponse) ProtoMessage() {}
 
 func (x *CreateUserResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gallery_proto_msgTypes[26]
+	mi := &file_proto_gallery_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1314,7 +1226,7 @@ func (x *CreateUserResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateUserResponse.ProtoReflect.Descriptor instead.
 func (*CreateUserResponse) Descriptor() ([]byte, []int) {
-	return file_proto_gallery_proto_rawDescGZIP(), []int{26}
+	return file_proto_gallery_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *CreateUserResponse) GetMessage() string {
@@ -1334,7 +1246,7 @@ type GetMediaByAlbumRequest struct {
 
 func (x *GetMediaByAlbumRequest) Reset() {
 	*x = GetMediaByAlbumRequest{}
-	mi := &file_proto_gallery_proto_msgTypes[27]
+	mi := &file_proto_gallery_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1346,7 +1258,7 @@ func (x *GetMediaByAlbumRequest) String() string {
 func (*GetMediaByAlbumRequest) ProtoMessage() {}
 
 func (x *GetMediaByAlbumRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gallery_proto_msgTypes[27]
+	mi := &file_proto_gallery_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1359,7 +1271,7 @@ func (x *GetMediaByAlbumRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMediaByAlbumRequest.ProtoReflect.Descriptor instead.
 func (*GetMediaByAlbumRequest) Descriptor() ([]byte, []int) {
-	return file_proto_gallery_proto_rawDescGZIP(), []int{27}
+	return file_proto_gallery_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *GetMediaByAlbumRequest) GetAlbumId() uint32 {
@@ -1379,7 +1291,7 @@ type GetMediaByAlbumResponse struct {
 
 func (x *GetMediaByAlbumResponse) Reset() {
 	*x = GetMediaByAlbumResponse{}
-	mi := &file_proto_gallery_proto_msgTypes[28]
+	mi := &file_proto_gallery_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1391,7 +1303,7 @@ func (x *GetMediaByAlbumResponse) String() string {
 func (*GetMediaByAlbumResponse) ProtoMessage() {}
 
 func (x *GetMediaByAlbumResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gallery_proto_msgTypes[28]
+	mi := &file_proto_gallery_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1404,7 +1316,7 @@ func (x *GetMediaByAlbumResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMediaByAlbumResponse.ProtoReflect.Descriptor instead.
 func (*GetMediaByAlbumResponse) Descriptor() ([]byte, []int) {
-	return file_proto_gallery_proto_rawDescGZIP(), []int{28}
+	return file_proto_gallery_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *GetMediaByAlbumResponse) GetMedia() []*Media {
@@ -1428,7 +1340,7 @@ type Album struct {
 
 func (x *Album) Reset() {
 	*x = Album{}
-	mi := &file_proto_gallery_proto_msgTypes[29]
+	mi := &file_proto_gallery_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1440,7 +1352,7 @@ func (x *Album) String() string {
 func (*Album) ProtoMessage() {}
 
 func (x *Album) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gallery_proto_msgTypes[29]
+	mi := &file_proto_gallery_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1453,7 +1365,7 @@ func (x *Album) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Album.ProtoReflect.Descriptor instead.
 func (*Album) Descriptor() ([]byte, []int) {
-	return file_proto_gallery_proto_rawDescGZIP(), []int{29}
+	return file_proto_gallery_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *Album) GetId() uint32 {
@@ -1506,7 +1418,7 @@ type Media struct {
 
 func (x *Media) Reset() {
 	*x = Media{}
-	mi := &file_proto_gallery_proto_msgTypes[30]
+	mi := &file_proto_gallery_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1518,7 +1430,7 @@ func (x *Media) String() string {
 func (*Media) ProtoMessage() {}
 
 func (x *Media) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gallery_proto_msgTypes[30]
+	mi := &file_proto_gallery_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1531,7 +1443,7 @@ func (x *Media) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Media.ProtoReflect.Descriptor instead.
 func (*Media) Descriptor() ([]byte, []int) {
-	return file_proto_gallery_proto_rawDescGZIP(), []int{30}
+	return file_proto_gallery_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *Media) GetId() uint32 {
@@ -1583,6 +1495,138 @@ func (x *Media) GetIsFavorite() bool {
 	return false
 }
 
+type MediaGroup struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Media         []*Media               `protobuf:"bytes,1,rep,name=media,proto3" json:"media,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MediaGroup) Reset() {
+	*x = MediaGroup{}
+	mi := &file_proto_gallery_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MediaGroup) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MediaGroup) ProtoMessage() {}
+
+func (x *MediaGroup) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gallery_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MediaGroup.ProtoReflect.Descriptor instead.
+func (*MediaGroup) Descriptor() ([]byte, []int) {
+	return file_proto_gallery_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *MediaGroup) GetMedia() []*Media {
+	if x != nil {
+		return x.Media
+	}
+	return nil
+}
+
+type DetectSimilarMediaRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AlbumId       uint32                 `protobuf:"varint,1,opt,name=album_id,json=albumId,proto3" json:"album_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DetectSimilarMediaRequest) Reset() {
+	*x = DetectSimilarMediaRequest{}
+	mi := &file_proto_gallery_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DetectSimilarMediaRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DetectSimilarMediaRequest) ProtoMessage() {}
+
+func (x *DetectSimilarMediaRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gallery_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DetectSimilarMediaRequest.ProtoReflect.Descriptor instead.
+func (*DetectSimilarMediaRequest) Descriptor() ([]byte, []int) {
+	return file_proto_gallery_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *DetectSimilarMediaRequest) GetAlbumId() uint32 {
+	if x != nil {
+		return x.AlbumId
+	}
+	return 0
+}
+
+type DetectSimilarMediaResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Groups        []*MediaGroup          `protobuf:"bytes,1,rep,name=groups,proto3" json:"groups,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DetectSimilarMediaResponse) Reset() {
+	*x = DetectSimilarMediaResponse{}
+	mi := &file_proto_gallery_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DetectSimilarMediaResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DetectSimilarMediaResponse) ProtoMessage() {}
+
+func (x *DetectSimilarMediaResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gallery_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DetectSimilarMediaResponse.ProtoReflect.Descriptor instead.
+func (*DetectSimilarMediaResponse) Descriptor() ([]byte, []int) {
+	return file_proto_gallery_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *DetectSimilarMediaResponse) GetGroups() []*MediaGroup {
+	if x != nil {
+		return x.Groups
+	}
+	return nil
+}
+
 type AddMediaToFavoriteRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	MediaId       uint32                 `protobuf:"varint,1,opt,name=media_id,json=mediaId,proto3" json:"media_id,omitempty"`
@@ -1592,7 +1636,7 @@ type AddMediaToFavoriteRequest struct {
 
 func (x *AddMediaToFavoriteRequest) Reset() {
 	*x = AddMediaToFavoriteRequest{}
-	mi := &file_proto_gallery_proto_msgTypes[31]
+	mi := &file_proto_gallery_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1604,7 +1648,7 @@ func (x *AddMediaToFavoriteRequest) String() string {
 func (*AddMediaToFavoriteRequest) ProtoMessage() {}
 
 func (x *AddMediaToFavoriteRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gallery_proto_msgTypes[31]
+	mi := &file_proto_gallery_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1617,7 +1661,7 @@ func (x *AddMediaToFavoriteRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddMediaToFavoriteRequest.ProtoReflect.Descriptor instead.
 func (*AddMediaToFavoriteRequest) Descriptor() ([]byte, []int) {
-	return file_proto_gallery_proto_rawDescGZIP(), []int{31}
+	return file_proto_gallery_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *AddMediaToFavoriteRequest) GetMediaId() uint32 {
@@ -1636,7 +1680,7 @@ type AddMediaToFavoriteResponse struct {
 
 func (x *AddMediaToFavoriteResponse) Reset() {
 	*x = AddMediaToFavoriteResponse{}
-	mi := &file_proto_gallery_proto_msgTypes[32]
+	mi := &file_proto_gallery_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1648,7 +1692,7 @@ func (x *AddMediaToFavoriteResponse) String() string {
 func (*AddMediaToFavoriteResponse) ProtoMessage() {}
 
 func (x *AddMediaToFavoriteResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gallery_proto_msgTypes[32]
+	mi := &file_proto_gallery_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1661,7 +1705,7 @@ func (x *AddMediaToFavoriteResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddMediaToFavoriteResponse.ProtoReflect.Descriptor instead.
 func (*AddMediaToFavoriteResponse) Descriptor() ([]byte, []int) {
-	return file_proto_gallery_proto_rawDescGZIP(), []int{32}
+	return file_proto_gallery_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *AddMediaToFavoriteResponse) GetMessage() string {
@@ -1735,11 +1779,7 @@ const file_proto_gallery_proto_rawDesc = "" +
 	"\x12DeleteMediaRequest\x12\x19\n" +
 	"\bmedia_id\x18\x01 \x01(\rR\amediaId\"/\n" +
 	"\x13DeleteMediaResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"6\n" +
-	"\x19DetectSimilarMediaRequest\x12\x19\n" +
-	"\balbum_id\x18\x01 \x01(\rR\aalbumId\"@\n" +
-	"\x1aDetectSimilarMediaResponse\x12\"\n" +
-	"\x05media\x18\x01 \x03(\v2\f.proto.MediaR\x05media\"E\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"E\n" +
 	"\x11CreateUserRequest\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\".\n" +
@@ -1764,7 +1804,14 @@ const file_proto_gallery_proto_rawDesc = "" +
 	"\n" +
 	"is_private\x18\x06 \x01(\bR\tisPrivate\x12\x1f\n" +
 	"\vis_favorite\x18\a \x01(\bR\n" +
-	"isFavorite\"6\n" +
+	"isFavorite\"0\n" +
+	"\n" +
+	"MediaGroup\x12\"\n" +
+	"\x05media\x18\x01 \x03(\v2\f.proto.MediaR\x05media\"6\n" +
+	"\x19DetectSimilarMediaRequest\x12\x19\n" +
+	"\balbum_id\x18\x01 \x01(\rR\aalbumId\"G\n" +
+	"\x1aDetectSimilarMediaResponse\x12)\n" +
+	"\x06groups\x18\x01 \x03(\v2\x11.proto.MediaGroupR\x06groups\"6\n" +
 	"\x19AddMediaToFavoriteRequest\x12\x19\n" +
 	"\bmedia_id\x18\x01 \x01(\rR\amediaId\"6\n" +
 	"\x1aAddMediaToFavoriteResponse\x12\x18\n" +
@@ -1801,7 +1848,7 @@ func file_proto_gallery_proto_rawDescGZIP() []byte {
 	return file_proto_gallery_proto_rawDescData
 }
 
-var file_proto_gallery_proto_msgTypes = make([]protoimpl.MessageInfo, 33)
+var file_proto_gallery_proto_msgTypes = make([]protoimpl.MessageInfo, 34)
 var file_proto_gallery_proto_goTypes = []any{
 	(*CreateAlbumRequest)(nil),         // 0: proto.CreateAlbumRequest
 	(*CreateAlbumResponse)(nil),        // 1: proto.CreateAlbumResponse
@@ -1826,61 +1873,63 @@ var file_proto_gallery_proto_goTypes = []any{
 	(*DownloadMediaResponse)(nil),      // 20: proto.DownloadMediaResponse
 	(*DeleteMediaRequest)(nil),         // 21: proto.DeleteMediaRequest
 	(*DeleteMediaResponse)(nil),        // 22: proto.DeleteMediaResponse
-	(*DetectSimilarMediaRequest)(nil),  // 23: proto.DetectSimilarMediaRequest
-	(*DetectSimilarMediaResponse)(nil), // 24: proto.DetectSimilarMediaResponse
-	(*CreateUserRequest)(nil),          // 25: proto.CreateUserRequest
-	(*CreateUserResponse)(nil),         // 26: proto.CreateUserResponse
-	(*GetMediaByAlbumRequest)(nil),     // 27: proto.GetMediaByAlbumRequest
-	(*GetMediaByAlbumResponse)(nil),    // 28: proto.GetMediaByAlbumResponse
-	(*Album)(nil),                      // 29: proto.Album
-	(*Media)(nil),                      // 30: proto.Media
-	(*AddMediaToFavoriteRequest)(nil),  // 31: proto.AddMediaToFavoriteRequest
-	(*AddMediaToFavoriteResponse)(nil), // 32: proto.AddMediaToFavoriteResponse
+	(*CreateUserRequest)(nil),          // 23: proto.CreateUserRequest
+	(*CreateUserResponse)(nil),         // 24: proto.CreateUserResponse
+	(*GetMediaByAlbumRequest)(nil),     // 25: proto.GetMediaByAlbumRequest
+	(*GetMediaByAlbumResponse)(nil),    // 26: proto.GetMediaByAlbumResponse
+	(*Album)(nil),                      // 27: proto.Album
+	(*Media)(nil),                      // 28: proto.Media
+	(*MediaGroup)(nil),                 // 29: proto.MediaGroup
+	(*DetectSimilarMediaRequest)(nil),  // 30: proto.DetectSimilarMediaRequest
+	(*DetectSimilarMediaResponse)(nil), // 31: proto.DetectSimilarMediaResponse
+	(*AddMediaToFavoriteRequest)(nil),  // 32: proto.AddMediaToFavoriteRequest
+	(*AddMediaToFavoriteResponse)(nil), // 33: proto.AddMediaToFavoriteResponse
 }
 var file_proto_gallery_proto_depIdxs = []int32{
-	30, // 0: proto.AlbumWithMedia.media:type_name -> proto.Media
+	28, // 0: proto.AlbumWithMedia.media:type_name -> proto.Media
 	3,  // 1: proto.GetAlbumsByUserResponse.albums:type_name -> proto.AlbumWithMedia
-	29, // 2: proto.GetPrivateAlbumResponse.album:type_name -> proto.Album
-	30, // 3: proto.GetMediaByUserResponse.media_list:type_name -> proto.Media
-	30, // 4: proto.GetPrivateMediaResponse.media:type_name -> proto.Media
-	30, // 5: proto.DetectSimilarMediaResponse.media:type_name -> proto.Media
-	30, // 6: proto.GetMediaByAlbumResponse.media:type_name -> proto.Media
-	30, // 7: proto.Album.media:type_name -> proto.Media
-	0,  // 8: proto.AlbumService.CreateAlbum:input_type -> proto.CreateAlbumRequest
-	2,  // 9: proto.AlbumService.GetAlbumsByUser:input_type -> proto.GetAlbumsByUserRequest
-	5,  // 10: proto.AlbumService.UpdateAlbum:input_type -> proto.UpdateAlbumRequest
-	7,  // 11: proto.AlbumService.DeleteAlbum:input_type -> proto.DeleteAlbumRequest
-	9,  // 12: proto.AlbumService.GetPrivateAlbum:input_type -> proto.GetPrivateAlbumRequest
-	11, // 13: proto.MediaService.AddMedia:input_type -> proto.AddMediaRequest
-	13, // 14: proto.MediaService.GetMediaByUser:input_type -> proto.GetMediaByUserRequest
-	15, // 15: proto.MediaService.MarkAsPrivate:input_type -> proto.MarkAsPrivateRequest
-	17, // 16: proto.MediaService.GetPrivateMedia:input_type -> proto.GetPrivateMediaRequest
-	19, // 17: proto.MediaService.DownloadMedia:input_type -> proto.DownloadMediaRequest
-	21, // 18: proto.MediaService.DeleteMedia:input_type -> proto.DeleteMediaRequest
-	23, // 19: proto.MediaService.DetectSimilarMedia:input_type -> proto.DetectSimilarMediaRequest
-	31, // 20: proto.MediaService.AddMediaToFavorite:input_type -> proto.AddMediaToFavoriteRequest
-	27, // 21: proto.MediaService.GetMediaByAlbum:input_type -> proto.GetMediaByAlbumRequest
-	25, // 22: proto.UserService.CreateUser:input_type -> proto.CreateUserRequest
-	1,  // 23: proto.AlbumService.CreateAlbum:output_type -> proto.CreateAlbumResponse
-	4,  // 24: proto.AlbumService.GetAlbumsByUser:output_type -> proto.GetAlbumsByUserResponse
-	6,  // 25: proto.AlbumService.UpdateAlbum:output_type -> proto.UpdateAlbumResponse
-	8,  // 26: proto.AlbumService.DeleteAlbum:output_type -> proto.DeleteAlbumResponse
-	10, // 27: proto.AlbumService.GetPrivateAlbum:output_type -> proto.GetPrivateAlbumResponse
-	12, // 28: proto.MediaService.AddMedia:output_type -> proto.AddMediaResponse
-	14, // 29: proto.MediaService.GetMediaByUser:output_type -> proto.GetMediaByUserResponse
-	16, // 30: proto.MediaService.MarkAsPrivate:output_type -> proto.MarkAsPrivateResponse
-	18, // 31: proto.MediaService.GetPrivateMedia:output_type -> proto.GetPrivateMediaResponse
-	20, // 32: proto.MediaService.DownloadMedia:output_type -> proto.DownloadMediaResponse
-	22, // 33: proto.MediaService.DeleteMedia:output_type -> proto.DeleteMediaResponse
-	24, // 34: proto.MediaService.DetectSimilarMedia:output_type -> proto.DetectSimilarMediaResponse
-	32, // 35: proto.MediaService.AddMediaToFavorite:output_type -> proto.AddMediaToFavoriteResponse
-	28, // 36: proto.MediaService.GetMediaByAlbum:output_type -> proto.GetMediaByAlbumResponse
-	26, // 37: proto.UserService.CreateUser:output_type -> proto.CreateUserResponse
-	23, // [23:38] is the sub-list for method output_type
-	8,  // [8:23] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	27, // 2: proto.GetPrivateAlbumResponse.album:type_name -> proto.Album
+	28, // 3: proto.GetMediaByUserResponse.media_list:type_name -> proto.Media
+	28, // 4: proto.GetPrivateMediaResponse.media:type_name -> proto.Media
+	28, // 5: proto.GetMediaByAlbumResponse.media:type_name -> proto.Media
+	28, // 6: proto.Album.media:type_name -> proto.Media
+	28, // 7: proto.MediaGroup.media:type_name -> proto.Media
+	29, // 8: proto.DetectSimilarMediaResponse.groups:type_name -> proto.MediaGroup
+	0,  // 9: proto.AlbumService.CreateAlbum:input_type -> proto.CreateAlbumRequest
+	2,  // 10: proto.AlbumService.GetAlbumsByUser:input_type -> proto.GetAlbumsByUserRequest
+	5,  // 11: proto.AlbumService.UpdateAlbum:input_type -> proto.UpdateAlbumRequest
+	7,  // 12: proto.AlbumService.DeleteAlbum:input_type -> proto.DeleteAlbumRequest
+	9,  // 13: proto.AlbumService.GetPrivateAlbum:input_type -> proto.GetPrivateAlbumRequest
+	11, // 14: proto.MediaService.AddMedia:input_type -> proto.AddMediaRequest
+	13, // 15: proto.MediaService.GetMediaByUser:input_type -> proto.GetMediaByUserRequest
+	15, // 16: proto.MediaService.MarkAsPrivate:input_type -> proto.MarkAsPrivateRequest
+	17, // 17: proto.MediaService.GetPrivateMedia:input_type -> proto.GetPrivateMediaRequest
+	19, // 18: proto.MediaService.DownloadMedia:input_type -> proto.DownloadMediaRequest
+	21, // 19: proto.MediaService.DeleteMedia:input_type -> proto.DeleteMediaRequest
+	30, // 20: proto.MediaService.DetectSimilarMedia:input_type -> proto.DetectSimilarMediaRequest
+	32, // 21: proto.MediaService.AddMediaToFavorite:input_type -> proto.AddMediaToFavoriteRequest
+	25, // 22: proto.MediaService.GetMediaByAlbum:input_type -> proto.GetMediaByAlbumRequest
+	23, // 23: proto.UserService.CreateUser:input_type -> proto.CreateUserRequest
+	1,  // 24: proto.AlbumService.CreateAlbum:output_type -> proto.CreateAlbumResponse
+	4,  // 25: proto.AlbumService.GetAlbumsByUser:output_type -> proto.GetAlbumsByUserResponse
+	6,  // 26: proto.AlbumService.UpdateAlbum:output_type -> proto.UpdateAlbumResponse
+	8,  // 27: proto.AlbumService.DeleteAlbum:output_type -> proto.DeleteAlbumResponse
+	10, // 28: proto.AlbumService.GetPrivateAlbum:output_type -> proto.GetPrivateAlbumResponse
+	12, // 29: proto.MediaService.AddMedia:output_type -> proto.AddMediaResponse
+	14, // 30: proto.MediaService.GetMediaByUser:output_type -> proto.GetMediaByUserResponse
+	16, // 31: proto.MediaService.MarkAsPrivate:output_type -> proto.MarkAsPrivateResponse
+	18, // 32: proto.MediaService.GetPrivateMedia:output_type -> proto.GetPrivateMediaResponse
+	20, // 33: proto.MediaService.DownloadMedia:output_type -> proto.DownloadMediaResponse
+	22, // 34: proto.MediaService.DeleteMedia:output_type -> proto.DeleteMediaResponse
+	31, // 35: proto.MediaService.DetectSimilarMedia:output_type -> proto.DetectSimilarMediaResponse
+	33, // 36: proto.MediaService.AddMediaToFavorite:output_type -> proto.AddMediaToFavoriteResponse
+	26, // 37: proto.MediaService.GetMediaByAlbum:output_type -> proto.GetMediaByAlbumResponse
+	24, // 38: proto.UserService.CreateUser:output_type -> proto.CreateUserResponse
+	24, // [24:39] is the sub-list for method output_type
+	9,  // [9:24] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_proto_gallery_proto_init() }
@@ -1894,7 +1943,7 @@ func file_proto_gallery_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_gallery_proto_rawDesc), len(file_proto_gallery_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   33,
+			NumMessages:   34,
 			NumExtensions: 0,
 			NumServices:   3,
 		},

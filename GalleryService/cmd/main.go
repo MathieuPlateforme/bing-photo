@@ -247,24 +247,30 @@ func (s *galleryServer) DetectSimilarMedia(ctx context.Context, req *proto.Detec
 
 	log.Printf("🔍 Détection de similarité sur albumID=%d pour userID=%d", req.AlbumId, userID)
 
-	similarMedia, err := s.mediaService.DetectSimilarMedia(userID, uint(req.AlbumId))
+	// Appel à la méthode modifiée
+	similarGroups, err := s.mediaService.DetectSimilarMedia(userID, uint(req.AlbumId))
 	if err != nil {
 		log.Printf("Erreur détection similarité : %v", err)
 		return nil, status.Errorf(codes.Unknown, err.Error())
 	}
 
-	var protoMedia []*proto.Media
-	for _, m := range similarMedia {
-		protoMedia = append(protoMedia, &proto.Media{
-			Id:       uint32(m.ID),
-			Name:     m.Name,
-			AlbumId:  uint32(m.AlbumID),
-			FileSize: uint32(m.FileSize),
-		})
+	// Convertit les groupes en format gRPC
+	var protoGroups []*proto.MediaGroup
+	for _, group := range similarGroups {
+		var protoMedia []*proto.Media
+		for _, m := range group {
+			protoMedia = append(protoMedia, &proto.Media{
+				Id:       uint32(m.ID),
+				Name:     m.Name,
+				AlbumId:  uint32(m.AlbumID),
+				FileSize: uint32(m.FileSize),
+			})
+		}
+		protoGroups = append(protoGroups, &proto.MediaGroup{Media: protoMedia})
 	}
 
 	return &proto.DetectSimilarMediaResponse{
-		Media: protoMedia,
+		Groups: protoGroups,
 	}, nil
 }
 

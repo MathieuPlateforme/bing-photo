@@ -7,10 +7,9 @@ import (
 	"io"
 	"log"
 	"strings"
-    "errors"
     "GalleryService/internal/utils"
     "os"
-    "time"
+	"strconv"
 )
 
 type MediaService struct {
@@ -25,30 +24,68 @@ func NewMediaService(dbManager *db.DBManagerService, s3Service *S3Service) *Medi
 		S3Service: s3Service,
 	}
 }
-
-// ajouter un fichier dans un album
 func (s *MediaService) AddMedia(media *models.Media, file io.Reader, fileSize int64) error {
-	// Vérifier si l'album existe
+	log.Printf(" Début d'ajout du média : %+v", media)
+
+	// 1. Vérifier que l'album existe
 	var album models.Album
 	if err := s.DBManager.DB.First(&album, media.AlbumID).Error; err != nil {
+		log.Printf(" Album non trouvé pour ID %d : %v", media.AlbumID, err)
 		return fmt.Errorf("album non trouvé : %v", err)
 	}
-	media.Path = fmt.Sprintf("%s/%s", album.BucketName, media.Name)
+	log.Printf("Album trouvé : %s", album.Name)
 
-	// Téléverser le fichier dans S3
-	err := s.S3Service.UploadFile(media.Path, file, fileSize)
+	// 2. Préparer le chemin du média
+	media.Path = fmt.Sprintf("%s/%s", album.BucketName, media.Name)
+	log.Printf("Chemin du fichier : %s", media.Path)
+
+	// 3. Sauvegarder le fichier temporairement
+	tempFilePath := fmt.Sprintf("/tmp/%s", media.Name)
+	tempFile, err := os.Create(tempFilePath)
 	if err != nil {
+		log.Printf("Erreur création fichier temporaire %s : %v", tempFilePath, err)
+		return fmt.Errorf("échec de la création du fichier temporaire : %v", err)
+	}
+	defer tempFile.Close()
+	defer os.Remove(tempFilePath)
+	log.Printf("Fichier temporaire créé : %s", tempFilePath)
+
+	// 4. Uploader le fichier en S3 et copier localement avec TeeReader
+	tee := io.TeeReader(file, tempFile)
+	if err := s.S3Service.UploadFile(media.Path, tee, fileSize); err != nil {
+		log.Printf("Échec de l'upload S3 : %v", err)
 		return fmt.Errorf("échec du téléversement du fichier : %v", err)
 	}
+	log.Printf("Upload S3 réussi")
 
-	// Enregistrer les métadonnées dans la base de données
+	// 5. Calculer le pHash à partir du fichier temporaire
+	hash, err := utils.ComputePHash(tempFilePath)
+	if err != nil {
+		log.Printf("Erreur calcul pHash : %v", err)
+		return fmt.Errorf("échec du calcul du pHash : %v", err)
+	}
+	log.Printf("pHash calculé : %d", hash)
+
+	// 6. Affecter le hash au média
+	media.Hash = ptr(fmt.Sprintf("%d", hash))
+	log.Printf("Hash converti en string et assigné : %s", *media.Hash)
+
+	// 7. Enregistrer les métadonnées
+	log.Printf("📥 Enregistrement du média en base : %+v", media)
 	if err := s.DBManager.DB.Create(media).Error; err != nil {
+		log.Printf("Erreur lors de la création en base : %v", err)
 		return fmt.Errorf("échec de l'enregistrement des métadonnées : %v", err)
 	}
+	log.Printf("Média enregistré avec succès")
 
-	log.Printf("Média ajouté avec succès : %+v", media)
 	return nil
 }
+
+// Helper pour pointer une string
+func ptr(s string) *string {
+	return &s
+}
+
 
 func (s *MediaService) GetMediaByUser(userID uint) ([]models.Media, error) {
 	var mediaList []models.Media
@@ -227,120 +264,104 @@ func (s *MediaService) DeleteMedia(mediaID uint, userID uint) error {
     return nil
 }
 
-func (s *MediaService) DetectSimilarMedia(userID uint, albumID uint) ([]models.Media, error) {
-	log.Printf("Détection de médias similaires pour userID=%d dans albumID=%d", userID, albumID)
+func (s *MediaService) DetectSimilarMedia(userID uint, albumID uint) ([][]models.Media, error) {
+	log.Printf("Début de la détection de médias similaires pour userID=%d, albumID=%d", userID, albumID)
 
-	// Étape 1 : Vérifier que l'album appartient bien à l'utilisateur
+	// Étape 1 : Vérification de l'accès à l'album
 	var album models.Album
 	if err := s.DBManager.DB.First(&album, albumID).Error; err != nil {
+		log.Printf("Album introuvable : %v", err)
 		return nil, fmt.Errorf("album introuvable pour albumID : %d", albumID)
 	}
 	if album.UserID != userID {
+		log.Printf("Accès refusé à l'album %d pour l'utilisateur %d", albumID, userID)
 		return nil, fmt.Errorf("l'utilisateur %d n'a pas accès à cet album", userID)
 	}
+	log.Printf("Accès à l'album confirmé")
 
-	// Étape 2 : Récupérer les fichiers dans le bucket S3
-	fileNames, err := s.S3Service.GetFilesInAlbum(album.BucketName)
-	if err != nil {
-		return nil, fmt.Errorf("erreur lors de la récupération des fichiers : %v", err)
+	// Étape 2 : Récupération des médias avec pHash
+	var medias []models.Media
+	if err := s.DBManager.DB.Where("album_id = ?", albumID).Find(&medias).Error; err != nil {
+		log.Printf("Erreur lors de la récupération des médias : %v", err)
+		return nil, err
 	}
-	if len(fileNames) < 2 {
-		return nil, errors.New("pas assez de fichiers pour effectuer une comparaison")
-	}
+	log.Printf(" %d médias récupérés depuis l'album", len(medias))
 
-	log.Printf("%d fichiers récupérés depuis le bucket %s", len(fileNames), album.BucketName)
-
-	// Étape 3 : Créer un groupe de similarité
-	newGroup := models.SimilarGroup{
-		UserID:    userID,
-		CreatedAt: time.Now(),
-	}
-	if err := s.DBManager.DB.Create(&newGroup).Error; err != nil {
-		return nil, fmt.Errorf("échec de la création du groupe de similarité : %v", err)
-	}
-
-	// Étape 4 : Générer les pHash
-	hashes := make(map[string]uint64)
-	tempFiles := make(map[string]string)
-
-	for _, fileName := range fileNames {
-		tempPath, err := s.S3Service.DownloadTempFile(album.BucketName, fileName)
-		if err != nil {
-			log.Printf("Échec du téléchargement du fichier %s : %v", fileName, err)
+	// Étape 3 : Création de la map hash → []Media
+	hashes := make(map[uint64][]models.Media)
+	for _, m := range medias {
+		if m.Hash == nil {
+			log.Printf("Média %d (%s) sans hash, ignoré", m.ID, m.Name)
 			continue
 		}
-		defer os.Remove(tempPath)
-
-		tempFiles[tempPath] = fileName
-
-		hash, err := utils.ComputePHash(tempPath)
+		parsed, err := strconv.ParseUint(*m.Hash, 10, 64)
 		if err != nil {
-			log.Printf("Erreur de calcul de pHash pour %s : %v", tempPath, err)
+			log.Printf("Erreur de parsing du hash pour media %d : %v", m.ID, err)
 			continue
 		}
-		hashes[tempPath] = hash
+		log.Printf(" Média %d ajouté avec pHash %d", m.ID, parsed)
+		hashes[parsed] = append(hashes[parsed], m)
 	}
+	log.Printf("%d pHash uniques analysés", len(hashes))
 
-	if len(hashes) < 2 {
-		return nil, errors.New("pas assez de médias valides pour la comparaison")
-	}
-
-	// Étape 5 : Comparer les fichiers
-	similarEntries := []models.SimilarMedia{}
+	// Étape 4 : Comparaison des pHash et regroupement par similarité
+	
+	var similarGroups [][]models.Media
+	visited := make(map[uint]bool)
 	threshold := 20
-	files := make([]string, 0, len(hashes))
-	for file := range hashes {
-		files = append(files, file)
+	hashesList := make([]uint64, 0, len(hashes))
+	for hash, group := range hashes {
+		if len(group) > 1 {
+			log.Printf("Duplication exacte détectée pour hash %d : %d médias", hash, len(group))
+			similarGroups = append(similarGroups, group)
+			for _, m := range group {
+				visited[m.ID] = true
+			}
+		}
+	}
+	for h := range hashes {
+		hashesList = append(hashesList, h)
 	}
 
-	for i := 0; i < len(files); i++ {
-		for j := i + 1; j < len(files); j++ {
-			dist := utils.HammingDistance(hashes[files[i]], hashes[files[j]])
-			log.Printf("📏 Distance entre %s et %s : %d", tempFiles[files[i]], tempFiles[files[j]], dist)
+	for i := 0; i < len(hashesList); i++ {
+		for j := i + 1; j < len(hashesList); j++ {
+			h1 := hashesList[i]
+			h2 := hashesList[j]
+			dist := utils.HammingDistance(h1, h2)
+			log.Printf("Distance Hamming entre %d et %d : %d", h1, h2, dist)
+
 			if dist < threshold {
-				log.Printf("Médias similaires détectés : %s et %s", tempFiles[files[i]], tempFiles[files[j]])
+				log.Printf("Groupe détecté : pHash %d et %d sont similaires", h1, h2)
+				group := []models.Media{}
 
-				var media1, media2 models.Media
-				if err := s.DBManager.DB.Where("album_id = ? AND name = ?", albumID, tempFiles[files[i]]).First(&media1).Error; err != nil {
-					continue
+				for _, m := range hashes[h1] {
+					if !visited[m.ID] {
+						log.Printf("Ajout de media %d (%s) au groupe", m.ID, m.Name)
+						visited[m.ID] = true
+						group = append(group, m)
+					}
 				}
-				if err := s.DBManager.DB.Where("album_id = ? AND name = ?", albumID, tempFiles[files[j]]).First(&media2).Error; err != nil {
-					continue
+				for _, m := range hashes[h2] {
+					if !visited[m.ID] {
+						log.Printf("Ajout de media %d (%s) au groupe", m.ID, m.Name)
+						visited[m.ID] = true
+						group = append(group, m)
+					}
 				}
-
-				similarEntries = append(similarEntries, models.SimilarMedia{
-					SimilarGroupID: newGroup.ID,
-					MediaID:        media1.ID,
-					SimilarityScore: float64(100 - dist),
-				}, models.SimilarMedia{
-					SimilarGroupID: newGroup.ID,
-					MediaID:        media2.ID,
-					SimilarityScore: float64(100 - dist),
-				})
+				if len(group) > 1 {
+					log.Printf("Groupe finalisé avec %d médias", len(group))
+					similarGroups = append(similarGroups, group)
+				}
 			}
 		}
 	}
 
-	// Étape 6 : Sauvegarde des similarités
-	if len(similarEntries) > 0 {
-		if err := s.DBManager.DB.Create(&similarEntries).Error; err != nil {
-			return nil, fmt.Errorf("échec de l'enregistrement des données de similarité : %v", err)
-		}
-	}
-
-	// Étape 7 : Récupération des médias similaires
-	var similarMedia []models.Media
-	if len(similarEntries) > 0 {
-		var mediaIDs []uint
-		for _, entry := range similarEntries {
-			mediaIDs = append(mediaIDs, entry.MediaID)
-		}
-		s.DBManager.DB.Where("id IN ?", mediaIDs).Find(&similarMedia)
-	}
-
-	log.Printf("Fin de la détection - %d médias similaires trouvés", len(similarMedia))
-	return similarMedia, nil
+	log.Printf("Détection terminée : %d groupes similaires trouvés", len(similarGroups))
+	return similarGroups, nil
 }
+
+
+
 
 func (s *MediaService) GetMediaByAlbum(albumID uint) ([]models.Media, error) {
 	var medias []models.Media
