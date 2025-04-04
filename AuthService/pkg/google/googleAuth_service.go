@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"os"
 
 	"golang.org/x/oauth2"
@@ -14,6 +13,12 @@ import (
 // GoogleAuthService structure
 type GoogleAuthService struct {
 	Config *oauth2.Config
+}
+type GoogleUserProfile struct {
+	ID      string `json:"sub"`
+	Email   string `json:"email"`
+	Name    string `json:"name"`
+	Picture string `json:"picture"`
 }
 
 // NewGoogleAuthService initialise et retourne une nouvelle instance de GoogleAuthService
@@ -53,23 +58,19 @@ func (s *GoogleAuthService) AuthenticateWithGoogle() (string, error) {
 	return authURL, nil
 }
 
-func (s *GoogleAuthService) GetGoogleUserProfile(token *oauth2.Token) (map[string]interface{}, error) {
+func (s *GoogleAuthService) GetGoogleUserProfile(token *oauth2.Token) (*GoogleUserProfile, error) {
 	client := s.Config.Client(oauth2.NoContext, token)
-	userInfoResp, err := client.Get("https://www.googleapis.com/oauth2/v3/userinfo")
+	resp, err := client.Get("https://www.googleapis.com/oauth2/v3/userinfo")
 	if err != nil {
-		return nil, fmt.Errorf("Échec de la récupération des informations utilisateur : %v", err)
+		return nil, err
 	}
-	defer userInfoResp.Body.Close()
+	defer resp.Body.Close()
 
-	// Vérifiez le code de statut HTTP de la réponse
-	if userInfoResp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Requête échouée avec le code de statut : %d", userInfoResp.StatusCode)
-	}
-
-	userInfo := map[string]interface{}{}
-	if err := json.NewDecoder(userInfoResp.Body).Decode(&userInfo); err != nil {
-		return nil, fmt.Errorf("Échec de la lecture des informations utilisateur : %v", err)
+	var userProfile GoogleUserProfile
+	if err := json.NewDecoder(resp.Body).Decode(&userProfile); err != nil {
+		return nil, err
 	}
 
-	return userInfo, nil
+	return &userProfile, nil
 }
+

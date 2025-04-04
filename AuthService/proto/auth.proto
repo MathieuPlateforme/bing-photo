@@ -80,6 +80,7 @@ message GoogleAuthCallbackRequest {
 message GoogleAuthCallbackResponse {
   string message = 1;
   string userInfo = 2;
+  string Token = 3;
 }
 
 message LogoutRequest {

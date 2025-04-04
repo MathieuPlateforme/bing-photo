@@ -216,3 +216,35 @@ func (s *AuthService) RevokeToken(token string, username string) error {
 	}
 	return s.DBManager.DB.Create(&revoked).Error
 }
+
+func (s *AuthService) LoginOrCreateGoogleUser(googleUser *google.GoogleUserProfile) (string, error) {
+	var user models.User
+	err := s.DBManager.DB.Where("email = ?", googleUser.Email).First(&user).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		// Créer un nouvel utilisateur à partir des infos Google
+		user = models.User{
+			Email:    googleUser.Email,
+			Username: googleUser.Name,
+			GoogleID: googleUser.ID,
+			Picture:  googleUser.Picture,
+		}
+
+		if err := s.DBManager.DB.Create(&user).Error; err != nil {
+			return "", fmt.Errorf("erreur lors de la création du compte Google : %v", err)
+		}
+		log.Printf("Utilisateur Google créé : %+v", user)
+	} else if err != nil {
+		return "", fmt.Errorf("erreur lors de la récupération de l'utilisateur : %v", err)
+	} else {
+		log.Printf("Utilisateur Google existant : %+v", user)
+	}
+
+	// Générer le token JWT
+	token, err := s.JWTService.GenerateToken(uint(user.ID), user.Username)
+	if err != nil {
+		return "", fmt.Errorf("erreur lors de la génération du token JWT : %v", err)
+	}
+
+	return token, nil
+}

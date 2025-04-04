@@ -4,7 +4,6 @@ import (
 	"AuthService/middleware"
 	"AuthService/pkg/jwt"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -140,18 +139,29 @@ func (s *authServer) LoginWithGoogle(ctx context.Context, req *proto.GoogleAuthR
 }
 func (s *authServer) GoogleAuthCallback(ctx context.Context, req *proto.GoogleAuthCallbackRequest) (*proto.GoogleAuthCallbackResponse, error) {
 	token, err := s.authService.GoogleAuthService.Config.Exchange(oauth2.NoContext, req.Code)
+	if err != nil {
+		return &proto.GoogleAuthCallbackResponse{Message: "Échec de l'échange du code"}, err
+	}
+
 	userInfo, err := s.authService.GoogleAuthService.GetGoogleUserProfile(token)
-
 	if err != nil {
-		return &proto.GoogleAuthCallbackResponse{Message: "Login failed"}, err
+		return &proto.GoogleAuthCallbackResponse{Message: "Échec de la récupération du profil Google"}, err
 	}
 
-	userInfoJson, err := json.Marshal(userInfo)
+	// Appelle la méthode que tu viens d’ajouter
+	jwtToken, err := s.authService.LoginOrCreateGoogleUser(userInfo)
 	if err != nil {
-		return &proto.GoogleAuthCallbackResponse{Message: "Failed to parse user info"}, err
+		return &proto.GoogleAuthCallbackResponse{Message: "Login ou création échouée"}, err
 	}
-	return &proto.GoogleAuthCallbackResponse{UserInfo: string(userInfoJson), Message: "Login successful"}, nil
+
+	return &proto.GoogleAuthCallbackResponse{
+		UserInfo: userInfo.Email,
+		Message:  "Login Google réussi",
+		Token:    jwtToken,
+	}, nil
 }
+
+
 func main() {
 
 	JWTService, err := jwt.NewJWTService()
