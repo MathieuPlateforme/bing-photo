@@ -1,12 +1,12 @@
 package handlers
 
 import (
+	"ApiGateway/utils"
 	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 	"strings"
-	"ApiGateway/utils"
 
 	proto "ApiGateway/proto"
 )
@@ -194,8 +194,6 @@ func (g *ApiGateway) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "Déconnexion réussie"})
 }
 
-
-
 // GoogleHandler godoc
 // @Summary Google OAuth
 // @Description Generates a Google login URL
@@ -215,7 +213,6 @@ func (g *ApiGateway) GoogleHandler(w http.ResponseWriter, r *http.Request) {
 	// ✅ Redirection réelle vers Google
 	http.Redirect(w, r, res.AuthUrl, http.StatusSeeOther)
 }
-
 
 // GoogleCallbackHandler godoc
 // @Summary Google OAuth Callback
@@ -257,9 +254,6 @@ func (g *ApiGateway) GoogleCallbackHandler(w http.ResponseWriter, r *http.Reques
 	redirectURL := "http://localhost:3000/overview?token=" + res.Message
 	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }
-
-
-
 
 func (g *ApiGateway) ValidateTokenHandler(w http.ResponseWriter, r *http.Request) {
 	// Extraire le token de l'en-tête Authorization
@@ -328,7 +322,6 @@ func (g *ApiGateway) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-
 // func (g *ApiGateway) GetMeHandler(w http.ResponseWriter, r *http.Request) {
 // 	res, err := g.AuthClient.GetMe(context.Background(), &proto.GetMeRequest{})
 // 	if err != nil {
@@ -337,9 +330,10 @@ func (g *ApiGateway) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 // 		return
 // 	}
 
-// 	w.WriteHeader(http.StatusOK)
-// 	json.NewEncoder(w).Encode(res)
-// }
+//		w.WriteHeader(http.StatusOK)
+//		json.NewEncoder(w).Encode(res)
+//	}
+//
 // GetMeHandler godoc
 // @Summary Obtenir les informations de l'utilisateur connecté
 // @Description Retourne les informations du profil de l'utilisateur authentifié
