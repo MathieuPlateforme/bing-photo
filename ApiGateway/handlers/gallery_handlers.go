@@ -354,17 +354,7 @@ func (g *GalleryGateway) GetMediaByUserHandler(w http.ResponseWriter, r *http.Re
 	json.NewEncoder(w).Encode(res)
 }
 
-// @Summary Rendre un média privé
-// @Description Marque un média comme privé
-// @Tags Media
-// @Accept json
-// @Produce json
-// @Param request body proto.MarkAsPrivateRequest true "Données de la requête"
-// @Success 200 {object} proto.MarkAsPrivateResponse
-// @Failure 400 {string} string "Requête invalide"
-// @Failure 500 {string} string "Erreur serveur"
-// @Router /media/{id}/private [post]
-// @Security BearerAuth
+
 func (g *GalleryGateway) MarkAsPrivateHandler(w http.ResponseWriter, r *http.Request) {
 	// Extraire le token du header Authorization
 	authHeader := r.Header.Get("Authorization")
