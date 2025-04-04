@@ -242,7 +242,7 @@ func (g *ApiGateway) GoogleCallbackHandler(w http.ResponseWriter, r *http.Reques
 	// ✅ Préparer la requête gRPC avec ces données
 	req := &proto.GoogleAuthCallbackRequest{
 		Code:  code,
-		state: state,
+		State: state,
 	}
 
 	// ✅ Appeler le service Auth
