@@ -366,6 +366,18 @@ func (g *GalleryGateway) GetMediaByUserHandler(w http.ResponseWriter, r *http.Re
 // @Router /media/{id}/private [post]
 // @Security BearerAuth
 func (g *GalleryGateway) MarkAsPrivateHandler(w http.ResponseWriter, r *http.Request) {
+	// Extraire le token du header Authorization
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization header missing", http.StatusUnauthorized)
+		log.Println("Authorization header is missing")
+		return
+	}
+
+	// Injecter le token dans un contexte gRPC
+	ctx := metadata.AppendToOutgoingContext(context.Background(), "authorization", authHeader)
+
+	// Lire et parser le corps de la requête
 	var req proto.MarkAsPrivateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
@@ -373,13 +385,15 @@ func (g *GalleryGateway) MarkAsPrivateHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	res, err := g.MediaClient.MarkAsPrivate(context.Background(), &req)
+	// Appeler le service gRPC avec le contexte enrichi
+	res, err := g.MediaClient.MarkAsPrivate(ctx, &req)
 	if err != nil {
 		http.Error(w, "Failed to mark as private: "+err.Error(), http.StatusInternalServerError)
 		log.Printf("Mark as private error: %v\n", err)
 		return
 	}
 
+	// Réponse OK
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(res)
 }
