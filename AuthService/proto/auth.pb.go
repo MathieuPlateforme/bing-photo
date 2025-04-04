@@ -617,6 +617,7 @@ func (x *GoogleAuthResponse) GetAuthUrl() string {
 type GoogleAuthCallbackRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
+	State         string                 `protobuf:"bytes,2,opt,name=state,proto3" json:"state,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -654,6 +655,13 @@ func (*GoogleAuthCallbackRequest) Descriptor() ([]byte, []int) {
 func (x *GoogleAuthCallbackRequest) GetCode() string {
 	if x != nil {
 		return x.Code
+	}
+	return ""
+}
+
+func (x *GoogleAuthCallbackRequest) GetState() string {
+	if x != nil {
+		return x.State
 	}
 	return ""
 }
@@ -1082,9 +1090,10 @@ const file_proto_auth_proto_rawDesc = "" +
 	"\amessage\x18\x01 \x01(\tR\amessage\"\x13\n" +
 	"\x11GoogleAuthRequest\".\n" +
 	"\x12GoogleAuthResponse\x12\x18\n" +
-	"\aauthUrl\x18\x01 \x01(\tR\aauthUrl\"/\n" +
+	"\aauthUrl\x18\x01 \x01(\tR\aauthUrl\"E\n" +
 	"\x19GoogleAuthCallbackRequest\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\tR\x04code\"h\n" +
+	"\x04code\x18\x01 \x01(\tR\x04code\x12\x14\n" +
+	"\x05state\x18\x02 \x01(\tR\x05state\"h\n" +
 	"\x1aGoogleAuthCallbackResponse\x12\x18\n" +
 	"\amessage\x18\x01 \x01(\tR\amessage\x12\x1a\n" +
 	"\buserInfo\x18\x02 \x01(\tR\buserInfo\x12\x14\n" +

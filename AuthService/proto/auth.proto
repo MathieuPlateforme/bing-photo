@@ -75,6 +75,7 @@ message GoogleAuthResponse {
 
 message GoogleAuthCallbackRequest {
   string code = 1;
+  string state = 2;
 }
 
 message GoogleAuthCallbackResponse {
