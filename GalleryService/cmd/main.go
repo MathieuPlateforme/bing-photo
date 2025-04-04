@@ -162,12 +162,20 @@ func (s *galleryServer) GetMediaByUser(ctx context.Context, req *proto.GetMediaB
 }
 
 func (s *galleryServer) MarkAsPrivate(ctx context.Context, req *proto.MarkAsPrivateRequest) (*proto.MarkAsPrivateResponse, error) {
-	// Note: The proto definition doesn't have user_id, so we'll need to get it from the media record
-	if err := s.mediaService.MarkAsPrivate(uint(req.MediaId), 0); err != nil {
-		log.Printf("Error marking media as private: %v", err)
-		return nil, err
+	// Extraire le userID depuis le contexte (via le JWT transmis dans le header Authorization)
+	userID, err := jwt.ExtractUserIDFromContext(ctx)
+	if err != nil {
+		log.Printf(" Impossible d'extraire le userID : %v", err)
+		return nil, status.Errorf(codes.Unauthenticated, "Token invalide ou manquant")
 	}
 
+	// Appeler le service métier avec l'ID utilisateur correct
+	if err := s.mediaService.MarkAsPrivate(uint(req.MediaId), userID); err != nil {
+		log.Printf(" Erreur lors du passage en privé : %v", err)
+		return nil, status.Errorf(codes.Unknown, "Erreur lors du passage en privé : %v", err)
+	}
+
+	log.Printf("Média %d marqué comme privé par userID=%d", req.MediaId, userID)
 	return &proto.MarkAsPrivateResponse{}, nil
 }
 
