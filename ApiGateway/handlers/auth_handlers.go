@@ -205,7 +205,6 @@ func (g *ApiGateway) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "Failed to generate URL"
 // @Router /auth/google [get]
 func (g *ApiGateway) GoogleHandler(w http.ResponseWriter, r *http.Request) {
-
 	res, err := g.AuthClient.LoginWithGoogle(context.Background(), &proto.GoogleAuthRequest{})
 	if err != nil {
 		http.Error(w, "Failed to generate URL", http.StatusInternalServerError)
@@ -213,9 +212,10 @@ func (g *ApiGateway) GoogleHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Message: " + res.AuthUrl))
+	// ✅ Redirection réelle vers Google
+	http.Redirect(w, r, res.AuthUrl, http.StatusSeeOther)
 }
+
 
 // GoogleCallbackHandler godoc
 // @Summary Google OAuth Callback
@@ -227,25 +227,38 @@ func (g *ApiGateway) GoogleHandler(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {string} string "Login success and user info"
 // @Failure 400 {string} string "Invalid request payload"
 // @Failure 500 {string} string "Google callback failed"
-// @Router /auth/google/callback [post]
+// @Router /auth/google/callback [get]
 func (g *ApiGateway) GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
-	req := &proto.GoogleAuthCallbackRequest{}
-	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		log.Printf("Failed to parse request: %v\n", err)
+	// ✅ Récupérer les valeurs depuis les query params (GET)
+	code := r.URL.Query().Get("code")
+	state := r.URL.Query().Get("state")
+
+	if code == "" || state == "" {
+		http.Error(w, "Code ou state manquant dans la requête", http.StatusBadRequest)
+		log.Printf("Code/state manquant. code: %s, state: %s\n", code, state)
 		return
 	}
 
+	// ✅ Préparer la requête gRPC avec ces données
+	req := &proto.GoogleAuthCallbackRequest{
+		Code:  code,
+		state: state,
+	}
+
+	// ✅ Appeler le service Auth
 	res, err := g.AuthClient.GoogleAuthCallback(context.Background(), req)
 	if err != nil {
-		http.Error(w, "Google callback failed"+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Google callback failed: "+err.Error(), http.StatusInternalServerError)
 		log.Printf("Google callback error: %v\n", err)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Token: " + res.Message + "user: " + res.UserInfo))
+	// ✅ Rediriger vers le front avec le token JWT
+	redirectURL := "http://localhost:3000/overview?token=" + res.Message
+	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }
+
+
 
 
 func (g *ApiGateway) ValidateTokenHandler(w http.ResponseWriter, r *http.Request) {

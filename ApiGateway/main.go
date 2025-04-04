@@ -97,7 +97,7 @@ func main() {
 	auth.HandleFunc("/login", authHandler.LoginHandler).Methods("POST", "OPTIONS")
 	auth.HandleFunc("/register", authHandler.RegisterHandler).Methods("POST", "OPTIONS")
 	auth.HandleFunc("/google", authHandler.GoogleHandler).Methods("GET", "OPTIONS")
-	auth.HandleFunc("/oauth2/callback", authHandler.GoogleCallbackHandler).Methods("GET", "OPTIONS")
+	auth.HandleFunc("/oauth2/callback", authHandler.GoogleCallbackHandler).Methods("GET", "POST", "OPTIONS")
 	auth.HandleFunc("/forgot-password", authHandler.ForgotPasswordHandler).Methods("POST", "OPTIONS")
 	auth.HandleFunc("/reset-password", authHandler.ResetPasswordHandler).Methods("POST", "OPTIONS")
 	auth.HandleFunc("/logout", authHandler.LogoutHandler).Methods("POST", "OPTIONS")
