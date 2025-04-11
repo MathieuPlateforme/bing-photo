@@ -1,0 +1,913 @@
+basePath: /
+definitions:
+  proto.AddMediaResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  proto.Album:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      media:
+        items:
+          $ref: '#/definitions/proto.Media'
+        type: array
+      name:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  proto.CreateAlbumRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  proto.CreateAlbumResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  proto.DeleteAlbumResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  proto.DeleteMediaResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  proto.DetectSimilarMediaRequest:
+    properties:
+      album_id:
+        type: integer
+    type: object
+  proto.DetectSimilarMediaResponse:
+    properties:
+      media:
+        items:
+          $ref: '#/definitions/proto.Media'
+        type: array
+    type: object
+  proto.ForgotPasswordRequest:
+    properties:
+      email:
+        type: string
+    type: object
+  proto.GetAlbumsByUserResponse:
+    properties:
+      albums:
+        items:
+          $ref: '#/definitions/proto.Album'
+        type: array
+    type: object
+  proto.GetMeResponse:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      picture:
+        type: string
+      username:
+        type: string
+    type: object
+  proto.GetMediaByAlbumResponse:
+    properties:
+      media:
+        items:
+          $ref: '#/definitions/proto.Media'
+        type: array
+    type: object
+  proto.GetMediaByUserResponse:
+    properties:
+      media_list:
+        items:
+          $ref: '#/definitions/proto.Media'
+        type: array
+    type: object
+  proto.GetPrivateAlbumResponse:
+    properties:
+      album:
+        $ref: '#/definitions/proto.Album'
+    type: object
+  proto.GetPrivateMediaResponse:
+    properties:
+      media:
+        items:
+          $ref: '#/definitions/proto.Media'
+        type: array
+    type: object
+  proto.GoogleAuthCallbackRequest:
+    properties:
+      code:
+        type: string
+    type: object
+  proto.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  proto.LogoutRequest:
+    properties:
+      token:
+        type: string
+    type: object
+  proto.MarkAsPrivateRequest:
+    properties:
+      media_id:
+        type: integer
+      pin:
+        type: string
+    type: object
+  proto.MarkAsPrivateResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  proto.Media:
+    properties:
+      album_id:
+        type: integer
+      file_size:
+        type: integer
+      id:
+        type: integer
+      is_favorite:
+        type: boolean
+      is_private:
+        type: boolean
+      name:
+        type: string
+      path:
+        type: string
+    type: object
+  proto.RegisterRequest:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  proto.ResetPasswordRequest:
+    properties:
+      email:
+        type: string
+      new_password:
+        type: string
+      token:
+        type: string
+    type: object
+  proto.UpdateAlbumRequest:
+    properties:
+      album_id:
+        type: integer
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  proto.UpdateAlbumResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  proto.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      picture:
+        type: string
+      token:
+        type: string
+      username:
+        type: string
+    type: object
+  proto.UpdateUserResponse:
+    properties:
+      message:
+        type: string
+    type: object
+host: localhost:8081
+info:
+  contact:
+    email: your@email.com
+    name: Your Name
+  description: This is the API Gateway for Bing Photo project.
+  title: Bing Photo API Gateway
+  version: "1.0"
+paths:
+  /albums:
+    post:
+      consumes:
+      - application/json
+      description: Crée un nouvel album avec un titre et un identifiant utilisateur
+      parameters:
+      - description: Données de l'album
+        in: body
+        name: album
+        required: true
+        schema:
+          $ref: '#/definitions/proto.CreateAlbumRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/proto.CreateAlbumResponse'
+        "400":
+          description: Requête invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Créer un album
+      tags:
+      - Albums
+  /albums/{id}:
+    delete:
+      description: Supprime un album par son ID
+      parameters:
+      - description: ID de l'album
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/proto.DeleteAlbumResponse'
+        "400":
+          description: Invalid album ID
+          schema:
+            type: string
+        "401":
+          description: Authorization header missing
+          schema:
+            type: string
+        "500":
+          description: Failed to delete album
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Supprimer un album
+      tags:
+      - Albums
+    put:
+      consumes:
+      - application/json
+      description: Met à jour les informations d'un album
+      parameters:
+      - description: ID de l'album
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Mise à jour de l'album
+        in: body
+        name: album
+        required: true
+        schema:
+          $ref: '#/definitions/proto.UpdateAlbumRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/proto.UpdateAlbumResponse'
+        "400":
+          description: Requête invalide
+          schema:
+            type: string
+        "401":
+          description: Non autorisé
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Mettre à jour un album
+      tags:
+      - Albums
+  /albums/type:
+    get:
+      description: Récupère un album privé ou principal selon le type
+      parameters:
+      - description: ID de l'utilisateur
+        in: query
+        name: user_id
+        required: true
+        type: integer
+      - description: 'Type d''album : ''private'' ou ''main'''
+        in: query
+        name: type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/proto.GetPrivateAlbumResponse'
+        "400":
+          description: ID ou type invalide
+          schema:
+            type: string
+        "401":
+          description: Authorization manquante
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Obtenir un album par type
+      tags:
+      - Albums
+  /albums/user:
+    get:
+      description: Récupère tous les albums appartenant à un utilisateur donné
+      parameters:
+      - description: ID utilisateur
+        in: query
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/proto.GetAlbumsByUserResponse'
+        "400":
+          description: ID utilisateur invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Obtenir les albums d'un utilisateur
+      tags:
+      - Albums
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Sends a reset password email
+      parameters:
+      - description: Email for password reset
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/proto.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Email successfully sent
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            type: string
+        "500":
+          description: Forgot password failed
+          schema:
+            type: string
+      summary: Forgot Password
+      tags:
+      - Auth
+  /auth/get-me:
+    get:
+      description: Retourne les informations du profil de l'utilisateur authentifié
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/proto.GetMeResponse'
+        "401":
+          description: Token manquant ou invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur interne
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Obtenir les informations de l'utilisateur connecté
+      tags:
+      - Auth
+  /auth/google:
+    get:
+      description: Generates a Google login URL
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Google login URL
+          schema:
+            type: string
+        "500":
+          description: Failed to generate URL
+          schema:
+            type: string
+      summary: Google OAuth
+      tags:
+      - Auth
+  /auth/google/callback:
+    post:
+      consumes:
+      - application/json
+      description: Handles the OAuth callback after Google login
+      parameters:
+      - description: Authorization code
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/proto.GoogleAuthCallbackRequest'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Login success and user info
+          schema:
+            type: string
+        "400":
+          description: Invalid request payload
+          schema:
+            type: string
+        "500":
+          description: Google callback failed
+          schema:
+            type: string
+      summary: Google OAuth Callback
+      tags:
+      - Auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns a JWT token
+      parameters:
+      - description: User credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/proto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token returned
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            type: string
+        "500":
+          description: Login failed
+          schema:
+            type: string
+      summary: Login
+      tags:
+      - Auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logs the user out by invalidating the token
+      parameters:
+      - description: Token to invalidate
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/proto.LogoutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Logout successful
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            type: string
+        "500":
+          description: Logout failed
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Logout
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Registers a new user and syncs with the gallery service
+      parameters:
+      - description: User registration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/proto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            type: string
+        "500":
+          description: Registration failed
+          schema:
+            type: string
+      summary: Register
+      tags:
+      - Auth
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Resets the user's password using a token
+      parameters:
+      - description: Reset token and new password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/proto.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password reset success
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            type: string
+        "500":
+          description: Reset password failed
+          schema:
+            type: string
+      summary: Reset Password
+      tags:
+      - Auth
+  /auth/update-user:
+    put:
+      consumes:
+      - application/json
+      description: Met à jour les informations d'un utilisateur (nom, prénom, email,
+        photo)
+      parameters:
+      - description: Champs à mettre à jour
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/proto.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/proto.UpdateUserResponse'
+        "400":
+          description: Requête invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur interne du serveur
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Mettre à jour un utilisateur
+      tags:
+      - Auth
+  /media:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Ajoute un fichier média à un album
+      parameters:
+      - description: ID de l'album
+        in: formData
+        name: album_id
+        required: true
+        type: integer
+      - description: Fichier à uploader
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/proto.AddMediaResponse'
+        "400":
+          description: Erreur de parsing du formulaire
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Ajouter un média
+      tags:
+      - Media
+  /media/{id}:
+    delete:
+      description: Supprime un média si l'utilisateur est propriétaire
+      parameters:
+      - description: ID du média à supprimer
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/proto.DeleteMediaResponse'
+        "400":
+          description: Invalid media ID
+          schema:
+            type: string
+        "401":
+          description: Authorization header missing
+          schema:
+            type: string
+        "500":
+          description: Failed to delete media
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Supprimer un média
+      tags:
+      - Media
+  /media/{id}/download:
+    get:
+      description: Télécharge le contenu d’un fichier média
+      parameters:
+      - description: ID du média
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: Fichier binaire
+          schema:
+            type: file
+        "400":
+          description: ID invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Télécharger un média
+      tags:
+      - Media
+  /media/{id}/private:
+    post:
+      consumes:
+      - application/json
+      description: Marque un média comme privé
+      parameters:
+      - description: Données de la requête
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/proto.MarkAsPrivateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/proto.MarkAsPrivateResponse'
+        "400":
+          description: Requête invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Rendre un média privé
+      tags:
+      - Media
+  /media/album/{id}:
+    get:
+      description: Renvoie tous les médias appartenant à un album donné
+      parameters:
+      - description: ID de l’album
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/proto.GetMediaByAlbumResponse'
+        "400":
+          description: Requête invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Récupérer les médias d’un album
+      tags:
+      - Media
+  /media/private:
+    get:
+      description: Récupère les médias privés d’un utilisateur
+      parameters:
+      - description: ID utilisateur
+        in: query
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/proto.GetPrivateMediaResponse'
+        "400":
+          description: ID invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Obtenir les médias privés
+      tags:
+      - Media
+  /media/similar:
+    post:
+      consumes:
+      - application/json
+      description: Détecte les fichiers médias similaires dans un album donné
+      parameters:
+      - description: Requête de détection
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/proto.DetectSimilarMediaRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/proto.DetectSimilarMediaResponse'
+        "400":
+          description: Requête invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Détecter les médias similaires dans un album
+      tags:
+      - Media
+  /media/user:
+    get:
+      description: Récupère tous les médias appartenant à un utilisateur
+      parameters:
+      - description: ID utilisateur
+        in: query
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/proto.GetMediaByUserResponse'
+        "400":
+          description: ID invalide
+          schema:
+            type: string
+        "500":
+          description: Erreur serveur
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Médias d’un utilisateur
+      tags:
+      - Media
+securityDefinitions:
+  BearerAuth:
+    description: 'Format : Bearer <votre_token>'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

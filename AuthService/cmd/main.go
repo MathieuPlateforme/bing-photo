@@ -4,18 +4,14 @@ import (
 	"AuthService/middleware"
 	"AuthService/pkg/jwt"
 	"context"
+	"fmt"
 	"log"
 	"net"
-	"net/http"
-	"encoding/json"
-	"bytes"
-	"fmt"
 
 	"AuthService/models"
 	proto "AuthService/proto"
 	"AuthService/services/auth"
-
-	"encoding/json"
+	"AuthService/utils"
 
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
@@ -26,7 +22,7 @@ import (
 type authServer struct {
 	proto.UnimplementedAuthServiceServer
 	authService *auth.AuthService
-	JWTService  *jwt.JWTService 
+	JWTService  *jwt.JWTService
 }
 
 func (s *authServer) Login(ctx context.Context, req *proto.LoginRequest) (*proto.LoginResponse, error) {
@@ -45,9 +41,9 @@ func (s *authServer) Login(ctx context.Context, req *proto.LoginRequest) (*proto
 // RegisterWithEmail handles user registration
 func (s *authServer) Register(ctx context.Context, req *proto.RegisterRequest) (*proto.RegisterResponse, error) {
 	success, err := s.authService.RegisterWithEmail(models.User{
-		Email:     req.Email,
-		Password:  req.Password,
-		Username:  req.Username,
+		Email:    req.Email,
+		Password: req.Password,
+		Username: req.Username,
 	})
 
 	if err != nil || !success {
@@ -64,40 +60,28 @@ func (s *authServer) Register(ctx context.Context, req *proto.RegisterRequest) (
 }
 
 func (s *authServer) syncWithGalleryService(ctx context.Context, email string, username string) error {
-    // Construire la requête pour GalleryService
-    url := "http://gallery-service:50052/users"
-    payload := map[string]string{
-        "email":    email,
-        "username": username,
-    }
-    body, err := json.Marshal(payload)
-    if err != nil {
-        return fmt.Errorf("erreur lors de la construction du payload : %v", err)
-    }
+	// Connect to GalleryService via gRPC
+	conn, err := grpc.Dial("gallery-service:50052", grpc.WithInsecure()) // Replace with TLS in production
+	if err != nil {
+		return fmt.Errorf("failed to connect to GalleryService: %v", err)
+	}
+	defer conn.Close()
 
-    // Envoyer la requête HTTP POST
-    req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
-    if err != nil {
-        return fmt.Errorf("erreur lors de la création de la requête : %v", err)
-    }
-    req.Header.Set("Content-Type", "application/json")
+	// Create a gRPC client
+	client := proto.NewUserServiceClient(conn)
 
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    if err != nil {
-        return fmt.Errorf("erreur lors de l'envoi de la requête à GalleryService : %v", err)
-    }
-    defer resp.Body.Close()
+	// Call the CreateUser gRPC method
+	_, err = client.CreateUser(ctx, &proto.CreateUserRequest{
+		Email:    email,
+		Username: username,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to sync with GalleryService: %v", err)
+	}
 
-    // Vérifier la réponse
-    if resp.StatusCode != http.StatusCreated {
-        return fmt.Errorf("échec de la synchronisation avec GalleryService, statut : %d", resp.StatusCode)
-    }
-
-    log.Println("Utilisateur synchronisé avec succès dans GalleryService")
-    return nil
+	log.Println("User successfully synced with GalleryService via gRPC")
+	return nil
 }
-
 
 func (s *authServer) ForgotPassword(ctx context.Context, req *proto.ForgotPasswordRequest) (*proto.ForgotPasswordResponse, error) {
 	err := s.authService.ForgotPassword(req.Email)
@@ -120,14 +104,30 @@ func (s *authServer) ResetPassword(ctx context.Context, req *proto.ResetPassword
 }
 
 func (s *authServer) Logout(ctx context.Context, req *proto.LogoutRequest) (*proto.LogoutResponse, error) {
-	err := s.authService.Logout(req.Token)
-
+	// ✅ Récupérer les claims à partir du contexte (via le middleware JWT)
+	claims, err := s.JWTService.VerifyTokenFromContext(ctx)
 	if err != nil {
-		return &proto.LogoutResponse{}, err
+		return nil, status.Errorf(codes.Unauthenticated, "Token invalide : %v", err)
 	}
 
-	return &proto.LogoutResponse{}, nil
+	username, ok := claims["username"].(string)
+	if !ok {
+		return nil, status.Errorf(codes.Internal, "username introuvable dans les claims")
+	}
+
+	token, err := s.JWTService.ExtractTokenFromContext(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Token introuvable dans le contexte : %v", err)
+	}
+
+	err = s.authService.RevokeToken(token, username)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Erreur de déconnexion : %v", err)
+	}
+
+	return &proto.LogoutResponse{Message: "Déconnexion réussie"}, nil
 }
+
 func (s *authServer) LoginWithGoogle(ctx context.Context, req *proto.GoogleAuthRequest) (*proto.GoogleAuthResponse, error) {
 	authUrl, err := s.authService.GoogleAuthService.AuthenticateWithGoogle()
 
@@ -139,18 +139,29 @@ func (s *authServer) LoginWithGoogle(ctx context.Context, req *proto.GoogleAuthR
 }
 func (s *authServer) GoogleAuthCallback(ctx context.Context, req *proto.GoogleAuthCallbackRequest) (*proto.GoogleAuthCallbackResponse, error) {
 	token, err := s.authService.GoogleAuthService.Config.Exchange(oauth2.NoContext, req.Code)
+	if err != nil {
+		return &proto.GoogleAuthCallbackResponse{Message: "Échec de l'échange du code"}, err
+	}
+
 	userInfo, err := s.authService.GoogleAuthService.GetGoogleUserProfile(token)
-
 	if err != nil {
-		return &proto.GoogleAuthCallbackResponse{Message: "Login failed"}, err
+		return &proto.GoogleAuthCallbackResponse{Message: "Échec de la récupération du profil Google"}, err
 	}
 
-	userInfoJson, err := json.Marshal(userInfo)
+	// Appelle la méthode que tu viens d’ajouter
+	jwtToken, err := s.authService.LoginOrCreateGoogleUser(userInfo)
 	if err != nil {
-		return &proto.GoogleAuthCallbackResponse{Message: "Failed to parse user info"}, err
+		return &proto.GoogleAuthCallbackResponse{Message: "Login ou création échouée"}, err
 	}
-	return &proto.GoogleAuthCallbackResponse{UserInfo: string(userInfoJson), Message: "Login successful"}, nil
+
+	return &proto.GoogleAuthCallbackResponse{
+		UserInfo: userInfo.Email,
+		Message:  "Login Google réussi",
+		Token:    jwtToken,
+	}, nil
 }
+
+
 func main() {
 
 	JWTService, err := jwt.NewJWTService()
@@ -165,9 +176,12 @@ func main() {
 
 	// Définir les méthodes nécessitant une vérification d'authentification
 	methodsToIntercept := map[string]bool{
-		"/proto.AuthService/Login": true,
+		"/proto.AuthService/Logout":       true,
+		"/proto.AuthService/ValidateToken": true,
+		"/proto.AuthService/UpdateUser":   true,
+		"/proto.AuthService/GetMe":   true,
 	}
-
+	
 	// Create gRPC server
 	server := grpc.NewServer(grpc.UnaryInterceptor(middleware.AuthInterceptor(JWTService, methodsToIntercept)))
 	proto.RegisterAuthServiceServer(server, &authServer{
@@ -205,5 +219,82 @@ func (s *authServer) ValidateToken(ctx context.Context, req *proto.ValidateToken
 	// Réponse avec succès
 	return &proto.ValidateTokenResponse{
 		Message: "Token valide",
+	}, nil
+}
+
+func (s *authServer) UpdateUser(ctx context.Context, req *proto.UpdateUserRequest) (*proto.UpdateUserResponse, error) {
+	userID, err := utils.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, err.Error())
+	}
+
+	log.Printf("Mise à jour du profil utilisateur ID: %d", userID)
+
+	// Récupérer l'utilisateur existant
+	var user models.User
+	if err := s.authService.DBManager.DB.First(&user, userID).Error; err != nil {
+		return nil, status.Errorf(codes.NotFound, "Utilisateur introuvable : %v", err)
+	}
+
+	// Mise à jour conditionnelle des champs
+	if req.FirstName != "" {
+		user.FirstName = req.FirstName
+	}
+	if req.LastName != "" {
+		user.LastName = req.LastName
+	}
+	if req.Email != "" {
+		user.Email = req.Email
+	}
+	if req.Username != "" {
+		user.Username = req.Username
+	}
+	if req.Picture != "" {
+		user.Picture = req.Picture
+	}
+
+	// Sauvegarder les modifications
+	if err := s.authService.DBManager.DB.Save(&user).Error; err != nil {
+		return nil, status.Errorf(codes.Internal, "Échec de la mise à jour de l'utilisateur : %v", err)
+	}
+
+	log.Printf("Utilisateur %d mis à jour avec succès", userID)
+
+	return &proto.UpdateUserResponse{
+		Message: "Utilisateur mis à jour avec succès",
+	}, nil
+}
+
+// func (s *authServer) GetMe(ctx context.Context, req *proto.GetMeRequest) (*proto.GetMeResponse, error) {
+
+// 	// Réponse avec succès
+// 	return &proto.GetMeResponse{
+// 		Email:     "",
+// 		Username:  "",
+// 		FirstName: "",
+// 		LastName:  "",
+// 		Picture:   "",
+// 	}, nil
+// }
+
+func (s *authServer) GetMe(ctx context.Context, req *proto.GetMeRequest) (*proto.GetMeResponse, error) {
+	userID, err := utils.GetUserIDFromContext(ctx)
+	if err != nil {
+		log.Printf("GetMe: impossible d'extraire userID du contexte : %v", err)
+		return nil, status.Errorf(codes.Unauthenticated, "Token invalide")
+	}
+
+	var user models.User
+	if err := user.GetUserByID(s.authService.DBManager.DB, userID); err != nil {
+		log.Printf("GetMe: utilisateur introuvable : %v", err)
+		return nil, status.Errorf(codes.NotFound, "Utilisateur non trouvé")
+	}
+
+	return &proto.GetMeResponse{
+		Email:     user.Email,
+		Username:  user.Username,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Picture:   user.Picture,
 	}, nil
 }

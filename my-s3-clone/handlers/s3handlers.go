@@ -249,7 +249,7 @@ func HandleDownloadObject(s storage.Storage) http.HandlerFunc {
         }
 
         // Envoyer les métadonnées dans les en-têtes HTTP
-        w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", objectName))
+        w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", objectName))
         w.Header().Set("Content-Length", fmt.Sprintf("%d", fileInfo.Size()))
         w.Header().Set("Last-Modified", fileInfo.ModTime().Format(http.TimeFormat))
 

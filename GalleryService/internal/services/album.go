@@ -45,21 +45,31 @@ func (s *AlbumService) CreateAlbum(album models.Album) error {
 }
 
 func (s *AlbumService) GetAlbumsByUser(userID uint) ([]models.Album, error) {
-	// Étape 1 : Récupérer les albums depuis la base de données
-	var albums []models.Album
-	err := s.DBManager.DB.Where("user_id = ?", userID).Find(&albums).Error
-	if err != nil {
-		log.Printf("Erreur lors de la récupération des albums depuis la base de données : %v", err)
-		return nil, fmt.Errorf("failed to fetch albums from database: %v", err)
+	// Récupérer l'utilisateur pour accéder à ses albums spéciaux
+	var user models.User
+	if err := s.DBManager.DB.First(&user, userID).Error; err != nil {
+		log.Printf("Utilisateur introuvable pour userID %d : %v", userID, err)
+		return nil, fmt.Errorf("utilisateur non trouvé")
 	}
 
-	// Obtenir la liste des buckets S3 existants
+	// Récupérer tous les albums sauf le main et le privé, et précharger les médias associés
+	var albums []models.Album
+	err := s.DBManager.DB.
+		Preload("Media"). // <- préchargement des médias liés
+		Where("user_id = ? AND id NOT IN (?, ?)", userID, user.PrivateAlbumID, user.MainAlbumID).
+		Find(&albums).Error
+
+	if err != nil {
+		log.Printf("Erreur lors de la récupération des albums : %v", err)
+		return nil, fmt.Errorf("échec de la récupération des albums")
+	}
+
+	// Vérifier l'existence des buckets S3
 	s3Buckets, err := s.S3Service.ListBuckets()
 	if err != nil {
-		log.Printf("Erreur lors de la récupération des buckets depuis l'API S3 : %v", err)
+		log.Printf("Erreur lors de la récupération des buckets S3 : %v", err)
 	}
 
-	// ajouter une indication si le bucket existe
 	bucketExists := make(map[string]bool)
 	for _, bucket := range s3Buckets {
 		bucketExists[strings.TrimSpace(bucket.Name)] = true
@@ -70,6 +80,7 @@ func (s *AlbumService) GetAlbumsByUser(userID uint) ([]models.Album, error) {
 
 	return albums, nil
 }
+
 
 func (s *AlbumService) UpdateAlbum(id uint, name string, description string) error {
 	// Récupérer l'album
@@ -113,14 +124,31 @@ func (s *AlbumService) DeleteAlbum(albumID uint) error {
 	return nil
 }
 
-func (s *AlbumService) GetPrivateAlbum(userID uint) (*models.Album, error) {
-    var album models.Album
-    err := s.DBManager.DB.Where("user_id = ? AND is_private = ?", userID, true).First(&album).Error
-    if err != nil {
-        return nil, fmt.Errorf("échec de la récupération de l'album privé : %v", err)
-    }
-    return &album, nil
+
+// Méthode publique appelée par le gRPC
+func (s *AlbumService) GetPrivateAlbum(userID uint, albumType string) (*models.Album, error) {
+	if albumType == "main" {
+		return s.getMainAlbum(userID)
+	}
+	return s.getPrivateAlbum(userID)
 }
 
+// Méthode interne pour récupérer l'album privé
+func (s *AlbumService) getPrivateAlbum(userID uint) (*models.Album, error) {
+	var album models.Album
+	if err := s.DBManager.DB.Where("user_id = ? AND is_private = true", userID).First(&album).Error; err != nil {
+		return nil, fmt.Errorf("album privé non trouvé : %v", err)
+	}
+	return &album, nil
+}
+
+// Méthode interne pour récupérer l'album principal
+func (s *AlbumService) getMainAlbum(userID uint) (*models.Album, error) {
+	var album models.Album
+	if err := s.DBManager.DB.Where("user_id = ? AND is_main = true", userID).First(&album).Error; err != nil {
+		return nil, fmt.Errorf("album principal non trouvé : %v", err)
+	}
+	return &album, nil
+}
 
 

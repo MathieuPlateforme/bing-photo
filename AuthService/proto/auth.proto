@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package protoauth;
+package proto;
 
-option go_package = "/proto;protoauth";
+option go_package = "/proto;proto";
 
 service AuthService {
   rpc Login (LoginRequest) returns (LoginResponse);
@@ -13,6 +13,8 @@ service AuthService {
   rpc LoginWithGoogle (GoogleAuthRequest) returns (GoogleAuthResponse);
   rpc GoogleAuthCallback (GoogleAuthCallbackRequest) returns (GoogleAuthCallbackResponse);
   rpc Logout (LogoutRequest) returns (LogoutResponse);
+  rpc UpdateUser (UpdateUserRequest) returns (UpdateUserResponse);
+  rpc GetMe (GetMeRequest) returns (GetMeResponse);
 }
 
 // Request and response messages
@@ -73,11 +75,13 @@ message GoogleAuthResponse {
 
 message GoogleAuthCallbackRequest {
   string code = 1;
+  string State = 2;
 }
 
 message GoogleAuthCallbackResponse {
   string message = 1;
   string userInfo = 2;
+  string Token = 3;
 }
 
 message LogoutRequest {
@@ -86,4 +90,28 @@ message LogoutRequest {
 
 message LogoutResponse {
   string message = 1;
+}
+
+message UpdateUserRequest {
+  string email = 1;
+  string username = 2;
+  string firstName = 3;
+  string lastName = 4;
+  string picture = 5;
+}
+
+message UpdateUserResponse {
+  string message = 1;
+}
+
+message GetMeRequest {
+  string token = 1;
+}
+
+message GetMeResponse {
+  string email = 1;
+  string username = 2;
+  string firstName = 3;
+  string lastName = 4;
+  string picture = 5;
 }

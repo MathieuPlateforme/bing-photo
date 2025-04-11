@@ -2,13 +2,13 @@ package services
 
 import (
 	"bytes"
+	"encoding/xml"
 	"fmt"
-	"net/http"
-    "encoding/xml"
-    "time"
 	"io"
 	"log"
+	"net/http"
 	"os"
+	"time"
 )
 
 // S3Service gère la communication avec l'API S3-like
@@ -17,16 +17,16 @@ type S3Service struct {
 }
 
 type ListAllMyBucketsResult struct {
-    XMLName xml.Name `xml:"ListAllMyBucketsResult"`
-    Buckets []Bucket `xml:"Buckets>Bucket"`
+	XMLName xml.Name `xml:"ListAllMyBucketsResult"`
+	Buckets []Bucket `xml:"Buckets>Bucket"`
 }
 
 type Bucket struct {
-    Name         string    `xml:"Name"`
-    CreationDate time.Time `xml:"CreationDate"`
-    LocationConstraint   string   `xml:"LocationConstraint,omitempty"`
-    ObjectLockConfig   string   `xml:"ObjectLockConfiguration,omitempty"`
-    ObjectDelimiter   string   `xml:"ObjectDelimiter,omitempty"`
+	Name               string    `xml:"Name"`
+	CreationDate       time.Time `xml:"CreationDate"`
+	LocationConstraint string    `xml:"LocationConstraint,omitempty"`
+	ObjectLockConfig   string    `xml:"ObjectLockConfiguration,omitempty"`
+	ObjectDelimiter    string    `xml:"ObjectDelimiter,omitempty"`
 }
 
 // NewS3Service initialise un S3Service
@@ -36,27 +36,27 @@ func NewS3Service(apiURL string) *S3Service {
 
 // CreateFolder crée un dossier dans l'API S3-like
 func (s *S3Service) CreateBucket(folderPath string) error {
-    // Ajouter un "/" pour simuler un dossier
-    url := fmt.Sprintf("%s/%s/", s.APIURL, folderPath)
+	// Ajouter un "/" pour simuler un dossier
+	url := fmt.Sprintf("%s/%s/", s.APIURL, folderPath)
 
-    req, err := http.NewRequest("PUT", url, bytes.NewReader([]byte{}))
-    if err != nil {
-        return fmt.Errorf("failed to create request: %v", err)
-    }
+	req, err := http.NewRequest("PUT", url, bytes.NewReader([]byte{}))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %v", err)
+	}
 
-    req.Header.Set("Content-Type", "application/octet-stream") // Type MIME pour un objet vide
+	req.Header.Set("Content-Type", "application/octet-stream") // Type MIME pour un objet vide
 
-    resp, err := http.DefaultClient.Do(req)
-    if err != nil {
-        return fmt.Errorf("failed to send request: %v", err)
-    }
-    defer resp.Body.Close()
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send request: %v", err)
+	}
+	defer resp.Body.Close()
 
-    if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-        return fmt.Errorf("failed to create folder, status: %s", resp.Status)
-    }
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("failed to create folder, status: %s", resp.Status)
+	}
 
-    return nil
+	return nil
 }
 
 // ListBuckets récupère la liste des buckets depuis l'API S3-like
@@ -152,7 +152,7 @@ func (s *S3Service) MoveObject(sourceBucket, sourceKey, targetBucket string) err
 		<TargetBucket>%s</TargetBucket>
 	</Move>
 
-	`,sourceKey, targetBucket)
+	`, sourceKey, targetBucket)
 
 	// Créer la requête HTTP POST
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(payload)))
@@ -203,103 +203,102 @@ func (s *S3Service) DownloadFile(path string, w io.Writer) error {
 }
 
 func (s *S3Service) DeleteObject(bucketName, objectName string) error {
-    // Journaliser la tentative de suppression
-    log.Printf("Tentative de suppression : bucket=%s, key=%s", bucketName, objectName)
+	// Journaliser la tentative de suppression
+	log.Printf("Tentative de suppression : bucket=%s, key=%s", bucketName, objectName)
 
-    // Construire l'URL pour supprimer l'objet
-    url := fmt.Sprintf("%s/%s/?delete=", s.APIURL, bucketName)
-    log.Printf("URL construite pour la suppression : %s", url)
+	// Construire l'URL pour supprimer l'objet
+	url := fmt.Sprintf("%s/%s/?delete=", s.APIURL, bucketName)
+	log.Printf("URL construite pour la suppression : %s", url)
 
-    // Construire le corps de la requête en XML
-    payload := fmt.Sprintf(`
+	// Construire le corps de la requête en XML
+	payload := fmt.Sprintf(`
     <Delete>
         <Object>
             <Key>%s</Key>
         </Object>
     </Delete>
     `, objectName)
-    log.Printf("Corps XML généré : %s", payload)
+	log.Printf("Corps XML généré : %s", payload)
 
-    // Créer une requête HTTP POST
-    req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(payload)))
-    if err != nil {
-        return fmt.Errorf("échec de la création de la requête de suppression : %v", err)
-    }
-    req.Header.Set("Content-Type", "application/xml")
+	// Créer une requête HTTP POST
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(payload)))
+	if err != nil {
+		return fmt.Errorf("échec de la création de la requête de suppression : %v", err)
+	}
+	req.Header.Set("Content-Type", "application/xml")
 
-    // Journaliser les en-têtes
-    log.Printf("Headers envoyés : %v", req.Header)
+	// Journaliser les en-têtes
+	log.Printf("Headers envoyés : %v", req.Header)
 
-    // Envoyer la requête HTTP
-    resp, err := http.DefaultClient.Do(req)
-    if err != nil {
-        return fmt.Errorf("échec de la requête de suppression : %v", err)
-    }
-    defer resp.Body.Close()
+	// Envoyer la requête HTTP
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("échec de la requête de suppression : %v", err)
+	}
+	defer resp.Body.Close()
 
-    // Lire le corps de la réponse pour le log
-    responseBody, _ := io.ReadAll(resp.Body)
-    log.Printf("Code de réponse HTTP : %d, Corps : %s", resp.StatusCode, string(responseBody))
+	// Lire le corps de la réponse pour le log
+	responseBody, _ := io.ReadAll(resp.Body)
+	log.Printf("Code de réponse HTTP : %d, Corps : %s", resp.StatusCode, string(responseBody))
 
-    // Vérifier le code de réponse
-    if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-        return fmt.Errorf("échec de la suppression de l'objet, statut : %s", resp.Status)
-    }
+	// Vérifier le code de réponse
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("échec de la suppression de l'objet, statut : %s", resp.Status)
+	}
 
-    // Journaliser la réussite
-    log.Printf("Objet supprimé avec succès : %s/%s", bucketName, objectName)
-    return nil
+	// Journaliser la réussite
+	log.Printf("Objet supprimé avec succès : %s/%s", bucketName, objectName)
+	return nil
 }
 
 func (s *S3Service) GetFilesInAlbum(bucketName string) ([]string, error) {
-    url := fmt.Sprintf("%s/%s/", s.APIURL, bucketName)
+	url := fmt.Sprintf("%s/%s/", s.APIURL, bucketName)
 
-    resp, err := http.Get(url)
-    if err != nil {
-        return nil, fmt.Errorf("échec de la récupération des fichiers pour l'album %s : %v", bucketName, err)
-    }
-    defer resp.Body.Close()
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("échec de la récupération des fichiers pour l'album %s : %v", bucketName, err)
+	}
+	defer resp.Body.Close()
 
-    if resp.StatusCode != http.StatusOK {
-        return nil, fmt.Errorf("échec de la requête, statut HTTP : %d", resp.StatusCode)
-    }
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("échec de la requête, statut HTTP : %d", resp.StatusCode)
+	}
 
-    var listResponse struct {
-        Objects []struct {
-            Key string `xml:"Key"`
-        } `xml:"Contents"`
-    }
+	var listResponse struct {
+		Objects []struct {
+			Key string `xml:"Key"`
+		} `xml:"Contents"`
+	}
 
-    err = xml.NewDecoder(resp.Body).Decode(&listResponse)
-    if err != nil {
-        return nil, fmt.Errorf("échec du décodage XML : %v", err)
-    }
+	err = xml.NewDecoder(resp.Body).Decode(&listResponse)
+	if err != nil {
+		return nil, fmt.Errorf("échec du décodage XML : %v", err)
+	}
 
-    fileNames := []string{}
-    for _, obj := range listResponse.Objects {
-        fileNames = append(fileNames, obj.Key)
-    }
+	fileNames := []string{}
+	for _, obj := range listResponse.Objects {
+		fileNames = append(fileNames, obj.Key)
+	}
 
-    log.Printf("Fichiers récupérés pour l'album %s : %v", bucketName, fileNames)
-    return fileNames, nil
+	log.Printf("Fichiers récupérés pour l'album %s : %v", bucketName, fileNames)
+	return fileNames, nil
 }
 
-
 func (s *S3Service) DownloadTempFile(bucketName, objectName string) (string, error) {
-    localPath := fmt.Sprintf("/tmp/%s", objectName)
+	localPath := fmt.Sprintf("/tmp/%s", objectName)
 
-    file, err := os.Create(localPath)
-    if err != nil {
-        return "", fmt.Errorf("échec de la création du fichier temporaire: %v", err)
-    }
-    defer file.Close()
+	file, err := os.Create(localPath)
+	if err != nil {
+		return "", fmt.Errorf("échec de la création du fichier temporaire: %v", err)
+	}
+	defer file.Close()
 
-    filePath := fmt.Sprintf("%s/%s", bucketName, objectName)
-    err = s.DownloadFile(filePath, file)
-    if err != nil {
-        return "", fmt.Errorf("échec du téléchargement du fichier: %v", err)
-    }
+	filePath := fmt.Sprintf("%s/%s", bucketName, objectName)
+	err = s.DownloadFile(filePath, file)
+	if err != nil {
+		return "", fmt.Errorf("échec du téléchargement du fichier: %v", err)
+	}
 
-    log.Printf("Fichier téléchargé temporairement : %s", localPath)
-    return localPath, nil
+	log.Printf("Fichier téléchargé temporairement : %s", localPath)
+	return localPath, nil
 }

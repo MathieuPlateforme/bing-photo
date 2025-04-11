@@ -1,0 +1,194 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "/proto;proto";
+
+service AlbumService {
+  rpc CreateAlbum (CreateAlbumRequest) returns (CreateAlbumResponse);
+  rpc GetAlbumsByUser (GetAlbumsByUserRequest) returns (GetAlbumsByUserResponse);
+  rpc UpdateAlbum (UpdateAlbumRequest) returns (UpdateAlbumResponse);
+  rpc DeleteAlbum (DeleteAlbumRequest) returns (DeleteAlbumResponse);
+  rpc GetPrivateAlbum (GetPrivateAlbumRequest) returns (GetPrivateAlbumResponse);
+}
+
+service MediaService {
+  rpc AddMedia (AddMediaRequest) returns (AddMediaResponse);
+  rpc GetMediaByUser (GetMediaByUserRequest) returns (GetMediaByUserResponse);
+  rpc MarkAsPrivate (MarkAsPrivateRequest) returns (MarkAsPrivateResponse);
+  rpc GetPrivateMedia (GetPrivateMediaRequest) returns (GetPrivateMediaResponse);
+  rpc DownloadMedia (DownloadMediaRequest) returns (DownloadMediaResponse);
+  rpc DeleteMedia (DeleteMediaRequest) returns (DeleteMediaResponse);
+  rpc DetectSimilarMedia (DetectSimilarMediaRequest) returns (DetectSimilarMediaResponse);
+  rpc AddMediaToFavorite (AddMediaToFavoriteRequest) returns (AddMediaToFavoriteResponse);
+  rpc GetMediaByAlbum(GetMediaByAlbumRequest) returns (GetMediaByAlbumResponse);
+}
+
+service UserService {
+  rpc CreateUser (CreateUserRequest) returns (CreateUserResponse);
+}
+
+// Album messages
+message CreateAlbumRequest {
+  string name = 1;
+  string description = 2;
+  uint32 user_id = 3;
+}
+
+message CreateAlbumResponse {
+  string message = 1;
+}
+
+message GetAlbumsByUserRequest {
+  uint32 user_id = 1;
+}
+
+message AlbumWithMedia {
+  uint32 id = 1;
+  string name = 2;
+  string description = 3;
+  uint32 user_id = 4;
+  repeated Media media = 5;
+}
+
+message GetAlbumsByUserResponse {
+  repeated AlbumWithMedia albums = 1;
+}
+
+message UpdateAlbumRequest {
+  uint32 album_id = 1;
+  string name = 2;
+  string description = 3;
+}
+
+message UpdateAlbumResponse {
+  string message = 1;
+}
+
+message DeleteAlbumRequest {
+  uint32 album_id = 1;
+}
+
+message DeleteAlbumResponse {
+  string message = 1;
+}
+
+message GetPrivateAlbumRequest {
+  uint32 user_id = 1;
+  string type = 2;
+}
+
+message GetPrivateAlbumResponse {
+  Album album = 1;
+}
+
+// Media messages
+message AddMediaRequest {
+  string name = 1;
+  uint32 album_id = 2;
+  bytes file_data = 3;
+}
+
+message AddMediaResponse {
+  string message = 1;
+}
+
+message GetMediaByUserRequest {
+  uint32 user_id = 1;
+}
+
+message GetMediaByUserResponse {
+  repeated Media media_list = 1;
+}
+
+message MarkAsPrivateRequest {
+  uint32 media_id = 1;
+  string pin = 2;
+}
+
+message MarkAsPrivateResponse {
+  string message = 1;
+}
+
+message GetPrivateMediaRequest {
+  uint32 user_id = 1;
+  string pin = 2;
+}
+
+message GetPrivateMediaResponse {
+  repeated Media media = 1;
+}
+
+message DownloadMediaRequest {
+  uint32 media_id = 1;
+}
+
+message DownloadMediaResponse {
+  bytes file_data = 1;
+}
+
+message DeleteMediaRequest {
+  uint32 media_id = 1;
+}
+
+message DeleteMediaResponse {
+  string message = 1;
+}
+
+// User messages
+message CreateUserRequest {
+  string username = 1;
+  string email = 2;
+}
+
+message CreateUserResponse {
+  string message = 1;
+}
+
+// Requête
+message GetMediaByAlbumRequest {
+  uint32 album_id = 1;
+}
+
+// Réponse
+message GetMediaByAlbumResponse {
+  repeated Media media = 1;
+}
+
+// Data structures
+message Album {
+  uint32 id = 1;
+  string name = 2;
+  string description = 3;
+  uint32 user_id = 4;
+  repeated Media media = 5;
+}
+
+message Media {
+  uint32 id = 1;
+  string name = 2;
+  uint32 album_id = 3;
+  uint32 file_size = 4;
+  string path = 5;
+  bool is_private = 6;
+  bool is_favorite = 7;
+}
+message MediaGroup {
+  repeated Media media = 1;
+}
+
+message DetectSimilarMediaRequest {
+  uint32 album_id = 1;
+}
+
+message DetectSimilarMediaResponse {
+  repeated MediaGroup groups = 1;
+}
+
+message AddMediaToFavoriteRequest {
+  uint32 media_id = 1;
+}
+
+message AddMediaToFavoriteResponse {
+  string message = 1;
+}

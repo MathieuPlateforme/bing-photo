@@ -1,25 +1,27 @@
 package models
 
 import (
-	"time" 
-    "gorm.io/gorm"
-    "AuthService/pkg/security"
-    "errors"
+	"AuthService/pkg/security"
+	"errors"
+	"time"
+
+	"gorm.io/gorm"
 )
 
 type User struct {
-    ID             int    `gorm:"primaryKey;autoIncrement"`
-    Username       string `gorm:"unique;not null"`
-    Password       string `gorm:"not null"`
-    FirstName      string
-    LastName       string
-    Email          string `gorm:"unique;not null"`
-    GoogleID       string
-    PhoneNumber    string
-	BirthDate      time.Time
-    ResetToken     string
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	ID          int    `gorm:"primaryKey;autoIncrement"`
+	Username    string `gorm:"not null"`
+	Password    string `gorm:"not null"`
+	FirstName   string
+	LastName    string
+	Email       string `gorm:"unique;not null"`
+	GoogleID    string
+	PhoneNumber string
+	BirthDate   time.Time
+	ResetToken  string
+	Picture		string `gorm:"column:picture"`
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 func (u *User) CreateUser(db *gorm.DB) error {
@@ -60,14 +62,18 @@ func (u *User) UpdatePassword(db *gorm.DB, newPassword string) error {
 	return db.Save(&u).Error
 }
 
-
 // Méthode pour valider le mot de passe
 func (u *User) ValidatePassword(db *gorm.DB, password string, securityService *security.SecurityService) bool {
-    return securityService.ComparePasswords(u.Password, password)
+	return securityService.ComparePasswords(u.Password, password)
 }
 
 func (u *User) UpdateResetToken(db *gorm.DB, token string) error {
 	u.ResetToken = token
 	u.UpdatedAt = time.Now()
 	return db.Save(&u).Error
+}
+
+func (u *User) UpdateUser(db *gorm.DB, updates map[string]interface{}) error {
+	updates["updated_at"] = time.Now()
+	return db.Model(u).Updates(updates).Error
 }
