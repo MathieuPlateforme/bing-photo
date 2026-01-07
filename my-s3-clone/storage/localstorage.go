@@ -14,9 +14,20 @@ import (
 )
 
 // FileStorage implémente l'interface Storage avec un stockage basé sur le système de fichiers
-type FileStorage struct{}
+type FileStorage struct{
+    Root string
+}
 
-const storageRoot = "/mydata/data"
+const defaultStorageRoot = "/mydata/data"
+
+// NewFileStorage creates a new FileStorage instance.
+// If root is empty, it uses the default storage root.
+func NewFileStorage(root string) *FileStorage {
+    if root == "" {
+        root = defaultStorageRoot
+    }
+    return &FileStorage{Root: root}
+}
 
 func ProcessChunkedStream(reader io.Reader, writer io.Writer) error {
     bufReader := bufio.NewReader(reader)
@@ -78,12 +89,23 @@ func ProcessChunkedStream(reader io.Reader, writer io.Writer) error {
     return nil
 }
 
+func (fs *FileStorage) getPath(bucketName, objectName string) (string, error) {
+    // Clean the paths to resolve .. and .
+    cleanRoot := filepath.Clean(fs.Root)
+    fullPath := filepath.Join(cleanRoot, bucketName, objectName)
+
+    // Ensure the path is within the root directory
+    if !strings.HasPrefix(fullPath, cleanRoot+string(os.PathSeparator)) && fullPath != cleanRoot {
+        return "", fmt.Errorf("access denied: path traversal attempt")
+    }
+    return fullPath, nil
+}
 
 // Ajout d'un objet dans un bucket
 func (fs *FileStorage) AddObject(bucketName, objectName string, data io.Reader, contentSha256 string) error {
     log.Printf("Starting object upload: %s in bucket: %s", objectName, bucketName)
 
-    objectPath, err := getUniqueObjectPath(bucketName, objectName)
+    objectPath, err := fs.getUniqueObjectPath(bucketName, objectName)
     if err != nil {
         log.Printf("Failed to create object path for %s in bucket %s: %v", objectName, bucketName, err)
         return fmt.Errorf("Failed to create object path: %v", err)
@@ -110,8 +132,12 @@ func (fs *FileStorage) AddObject(bucketName, objectName string, data io.Reader, 
 }
 
 // Fonction pour obtenir un chemin unique si l'objet existe déjà
-func getUniqueObjectPath(bucketName, objectName string) (string, error) {
-    objectPath := filepath.Join(storageRoot, bucketName, objectName)
+func (fs *FileStorage) getUniqueObjectPath(bucketName, objectName string) (string, error) {
+    objectPath, err := fs.getPath(bucketName, objectName)
+    if err != nil {
+        return "", err
+    }
+
     if _, err := os.Stat(objectPath); os.IsNotExist(err) {
         return objectPath, nil
     }
@@ -120,12 +146,15 @@ func getUniqueObjectPath(bucketName, objectName string) (string, error) {
 
     objectNameWithoutExt := strings.TrimSuffix(objectName, filepath.Ext(objectName))
     extension := filepath.Ext(objectName)
-    newObjectName := objectNameWithoutExt
     suffix := 1
 
     for {
-        newObjectName = fmt.Sprintf("%s-%d%s", objectNameWithoutExt, suffix, extension)
-        newObjectPath := filepath.Join(storageRoot, bucketName, newObjectName)
+        newObjectName := fmt.Sprintf("%s-%d%s", objectNameWithoutExt, suffix, extension)
+        newObjectPath, err := fs.getPath(bucketName, newObjectName)
+        if err != nil {
+            return "", err
+        }
+
         if _, err := os.Stat(newObjectPath); os.IsNotExist(err) {
             return newObjectPath, nil
         }
@@ -153,8 +182,28 @@ func writeObjectToFile(data io.Reader, file *os.File, contentSha256 string) erro
 
 // Lister les objets dans un bucket
 func (fs *FileStorage) ListObjects(bucketName, prefix, marker string, maxKeys int) (dto.ListObjectsResponse, error) {
-    bucketPath := filepath.Join(storageRoot, bucketName)
+    bucketPath, err := fs.getPath(bucketName, "")
+    if err != nil {
+        return dto.ListObjectsResponse{}, err
+    }
 
+    // Since prefix can also contain traversal characters, we should be careful.
+    // However, glob pattern matching is tricky.
+    // Instead of using Glob on the joined path, we should read the directory and filter.
+    // But Glob is used here.
+    // Let's verify prefix doesn't contain traversal.
+    if strings.Contains(prefix, "..") {
+         return dto.ListObjectsResponse{}, fmt.Errorf("invalid prefix")
+    }
+
+    // safeGlobPath should be constructed carefully
+    // We are looking for files in bucketPath that start with prefix
+    // bucketPath is already verified to be safe.
+
+    // Glob pattern: bucketPath/prefix*
+    // If prefix has slashes, it might look into subdirectories.
+
+    // For now, let's keep the original logic but use the safe bucketPath
     objects, err := filepath.Glob(filepath.Join(bucketPath, prefix+"*"))
     if err != nil {
         return dto.ListObjectsResponse{}, fmt.Errorf("error while listing objects: %v", err)
@@ -196,16 +245,16 @@ func (fs *FileStorage) ListBuckets() []string {
     var buckets []string
 
     // Ajout de log pour vérifier si le répertoire existe
-    log.Printf("Vérification de l'existence du répertoire de stockage des buckets : %s", storageRoot)
+    log.Printf("Vérification de l'existence du répertoire de stockage des buckets : %s", fs.Root)
 
-    files, err := os.ReadDir(storageRoot)
+    files, err := os.ReadDir(fs.Root)
     if err != nil {
-        log.Printf("Erreur lors de la lecture du répertoire %s : %v", storageRoot, err)
+        log.Printf("Erreur lors de la lecture du répertoire %s : %v", fs.Root, err)
         return buckets
     }
 
     // Ajout de log pour voir combien de fichiers/répertoires sont trouvés
-    log.Printf("Nombre d'éléments trouvés dans le répertoire %s : %d", storageRoot, len(files))
+    log.Printf("Nombre d'éléments trouvés dans le répertoire %s : %d", fs.Root, len(files))
 
     // Parcourir chaque élément trouvé
     for _, file := range files {
@@ -227,7 +276,10 @@ func (fs *FileStorage) ListBuckets() []string {
 
 // Créer un bucket
 func (fs *FileStorage) CreateBucket(bucketName string) error {
-    bucketPath := filepath.Join(storageRoot, bucketName)
+    bucketPath, err := fs.getPath(bucketName, "")
+    if err != nil {
+        return err
+    }
     if err := os.MkdirAll(bucketPath, os.ModePerm); err != nil {
         return err
     }
@@ -236,7 +288,10 @@ func (fs *FileStorage) CreateBucket(bucketName string) error {
 
 // Récupération d'un objet dans un bucket
 func (fs *FileStorage) GetObject(bucketName, objectName string) ([]byte, dto.FileInfo, error) {
-	objectPath := filepath.Join(storageRoot, bucketName, objectName)
+	objectPath, err := fs.getPath(bucketName, objectName)
+    if err != nil {
+        return nil, nil, err
+    }
 	log.Printf("Tentative de récupération de l'objet : %s", objectPath)
 
 	// Lire le fichier
@@ -259,7 +314,10 @@ func (fs *FileStorage) GetObject(bucketName, objectName string) ([]byte, dto.Fil
 
 // Vérification de l'existence d'un objet dans un bucket
 func (fs *FileStorage) CheckObjectExist(bucketName, objectName string) (bool, time.Time, int64, error) {
-    objectPath := filepath.Join(storageRoot, bucketName, objectName)
+    objectPath, err := fs.getPath(bucketName, objectName)
+    if err != nil {
+        return false, time.Time{}, 0, err
+    }
 
     fileInfo, err := os.Stat(objectPath)
     if os.IsNotExist(err) {
@@ -274,7 +332,10 @@ func (fs *FileStorage) CheckObjectExist(bucketName, objectName string) (bool, ti
 
 // Vérification de l'existence d'un bucket
 func (fs *FileStorage) CheckBucketExists(bucketName string) (bool, error) {
-    bucketPath := filepath.Join(storageRoot, bucketName)
+    bucketPath, err := fs.getPath(bucketName, "")
+    if err != nil {
+        return false, err
+    }
     if _, err := os.Stat(bucketPath); os.IsNotExist(err) {
         return false, nil
     } else if err != nil {
@@ -285,14 +346,17 @@ func (fs *FileStorage) CheckBucketExists(bucketName string) (bool, error) {
 
 // Suppression d'un bucket
 func (fs *FileStorage) DeleteBucket(bucketName string) error {
-    bucketPath := filepath.Join(storageRoot, bucketName)
+    bucketPath, err := fs.getPath(bucketName, "")
+    if err != nil {
+        return err
+    }
 
     if _, err := os.Stat(bucketPath); os.IsNotExist(err) {
         log.Printf("Bucket %s does not exist", bucketName)
         return err
     }
 
-    err := os.RemoveAll(bucketPath)
+    err = os.RemoveAll(bucketPath)
     if err != nil {
         log.Printf("Failed to delete bucket %s: %v", bucketName, err)
         return err
@@ -304,14 +368,17 @@ func (fs *FileStorage) DeleteBucket(bucketName string) error {
 
 // Suppression d'un objet dans un bucket
 func (fs *FileStorage) DeleteObject(bucketName, objectName string) error {
-    objectPath := filepath.Join(storageRoot, bucketName, objectName)
+    objectPath, err := fs.getPath(bucketName, objectName)
+    if err != nil {
+        return err
+    }
 
     if _, err := os.Stat(objectPath); os.IsNotExist(err) {
         log.Printf("Object %s does not exist in bucket %s", objectName, bucketName)
         return fmt.Errorf("object not found: %w", err) // Retourne une erreur "object not found" encapsulant l'erreur 404
     }
 
-    err := os.Remove(objectPath)
+    err = os.Remove(objectPath)
     if err != nil {
         log.Printf("Failed to delete object %s in bucket %s: %v", objectName, bucketName, err)
         return err
@@ -322,8 +389,14 @@ func (fs *FileStorage) DeleteObject(bucketName, objectName string) error {
 }
 
 func (fs *FileStorage) CopyObject(sourceBucket, sourceKey, targetBucket, targetKey string) error {
-	sourcePath := filepath.Join(storageRoot, sourceBucket, sourceKey)
-	targetPath := filepath.Join(storageRoot, targetBucket, targetKey)
+	sourcePath, err := fs.getPath(sourceBucket, sourceKey)
+    if err != nil {
+        return err
+    }
+	targetPath, err := fs.getPath(targetBucket, targetKey)
+    if err != nil {
+        return err
+    }
 
 	// Assurez-vous que le répertoire cible existe
 	if err := os.MkdirAll(filepath.Dir(targetPath), os.ModePerm); err != nil {
