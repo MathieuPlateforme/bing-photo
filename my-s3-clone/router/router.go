@@ -11,7 +11,7 @@ import (
 // SetupRouter sets up the router with default storage
 func SetupRouter() *mux.Router {
     // Use default storage (e.g., FileStorage)
-    return SetupRouterWithStorage(&storage.FileStorage{})
+    return SetupRouterWithStorage(storage.NewFileStorage(""))
 }
 
 // SetupRouterWithStorage allows injecting custom storage (e.g., mock storage for tests)

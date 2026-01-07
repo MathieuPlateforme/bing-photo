@@ -6,6 +6,7 @@ import (
 	"AuthService/pkg/google"
 	"AuthService/pkg/jwt"
 	"AuthService/services/auth"
+	"AuthService/utils"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -95,6 +96,17 @@ func (h *AuthHandlers) RegisterWithEmailHandler(w http.ResponseWriter, r *http.R
 	err = json.Unmarshal(body, &newUser)
 	if err != nil {
 		http.Error(w, "Erreur de parsing JSON", http.StatusBadRequest)
+		return
+	}
+
+	// Validate email and password
+	if !utils.CheckEmail(newUser.Email) {
+		http.Error(w, "Email invalide", http.StatusBadRequest)
+		return
+	}
+
+	if !utils.CheckPassword(newUser.Password) {
+		http.Error(w, "Le mot de passe doit contenir au moins 8 caractères", http.StatusBadRequest)
 		return
 	}
 
